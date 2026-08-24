@@ -1,0 +1,78 @@
+services:
+  postgres:
+    image: postgis/postgis:15-3.3
+    container_name: urbancoolsim_postgres
+    environment:
+      POSTGRES_USER: urbancoolsim
+      POSTGRES_PASSWORD: urbancoolsim_secret_password
+      POSTGRES_DB: urbancoolsim
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U urbancoolsim"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: urbancoolsim_redis
+    ports:
+      - "6379:6379"
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: urbancoolsim_backend
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://urbancoolsim:urbancoolsim_secret_password@postgres:5432/urbancoolsim
+      - SYNC_DATABASE_URL=postgresql://urbancoolsim:urbancoolsim_secret_password@postgres:5432/urbancoolsim
+      - REDIS_URL=redis://redis:6379/0
+      - ENVIRONMENT=production
+      - DEBUG=False
+    volumes:
+      - ./dataset/raw:/app/dataset/raw:ro
+      - ./storage:/app/storage
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: urbancoolsim_worker
+    command: celery -A app.worker.celery_app worker --loglevel=info
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://urbancoolsim:urbancoolsim_secret_password@postgres:5432/urbancoolsim
+      - SYNC_DATABASE_URL=postgresql://urbancoolsim:urbancoolsim_secret_password@postgres:5432/urbancoolsim
+      - REDIS_URL=redis://redis:6379/0
+    volumes:
+      - ./dataset/raw:/app/dataset/raw:ro
+      - ./storage:/app/storage
+    depends_on:
+      - redis
+      - backend
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: urbancoolsim_frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+      - BACKEND_INTERNAL_URL=http://backend:8000
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:

@@ -1,0 +1,166 @@
+# ==============================================================================
+# UrbanCoolSim Production .gitignore
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# 1. Environment & Secrets
+# ------------------------------------------------------------------------------
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
+!.env.example
+
+# ------------------------------------------------------------------------------
+# 2. Python & Virtual Environments
+# ------------------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environments
+venv/
+.venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+dataset/venv/
+backend/venv/
+
+# Pytest & Coverage
+.pytest_cache/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+htmlcov/
+
+# ------------------------------------------------------------------------------
+# 3. Node.js & Next.js Frontend
+# ------------------------------------------------------------------------------
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Next.js Build Outputs
+frontend/.next/
+.next/
+out/
+dist/
+.turbo/
+
+# TypeScript Build Cache
+*.tsbuildinfo
+next-env.d.ts
+
+# ------------------------------------------------------------------------------
+# 4. Databases, Local Storage & Runtime Artifacts
+# ------------------------------------------------------------------------------
+*.sqlite
+*.sqlite3
+*.db
+urbancoolsim.db
+
+# Docker Data Volumes
+postgres_data/
+redis_data/
+
+# Dynamic Runtime Storage (preserve folder structure with .gitkeep)
+storage/models/*
+!storage/models/.gitkeep
+storage/rasters/*
+!storage/rasters/.gitkeep
+storage/reports/*
+!storage/reports/.gitkeep
+
+# Generated Reports & PDFs
+*.pdf
+*.log
+
+# ------------------------------------------------------------------------------
+# 5. Geospatial Raw Data & Heavy Satellite Granules (>50MB)
+# ------------------------------------------------------------------------------
+# Note: Raw HDF5/GeoTIFF/NetCDF/Tar satellite files should be downloaded via 
+# python dataset/download_datasets.py rather than tracked in Git repository.
+dataset/raw/*
+!dataset/raw/.gitkeep
+dataset/processed/*
+!dataset/processed/.gitkeep
+
+# Large Geo-Raster Formats
+*.tif
+*.tiff
+*.geotiff
+*.h5
+*.hdf
+*.hdf5
+*.nc
+*.nc4
+*.tar.gz
+*.tar
+*.zip
+*.geojson.gz
+
+# ------------------------------------------------------------------------------
+# 6. Operating System & IDE Files
+# ------------------------------------------------------------------------------
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.cproject
+.settings/
+
+# ------------------------------------------------------------------------------
+# 7. Agentic & Workspace Temp Files
+# ------------------------------------------------------------------------------
+.gemini/
+.agents/
+.system_generated/
+scratch/
