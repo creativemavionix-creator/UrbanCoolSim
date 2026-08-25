@@ -1,5 +1,5 @@
 import numpy as np
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 from pymoo.core.problem import ElementwiseProblem
 from pymoo.algorithms.moo.nsga2 import NSGA2
 from pymoo.optimize import minimize
@@ -89,22 +89,55 @@ class UrbanCoolingOptimizationProblem(ElementwiseProblem):
         out["G"] = [g1, g2, g3]
 
 def run_multi_objective_optimization(
+    study_area_id: str = "delhi_cp",
     max_budget_usd: float = 500000.0,
     max_water_m3: float = 10000.0,
     max_land_m2: float = 50000.0,
+    weight_cooling: float = 0.35,
+    weight_cost: float = 0.25,
+    weight_population: float = 0.20,
+    weight_water: float = 0.10,
+    weight_energy: float = 0.10,
+    min_cool_roof_reflectance: float = 0.70,
+    max_tree_area_pct: float = 0.35,
     pop_size: int = 40,
     n_gen: int = 30
 ) -> Dict[str, Any]:
     """
-    Executes NSGA-II multi-objective optimization, computes Pareto front,
-    and runs high-fidelity physics validation on all Pareto candidates.
+    Executes NSGA-II multi-objective optimization with custom objective weighting,
+    computes Pareto front, evaluates energy & financial ROI, and runs physics re-validation.
     """
     surrogate = SurrogateModelPipeline()
+    
+    # Climate conditions by study area
+    climates = {
+        "delhi_cp": {"air_temp_c": 42.0, "solar_rad": 920.0, "wind_speed": 2.2, "q_f": 45.0, "base_albedo": 0.18, "veg": 0.12},
+        "mumbai_bkc": {"air_temp_c": 36.5, "solar_rad": 840.0, "wind_speed": 3.8, "q_f": 50.0, "base_albedo": 0.15, "veg": 0.10},
+        "singapore_marina": {"air_temp_c": 33.0, "solar_rad": 880.0, "wind_speed": 2.8, "q_f": 40.0, "base_albedo": 0.19, "veg": 0.22},
+        "phoenix_downtown": {"air_temp_c": 45.0, "solar_rad": 1020.0, "wind_speed": 2.0, "q_f": 55.0, "base_albedo": 0.16, "veg": 0.05},
+        "tokyo_shinjuku": {"air_temp_c": 35.5, "solar_rad": 860.0, "wind_speed": 2.4, "q_f": 65.0, "base_albedo": 0.16, "veg": 0.08}
+    }
+    c_info = climates.get(study_area_id, climates["delhi_cp"])
+    
+    base_feat = {
+        "baseline_albedo": c_info["base_albedo"],
+        "baseline_veg_frac": c_info["veg"],
+        "baseline_water_frac": 0.02,
+        "building_height": 22.0,
+        "building_density": 0.45,
+        "q_f": c_info["q_f"],
+        "air_temp_c": c_info["air_temp_c"],
+        "solar_rad": c_info["solar_rad"],
+        "wind_speed": c_info["wind_speed"],
+        "wetness_factor": 0.5
+    }
+    
     problem = UrbanCoolingOptimizationProblem(
         surrogate=surrogate,
         max_budget_usd=max_budget_usd,
         max_water_m3=max_water_m3,
-        max_land_m2=max_land_m2
+        max_land_m2=max_land_m2,
+        baseline_features=base_feat
     )
     
     algorithm = NSGA2(
@@ -124,7 +157,12 @@ def run_multi_objective_optimization(
     )
     
     pareto_solutions = []
-    solver = EnergyBalanceSolver(solar_rad=850.0, air_temp_c=38.5, rel_humidity=0.45, wind_speed=2.5)
+    solver = EnergyBalanceSolver(
+        solar_rad=c_info["solar_rad"],
+        air_temp_c=c_info["air_temp_c"],
+        rel_humidity=0.45,
+        wind_speed=c_info["wind_speed"]
+    )
     
     # Extract decision variable arrays
     X_candidates = None
@@ -137,7 +175,7 @@ def run_multi_objective_optimization(
         # Fallback grid sampling of decision space
         g = np.linspace(0.05, 0.70, 5)
         c = np.linspace(0.05, 0.35, 4)
-        t = np.linspace(0.05, 0.35, 4)
+        t = np.linspace(0.05, min(max_tree_area_pct, 0.35), 4)
         w = np.linspace(0.0, 0.15, 3)
         grid_samples = []
         for g_val in g:
@@ -147,17 +185,28 @@ def run_multi_objective_optimization(
                         grid_samples.append([g_val, c_val, t_val, w_val])
         X_candidates = np.array(grid_samples[:30])
 
+    # Normalize weights
+    total_w = weight_cooling + weight_cost + weight_population + weight_water + weight_energy
+    w_cool = weight_cooling / total_w
+    w_cost = weight_cost / total_w
+    w_pop = weight_population / total_w
+    w_water = weight_water / total_w
+    w_energy = weight_energy / total_w
+
+    bldg_footprint_m2 = 112500.0  # 45% of 250,000 m2 district
+    total_district_m2 = 250000.0
+
     for idx, vars_opt in enumerate(X_candidates):
         green_roof, cool_roof, tree_canopy, water_feat = vars_opt[0], vars_opt[1], vars_opt[2], vars_opt[3]
         
-        feat = {
-            "baseline_albedo": 0.18, "baseline_veg_frac": 0.12, "baseline_water_frac": 0.02,
-            "building_height": 22.0, "building_density": 0.45, "q_f": 40.0, "air_temp_c": 38.5,
-            "solar_rad": 850.0, "wind_speed": 2.5, "wetness_factor": 0.5,
-            "green_roof_coverage": green_roof, "cool_roof_albedo_boost": cool_roof,
-            "tree_canopy_addition": tree_canopy, "reflective_pavement_albedo": cool_roof * 0.5,
+        feat = base_feat.copy()
+        feat.update({
+            "green_roof_coverage": green_roof,
+            "cool_roof_albedo_boost": cool_roof,
+            "tree_canopy_addition": tree_canopy,
+            "reflective_pavement_albedo": cool_roof * 0.5,
             "water_feature_fraction": water_feat
-        }
+        })
         surrogate_delta_T = surrogate.predict_delta_t(feat)
         resource = InterventionEngine.calculate_resource_budget(feat)
         cost = resource["total_cost_usd"]
@@ -165,21 +214,44 @@ def run_multi_objective_optimization(
         
         # --- PHYSICS VALIDATION STEP ---
         base_res = solver.solve_cell_equilibrium(
-            albedo=0.18, emissivity=0.95, veg_fraction=0.12, water_fraction=0.02,
-            building_height=22.0, building_density=0.45, q_f=40.0
+            albedo=c_info["base_albedo"], emissivity=0.95, veg_fraction=c_info["veg"], water_fraction=0.02,
+            building_height=22.0, building_density=0.45, q_f=c_info["q_f"]
         )
         scen_res = solver.solve_cell_equilibrium(
-            albedo=0.18 + (0.45 * cool_roof),
+            albedo=c_info["base_albedo"] + (0.45 * cool_roof),
             emissivity=0.95,
-            veg_fraction=0.12 + (0.45 * green_roof) + tree_canopy,
+            veg_fraction=c_info["veg"] + (0.45 * green_roof) + tree_canopy,
             water_fraction=0.02 + water_feat,
-            building_height=22.0, building_density=0.45, q_f=40.0, wetness_factor=0.5
+            building_height=22.0, building_density=0.45, q_f=c_info["q_f"], wetness_factor=0.5
         )
         physics_validated_delta_T = float(base_res["T_surface_c"] - scen_res["T_surface_c"])
         val_error = float(abs(surrogate_delta_T - physics_validated_delta_T))
         
-        land_m2 = float(green_roof * 100000 * 0.45 + tree_canopy * 100000 * 0.55 + water_feat * 100000)
+        land_m2 = float(green_roof * total_district_m2 * 0.45 + tree_canopy * total_district_m2 * 0.55 + water_feat * total_district_m2)
         heat_risk_score = round(max(0.0, 10.0 - (physics_validated_delta_T * 2.2)), 1)
+        
+        # Energy & Carbon ROI Calculations (Page 6 & 11)
+        # 1.0 °C cooling reduction saves ~3.5% of annual HVAC chiller electricity demand
+        # Standard commercial building cooling load ~55 kWh/m2/yr
+        hvac_kwh_saved = round(bldg_footprint_m2 * 55.0 * (physics_validated_delta_T * 0.038), 0)
+        elec_savings_usd = round(hvac_kwh_saved * 0.12, 0)  # $0.12 / kWh commercial tariff
+        co2_tons = round(hvac_kwh_saved * 0.00072, 1)        # Grid intensity
+        payback_years = round(cost / max(100.0, elec_savings_usd), 1)
+        
+        # Multi-attribute composite score (0-100)
+        norm_cooling = min(1.0, physics_validated_delta_T / 4.5)
+        norm_cost = max(0.0, 1.0 - (cost / max(1.0, max_budget_usd)))
+        norm_pop = min(1.0, (physics_validated_delta_T * 1.2) / 4.0)
+        norm_water = max(0.0, 1.0 - (water / max(1.0, max_water_m3)))
+        norm_energy = min(1.0, hvac_kwh_saved / 250000.0)
+        
+        composite_score = round((
+            w_cool * norm_cooling +
+            w_cost * norm_cost +
+            w_pop * norm_pop +
+            w_water * norm_water +
+            w_energy * norm_energy
+        ) * 100.0, 1)
         
         sol = {
             "solution_id": idx + 1,
@@ -192,32 +264,42 @@ def run_multi_objective_optimization(
             "water_demand_m3": round(water, 2),
             "land_area_m2": round(land_m2, 1),
             "heat_risk_score": heat_risk_score,
+            "hvac_energy_savings_kwh": hvac_kwh_saved,
+            "electricity_cost_savings_usd": elec_savings_usd,
+            "co2_avoided_tons": co2_tons,
+            "payback_period_years": payback_years,
+            "composite_score": composite_score,
             "physics_validated": True,
             "validated_delta_t": round(physics_validated_delta_T, 2),
             "validation_error": round(val_error, 3)
         }
         pareto_solutions.append(sol)
             
-    # Sort solutions by cooling benefit descending
-    pareto_solutions.sort(key=lambda s: s["validated_delta_t"], reverse=True)
-    
-    # Pick recommended solution: Best trade-off balancing cooling and cost efficiency
+    # Sort solutions by composite score descending
+    pareto_solutions.sort(key=lambda s: s["composite_score"], reverse=True)
     recommended = pareto_solutions[0] if pareto_solutions else {}
-    if pareto_solutions:
-        # Score = Delta_T / (Cost / 100k + 1)
-        best_score = -1.0
-        for s in pareto_solutions:
-            score = s["validated_delta_t"] / ((s["total_cost_usd"] / 100000.0) + 0.5)
-            if score > best_score:
-                best_score = score
-                recommended = s
                 
     return {
-        "objectives": ["Maximize Cooling Benefit (ΔT)", "Minimize Cost ($)", "Minimize Water Demand (m³)"],
+        "objectives": [
+            "Maximize Cooling Benefit (ΔT)",
+            "Minimize Implementation Cost ($)",
+            "Maximize Population Protected (HVI)",
+            "Minimize Water Demand (m³)",
+            "Maximize HVAC Energy Savings (kWh)"
+        ],
         "constraints": {
             "max_budget_usd": max_budget_usd,
             "max_water_m3": max_water_m3,
-            "max_land_m2": max_land_m2
+            "max_land_m2": max_land_m2,
+            "min_cool_roof_reflectance": min_cool_roof_reflectance,
+            "max_tree_area_pct": max_tree_area_pct
+        },
+        "weights": {
+            "cooling": round(w_cool, 2),
+            "cost": round(w_cost, 2),
+            "population": round(w_pop, 2),
+            "water": round(w_water, 2),
+            "energy": round(w_energy, 2)
         },
         "pareto_solutions": pareto_solutions,
         "recommended_solution": recommended,

@@ -3,7 +3,7 @@
 [![Docker Compose](https://img.shields.io/badge/docker--compose-v2.20+-blue?logo=docker&logoColor=white)](./docker-compose.yml)
 [![FastAPI Backend](https://img.shields.io/badge/FastAPI-0.110+-009688?logo=fastapi&logoColor=white)](./backend)
 [![Next.js Frontend](https://img.shields.io/badge/Next.js-14.1.3-black?logo=next.js&logoColor=white)](./frontend)
-[![Pytest](https://img.shields.io/badge/pytest-5%20passed-emerald?logo=pytest&logoColor=white)](./backend/tests/test_backend.py)
+[![Pytest](https://img.shields.io/badge/pytest-8%20passed-emerald?logo=pytest&logoColor=white)](./backend/tests/test_backend.py)
 [![Python](https://img.shields.io/badge/python-3.11.9-3776AB?logo=python&logoColor=white)](./backend)
 [![TypeScript](https://img.shields.io/badge/typescript-5.4-3178C6?logo=typescript&logoColor=white)](./frontend)
 [![PostgreSQL](https://img.shields.io/badge/PostGIS-15--3.3-336791?logo=postgresql&logoColor=white)](./docker-compose.yml)
@@ -24,7 +24,7 @@ UrbanCoolSim is an enterprise-grade urban microclimate digital twin, surface ene
 6. [AI Surrogate Acceleration & SHAP Explainability Framework](#6-ai-surrogate-acceleration--shap-explainability-framework)
 7. [NSGA-II Multi-Objective Optimization & Physics Re-Validation](#7-nsga-ii-multi-objective-optimization--physics-re-validation)
 8. [Observational Satellite Validation & Ground-Truth Calibration](#8-observational-satellite-validation--ground-truth-calibration)
-9. [Frontend User Experience & The 10 Core Application Screens](#9-frontend-user-experience--the-10-core-application-screens)
+9. [Frontend User Experience & The 11 Core Application Screens](#9-frontend-user-experience--the-11-core-application-screens)
 10. [Backend Architecture & API Specification](#10-backend-architecture--api-specification)
 11. [Installation, Verification & Operational Guide](#11-installation-verification--operational-guide)
 12. [Security, Resource Bounds & Computational Integrity](#12-security-resource-bounds--computational-integrity)
@@ -270,7 +270,6 @@ Urban interventions modify the physical properties of each grid cell:
 │ Reflective Pavements  │ ↑ Albedo (Δα = +0.20)│ $22 / m²     │ 0 L/m²/yr     │ Ground albedo reflect  │
 │ Urban Water Features  │ ↑ f_water, Direct Qe │ $120 / m²    │ 1200 L/m²/yr  │ Evaporative heat sink  │
 └───────────────────────┴──────────────────────┴──────────────┴───────────────┴────────────────────────┘
-```
 
 ### Physical Property Transformations:
 $$\alpha_{\text{modified}} = \text{clip}\left(\alpha_{\text{base}} + f_{bldg} \cdot \Delta \alpha_{\text{cool}} + (1 - f_{bldg} - f_{water}) \cdot \Delta \alpha_{\text{pave}}, 0.05, 0.85\right)$$
@@ -373,41 +372,41 @@ Every data layer and metric emitted by the platform carries an immutable provena
 
 ---
 
-## 9. Frontend User Experience & The 10 Core Application Screens
+## 9. Frontend User Experience & The 11 Core Application Screens
 
-The Next.js 14 frontend provides ten specialized spatial and decision-support views:
+The Next.js 14 frontend provides 11 specialized spatial and decision-support views:
 
-```
-                              FRONTEND SITEMAP & FLOW
-                                   
-                 ┌──────────────────────────────────────────────────┐
-                 │ 00. /
-                 │ Urban heat is spatial. Simulate it first.        │
-                 └────────────────────────┬─────────────────────────┘
-                                          │ [Explore Platform CTA]
-                                          ▼
-   ┌───────────────────┐     ┌───────────────────┐     ┌───────────────────┐
-   │ 01. /dashboard    │ ──► │ 02. /digital-twin │ ──► │ 03. /thermal-     │
-   │ Executive Summary │     │ 10m Microgrid Map │     │     analysis      │
-   └───────────────────┘     └───────────────────┘     └───────────────────┘
-             │                         │                         │
-             ▼                         ▼                         ▼
-   ┌───────────────────┐     ┌───────────────────┐     ┌───────────────────┐
-   │ 04. /intervention-│ ──► │ 05. /scenario-lab │ ──► │ 06. /optimization │
-   │     studio        │     │ Side-by-Side A/B  │     │ Pareto Frontier   │
-   └───────────────────┘     └───────────────────┘     └───────────────────┘
-             │                         │                         │
-             ▼                         ▼                         ▼
-   ┌───────────────────┐     ┌───────────────────┐     ┌───────────────────┐
-   │ 07. /simulation-  │ ──► │ 08. /validation   │ ──► │ 09. /reports      │
-   │     results       │     │ Satellite 1:1 Fit │     │ PDF & Markdown    │
-   └───────────────────┘     └───────────────────┘     └───────────────────┘
-                                       │
-                                       ▼
-                             ┌───────────────────┐
-                             │ 10. /methodology  │
-                             │ Physics Formulas  │
-                             └───────────────────┘
+```text
+                               FRONTEND SITEMAP & FLOW (11 SCREENS)
+                                    
+                  ┌──────────────────────────────────────────────────┐
+                  │ 00. / (Public Landing Page)                      │
+                  │ Urban heat is spatial. Simulate it first.        │
+                  └────────────────────────┬─────────────────────────┘
+                                           │ [Explore Platform CTA]
+                                           ▼
+    ┌───────────────────┐     ┌───────────────────┐     ┌───────────────────┐
+    │ 01. /dashboard    │ ──► │ 02. /digital-twin │ ──► │ 03. /heat-risk    │
+    │ Multi-City Overview│    │ Multi-City 10m Grid│    │ HVI & 4 Zones [NEW]│
+    └───────────────────┘     └───────────────────┘     └───────────────────┘
+              │                         │                         │
+              ▼                         ▼                         ▼
+    ┌───────────────────┐     ┌───────────────────┐     ┌───────────────────┐
+    │ 04. /thermal-     │ ──► │ 05. /intervention-│ ──► │ 06. /scenario-lab │
+    │     analysis      │     │     studio (Live) │     │ Dual Map & Swipe  │
+    └───────────────────┘     └───────────────────┘     └───────────────────┘
+              │                         │                         │
+              ▼                         ▼                         ▼
+    ┌───────────────────┐     ┌───────────────────┐     ┌───────────────────┐
+    │ 07. /optimization │ ──► │ 08. /simulation-  │ ──► │ 09. /validation   │
+    │ 5-Obj NSGA-II     │     │ results (24h LST) │     │ Satellite 1:1 Fit │
+    └───────────────────┘     └───────────────────┘     └───────────────────┘
+                                        │
+                                        ▼
+                              ┌───────────────────┐     ┌───────────────────┐
+                              │ 10. /reports      │ ──► │ 11. /methodology  │
+                              │ PDF + GeoJSON+CSV │     │ Physics Formulas  │
+                              └───────────────────┘     └───────────────────┘
 ```
 
 ### The Two Product Worlds:
@@ -416,10 +415,24 @@ The Next.js 14 frontend provides ten specialized spatial and decision-support vi
 - **Visual Tone**: Warm editorial linen canvas (`#faf9f5`), typography-driven hero, and interactive before/after simulation demonstration.
 - **Narrative Flow**: Explains why urban heat is a spatial problem, the failure of single-intervention trial-and-error, the 7-step computational pipeline, multi-spectral data fusion, first-principles thermodynamics, stakeholder applications (Municipalities, Real Estate Developers, Smart Cities, Consultants), the core thesis (*"Spend computationally before spending physically"*), and a one-click transition to the active platform.
 
-#### B. Analytical Product World (`/dashboard`, `/digital-twin`, etc.)
+#### B. Analytical Product World (`/dashboard`, `/digital-twin`, `/heat-risk`, etc.)
 - **Visual Tone**: Obsidian graphite base (`#0d0e11`), subtle borders (`rgba(255, 255, 255, 0.07)`), restrained botanical green accents (`#22c55e`), and semantic thermal scales without glowing cyberpunk borders.
-- **Navigation Shell**: Slim grouped vertical navigation rail organized into **Understand**, **Design**, **Decide**, and **System**.
-- **Continuous Raster Rendering**: HTML5 Canvas 2D engine with smooth bilinear interpolation, concentric urban street geometry overlays, and a quiet, floating precision cell inspector.
+- **Header Telemetry & Global Controls**:
+  - **Multi-City Study Area Switcher**: Instant switching between 5 microclimate archetypes:
+    - 🇮🇳 `delhi_cp` (Delhi Connaught Place: semi-arid radial district, base $42.0^\circ\text{C}$, $Q^*=920\text{ W/m}^2$)
+    - 🇮🇳 `mumbai_bkc` (Mumbai BKC: coastal humid commercial center, base $36.5^\circ\text{C}$, RH 75%)
+    - 🇸🇬 `singapore_marina` (Singapore Marina Bay: tropical high-rise waterfront, base $33.0^\circ\text{C}$, RH 82%)
+    - 🇺🇸 `phoenix_downtown` (Phoenix Downtown: arid desert grid core, base $45.0^\circ\text{C}$, $Q^*=1020\text{ W/m}^2$)
+    - 🇯🇵 `tokyo_shinjuku` (Tokyo Shinjuku: hyper-dense skyscraper canyons, base $35.5^\circ\text{C}$, $Q_f=65\text{ W/m}^2$)
+  - **Stakeholder Persona Modes**: Tailored perspectives for 🏛️ Municipal Planners (Heat-Health focus), 🏢 Real Estate ESG (LEED & Energy ROI), and 🔬 Climate Scientists (SEB physics & aerodynamic resistance).
+  - **Quick Start Guided Tour**: 4-step interactive onboarding modal explaining spatial ingestion, SEB physics, AI surrogate acceleration, and GIS export.
+- **Interactive Spatial Visualizers**:
+  - **Heat Risk & Critical Zones (`/heat-risk`)**: Demographic exposure matrix ($>41.5^\circ\text{C}$ counts), Heat-Health Action Plan tier banners (Yellow/Orange/Red), 4 canonical urban zones table, and ward-level HVI rankings.
+  - **Synchronized Scenario Lab (`/scenario-lab`)**: Synchronized Side-by-Side Dual-Canvas Map and interactive A/B Swipe Divider tool with pixel-level coordinate inspection.
+  - **5-Objective NSGA-II Optimizer (`/optimization`)**: Sliders for Cooling ($\Delta T$), CapEx Cost (\$), Population Protected ($HVI$), Water Demand ($m^3$), and HVAC Energy ($kWh$), with "Apply to Digital Twin" and "Export GeoJSON" actions.
+  - **24-Hour Diurnal Curve & Energy ROI (`/simulation-results`)**: Full diurnal temperature profiles ($T_a, T_{s,\text{base}}, T_{s,\text{scen}}$), cooling modality donut shares, and HVAC financial/carbon savings calculator.
+  - **Live Canvas Preview (`/intervention-studio`)**: Real-time 2D thermal canvas updates as sliders move, with zone-targeted brush modes.
+  - **Multi-Format Decision Exports (`/reports`)**: Executive PDF download, vector GeoJSON blueprint (`.geojson`), and 2,500-cell microgrid CSV export (`.csv`).
 
 ### Design System Tokens & Typography:
 - **Display Headlines**: `Instrument Serif` (Editorial serif for display metrics and hero statements).

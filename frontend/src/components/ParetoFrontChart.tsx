@@ -20,23 +20,23 @@ export function ParetoFrontChart({ solutions, onSelect, selectedSolution }: Pare
   }));
 
   return (
-    <div className="bg-obsidian-subtle border border-obsidian-border p-5 rounded-xl flex flex-col gap-4">
+    <div className="graphite-card p-6 rounded-lg flex flex-col gap-4">
       {/* Header */}
-      <div className="flex flex-wrap justify-between items-baseline gap-2 border-b border-obsidian-border pb-3">
+      <div className="flex flex-wrap justify-between items-baseline gap-2 border-b border-surface-border pb-3">
         <div>
-          <h2 className="text-sm font-semibold text-white tracking-tight">NSGA-II Pareto Frontier</h2>
-          <p className="text-xs text-obsidian-textMuted mt-0.5">
-            Trade-off: Cooling Impact (ΔT °C) vs Capital Cost ($k USD)
+          <h2 className="text-sm font-semibold text-ink-primary">NSGA-II Pareto Frontier</h2>
+          <p className="text-xs text-ink-muted mt-0.5">
+            Non-dominated trade-off: Cooling Impact (ΔT °C) vs Capital Cost ($k USD)
           </p>
         </div>
-        <span className="text-[11px] font-mono text-botanical-light flex items-center gap-1.5">
-          <span className="w-1.5 h-1.5 rounded-full bg-botanical-light" />
+        <span className="text-[11px] font-mono text-status-safe flex items-center gap-1.5 bg-status-safe/10 px-2 py-0.5 rounded border border-status-safe/25">
+          <span className="w-1.5 h-1.5 rounded-full bg-status-safe" />
           Deterministic Physics Re-Validated
         </span>
       </div>
 
       {/* Scatter Chart */}
-      <div className="h-64 w-full">
+      <div className="h-64 w-full tabular-nums">
         <ResponsiveContainer width="100%" height="100%">
           <ScatterChart margin={{ top: 15, right: 15, left: -15, bottom: 0 }}>
             <XAxis 
@@ -44,7 +44,7 @@ export function ParetoFrontChart({ solutions, onSelect, selectedSolution }: Pare
               dataKey="x" 
               name="Cooling Benefit ΔT" 
               unit="°C"
-              stroke="#6b7280" 
+              stroke="#5E6678" 
               fontSize={11}
               tickLine={false}
               axisLine={{ stroke: "rgba(255, 255, 255, 0.08)" }}
@@ -56,34 +56,25 @@ export function ParetoFrontChart({ solutions, onSelect, selectedSolution }: Pare
               dataKey="y" 
               name="Capital Cost" 
               unit="$k"
-              stroke="#6b7280" 
+              stroke="#5E6678" 
               fontSize={11}
               tickLine={false}
               axisLine={{ stroke: "rgba(255, 255, 255, 0.08)" }}
               tickFormatter={(v) => `$${Math.round(v)}k`}
             />
-            <ZAxis type="number" dataKey="water" range={[60, 220]} name="Water Demand (m³)" />
+            <ZAxis type="number" dataKey="water" range={[60, 200]} name="Water Demand (m³)" />
             <Tooltip
               cursor={{ strokeDasharray: "3 3", stroke: "rgba(255, 255, 255, 0.15)" }}
               content={({ active, payload }) => {
                 if (active && payload && payload.length) {
                   const p = payload[0].payload;
                   return (
-                    <div className="bg-obsidian-surface border border-obsidian-border p-3 rounded-lg text-xs shadow-floating space-y-1.5">
-                      <div className="font-semibold text-white">Pareto Candidate Strategy</div>
-                      <div className="text-[11px] space-y-1 font-mono">
-                        <div className="text-botanical-light">
-                          Cooling: <strong>-{Math.abs(p.x).toFixed(2)}°C</strong>
-                        </div>
-                        <div className="text-white">
-                          CapEx: <strong>${Math.round(p.y * 1000).toLocaleString()} USD</strong>
-                        </div>
-                        <div className="text-obsidian-textSecondary">
-                          Water: <strong>{p.water.toLocaleString()} m³/yr</strong>
-                        </div>
-                      </div>
-                      <div className="text-[10px] text-obsidian-textMuted pt-1 border-t border-obsidian-border">
-                        Click to inspect intervention breakdown
+                    <div className="graphite-card p-3 rounded text-xs space-y-1 font-mono shadow-floating">
+                      <div className="font-semibold text-ink-primary">Portfolio #{p.solution.solution_id}</div>
+                      <div className="text-[11px] space-y-0.5">
+                        <div className="text-cobalt">Cooling: <strong>-{Math.abs(p.x).toFixed(2)}°C</strong></div>
+                        <div className="text-ink-primary">CapEx: <strong>${Math.round(p.y * 1000).toLocaleString()} USD</strong></div>
+                        <div className="text-ink-muted">Water: {p.water.toLocaleString()} m³/yr</div>
                       </div>
                     </div>
                   );
@@ -93,7 +84,7 @@ export function ParetoFrontChart({ solutions, onSelect, selectedSolution }: Pare
             />
             <Scatter
               data={chartData}
-              fill="#22c55e"
+              fill="#4A6CFF"
               onClick={(e) => onSelect && onSelect(e.payload.solution)}
               className="cursor-pointer"
             />
@@ -101,9 +92,9 @@ export function ParetoFrontChart({ solutions, onSelect, selectedSolution }: Pare
         </ResponsiveContainer>
       </div>
 
-      <div className="text-[11px] text-obsidian-textMuted flex justify-between items-center px-1">
-        <span>Bubble size corresponds to annual water demand ($m^3$)</span>
-        <span className="font-mono">{solutions.length} Non-dominated portfolios</span>
+      <div className="text-[11px] text-ink-muted flex justify-between items-center px-1 font-mono">
+        <span>Bubble size denotes annual water demand (m³)</span>
+        <span className="text-ink-primary font-medium">{solutions.length} Non-dominated solutions</span>
       </div>
     </div>
   );

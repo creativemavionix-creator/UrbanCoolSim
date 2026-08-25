@@ -9,48 +9,65 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // Editorial Warm Neutrals
-        sand: {
-          50: "#faf9f5",
-          100: "#f4f2ea",
-          200: "#eae6dc",
-          300: "#dad4c5",
-          400: "#b8b09d",
-          800: "#3d3930",
-          900: "#24221c",
-        },
-        // Dark Obsidian / Graphite Palette (Product World)
-        obsidian: {
-          base: "#0d0e11",
-          subtle: "#14151a",
-          surface: "#1b1d24",
-          hover: "#242731",
+        // 1. Base Surface (Graphite, not pure black)
+        surface: {
+          base: "#0B0C10",
+          elevated: "#13151B",
+          card: "#13151B",
+          interactive: "#1B1E26",
+          hover: "#222631",
           border: "rgba(255, 255, 255, 0.07)",
           borderHover: "rgba(255, 255, 255, 0.14)",
-          textPrimary: "#f3f4f6",
-          textSecondary: "#9ca3af",
-          textMuted: "#6b7280",
+          borderActive: "rgba(255, 255, 255, 0.28)",
         },
-        // Botanical Accents
-        botanical: {
-          DEFAULT: "#15803d",
-          light: "#22c55e",
-          dark: "#14532d",
-          subtle: "rgba(34, 197, 94, 0.12)",
+        // 2. Signature Brand Accent (Electric Cobalt / Indigo — used sparingly)
+        cobalt: {
+          DEFAULT: "#4A6CFF",
+          hover: "#5B7FFF",
+          subtle: "rgba(74, 108, 255, 0.12)",
+          border: "rgba(74, 108, 255, 0.35)",
         },
-        // Thermal Semantic Scale
+        // 3. Neutrals (Gray-on-graphite hierarchy)
+        ink: {
+          primary: "#F2F3F5",
+          secondary: "#8E95A5",
+          muted: "#5E6678",
+          dim: "#3A404F",
+        },
+        // 4. Semantic / Status Colors (Reserved strictly for state mapping)
+        status: {
+          safe: "#10B981",       // Validated / Physics Ground Truth
+          high: "#F59E0B",       // High Heat / Risk Tier
+          critical: "#EF4444",   // Critical Risk Tier / >41.5°C
+        },
+        // 5. Scientific Colormap Scale (Domain data only: LST rasters)
         thermal: {
-          cool: "#0ea5e9",
-          moderate: "#10b981",
+          cool: "#2563eb",
+          mild: "#06b6d4",
           warm: "#f59e0b",
-          intense: "#ea580c",
+          hot: "#ea580c",
           extreme: "#dc2626",
         },
-        // Legacy compatibility aliases mapped to new tokens
-        background: "#0d0e11",
-        card: "#14151a",
-        cardHover: "#1b1d24",
-        border: "rgba(255, 255, 255, 0.08)",
+        // Legacy compatibility aliases
+        background: "#0B0C10",
+        card: "#13151B",
+        cardHover: "#1B1E26",
+        border: "rgba(255, 255, 255, 0.07)",
+        botanical: {
+          DEFAULT: "#4A6CFF",
+          light: "#5B7FFF",
+          dark: "#3B55CC",
+        },
+        obsidian: {
+          base: "#0B0C10",
+          subtle: "#13151B",
+          surface: "#1B1E26",
+          hover: "#222631",
+          textPrimary: "#F2F3F5",
+          textSecondary: "#8E95A5",
+          textMuted: "#5E6678",
+          border: "rgba(255, 255, 255, 0.07)",
+        }
       },
       fontFamily: {
         serif: ["var(--font-serif)", "Instrument Serif", "Georgia", "serif"],
@@ -58,18 +75,19 @@ module.exports = {
         mono: ["var(--font-mono)", "JetBrains Mono", "SF Mono", "monospace"],
       },
       boxShadow: {
-        subtle: "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
-        surface: "0 4px 20px -2px rgba(0, 0, 0, 0.25)",
-        floating: "0 12px 32px -4px rgba(0, 0, 0, 0.4)",
+        surface: "0 4px 20px -2px rgba(0, 0, 0, 0.45)",
+        floating: "0 12px 32px -4px rgba(0, 0, 0, 0.65)",
+        cobaltGlow: "0 0 20px -2px rgba(74, 108, 255, 0.35)",
+        specular: "inset 0 1px 0 0 rgba(255, 255, 255, 0.08)",
       },
       letterSpacing: {
-        tightest: "-0.03em",
-        tighter: "-0.02em",
-        tight: "-0.01em",
+        tightest: "-0.04em",
+        tighter: "-0.025em",
+        tight: "-0.015em",
         normal: "0",
-        wide: "0.02em",
+        wide: "0.025em",
         wider: "0.05em",
-        widest: "0.1em",
+        widest: "0.12em",
       },
     },
   },

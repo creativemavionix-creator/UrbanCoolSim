@@ -3,9 +3,13 @@ from fastapi.testclient import TestClient
 import numpy as np
 
 from app.main import app
+from app.database import engine, Base
 from app.physics.energy_balance import EnergyBalanceSolver
 from app.ml.surrogate import SurrogateModelPipeline
 from app.optimization.pareto_optimizer import run_multi_objective_optimization
+
+# Ensure tables are created for tests
+Base.metadata.create_all(bind=engine)
 
 client = TestClient(app)
 
@@ -13,6 +17,35 @@ def test_health_check():
     response = client.get("/health")
     assert response.status_code == 200
     assert response.json()["status"] == "UP"
+
+def test_study_areas_endpoint():
+    response = client.get("/api/v1/digital-twin/study-areas")
+    assert response.status_code == 200
+    areas = response.json()
+    assert len(areas) >= 5
+    ids = [a["id"] for a in areas]
+    assert "delhi_cp" in ids
+    assert "mumbai_bkc" in ids
+    assert "singapore_marina" in ids
+    assert "phoenix_downtown" in ids
+    assert "tokyo_shinjuku" in ids
+
+def test_heat_risk_analysis():
+    response = client.get("/api/v1/heat-risk/analysis?study_area_id=delhi_cp")
+    assert response.status_code == 200
+    data = response.json()
+    assert "critical_zones" in data
+    assert len(data["critical_zones"]) == 4
+    assert "heat_alert_tier" in data
+    assert data["total_population_estimate"] > 0
+
+def test_diurnal_profile():
+    response = client.get("/api/v1/thermal/diurnal-profile?study_area_id=delhi_cp")
+    assert response.status_code == 200
+    data = response.json()
+    assert "diurnal_curve" in data
+    assert len(data["diurnal_curve"]) == 24
+    assert data["max_cooling_c"] > 0.0
 
 def test_physics_energy_balance_solver():
     solver = EnergyBalanceSolver(solar_rad=850.0, air_temp_c=38.5, rel_humidity=0.45, wind_speed=2.5)
@@ -53,6 +86,7 @@ def test_surrogate_model_training_and_prediction():
 
 def test_nsga2_multi_objective_optimization():
     opt_res = run_multi_objective_optimization(
+        study_area_id="delhi_cp",
         max_budget_usd=300000.0,
         pop_size=20,
         n_gen=10
@@ -62,6 +96,7 @@ def test_nsga2_multi_objective_optimization():
     assert len(opt_res["pareto_solutions"]) > 0
     assert opt_res["physics_validated"] is True
     assert "validated_delta_t" in opt_res["recommended_solution"]
+    assert "hvac_energy_savings_kwh" in opt_res["recommended_solution"]
 
 def test_auth_user_flow():
     import uuid

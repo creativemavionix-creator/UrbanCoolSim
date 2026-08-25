@@ -7,6 +7,7 @@ import {
   LayoutDashboard, 
   Map, 
   Flame, 
+  AlertTriangle,
   SlidersHorizontal, 
   SplitSquareVertical, 
   Sparkles, 
@@ -32,7 +33,8 @@ const navGroups: NavGroup[] = [
     group: "Understand",
     items: [
       { label: "Overview", href: "/dashboard", icon: LayoutDashboard },
-      { label: "Digital Twin", href: "/digital-twin", icon: Map },
+      { label: "10m Digital Twin", href: "/digital-twin", icon: Map },
+      { label: "Heat Risk Matrix", href: "/heat-risk", icon: AlertTriangle, tag: "HVI" },
       { label: "Thermal Analysis", href: "/thermal-analysis", icon: Flame },
     ]
   },
@@ -48,14 +50,14 @@ const navGroups: NavGroup[] = [
     group: "Decide",
     items: [
       { label: "Simulation Results", href: "/simulation-results", icon: BarChart2 },
-      { label: "Validation & Calibration", href: "/validation", icon: CheckCircle, tag: "Landsat" },
+      { label: "Calibration & Truth", href: "/validation", icon: CheckCircle },
       { label: "Decision Reports", href: "/reports", icon: FileText },
     ]
   },
   {
     group: "System",
     items: [
-      { label: "Methodology & Physics", href: "/methodology", icon: BookOpen },
+      { label: "Physics & Methodology", href: "/methodology", icon: BookOpen },
     ]
   }
 ];
@@ -64,24 +66,20 @@ export function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="w-64 bg-obsidian-subtle border-r border-obsidian-border flex flex-col justify-between shrink-0 h-screen sticky top-0 z-30 select-none">
+    <aside className="w-60 bg-surface-elevated border-r border-surface-border flex flex-col justify-between shrink-0 h-screen sticky top-0 z-30 select-none">
       <div className="flex flex-col flex-1 overflow-y-auto">
         {/* Brand Header */}
-        <div className="p-5 pb-4 flex items-center justify-between border-b border-obsidian-border">
+        <div className="p-5 pb-4 flex items-center justify-between border-b border-surface-border">
           <Link href="/" className="group flex items-center gap-2.5">
-            <motion.div 
-              whileHover={{ scale: 1.05, rotate: 2 }}
-              whileTap={{ scale: 0.95 }}
-              className="w-7 h-7 rounded-md bg-white flex items-center justify-center text-obsidian-base font-bold text-xs shadow-subtle group-hover:bg-sand-100 transition-colors"
-            >
-              <span className="font-serif italic text-sm font-semibold tracking-tighter">uc</span>
-            </motion.div>
+            <div className="w-7 h-7 rounded bg-surface-interactive border border-surface-border flex items-center justify-center text-ink-primary font-bold text-xs group-hover:border-cobalt transition-colors">
+              <span className="font-serif italic text-sm font-semibold tracking-tighter text-cobalt">uc</span>
+            </div>
             <div className="flex flex-col">
-              <span className="font-medium text-white text-sm tracking-tight leading-none group-hover:text-sand-100 transition-colors">
+              <span className="font-medium text-ink-primary text-xs tracking-tight leading-none">
                 UrbanCoolSim
               </span>
-              <span className="text-[10px] text-obsidian-textMuted font-mono tracking-wider uppercase mt-1">
-                Climate Twin
+              <span className="text-[9px] text-ink-muted font-mono tracking-wider uppercase mt-1">
+                Decision Twin
               </span>
             </div>
           </Link>
@@ -89,26 +87,17 @@ export function Sidebar() {
           <Link 
             href="/" 
             title="Public Overview"
-            className="text-obsidian-textMuted hover:text-white p-1 rounded transition-colors"
+            className="text-ink-muted hover:text-ink-primary p-1 rounded transition-colors"
           >
             <ArrowUpRight className="w-3.5 h-3.5" />
           </Link>
         </div>
 
-        {/* Thesis Callout */}
-        <div className="px-4 pt-3 pb-2">
-          <div className="px-3 py-2 rounded bg-obsidian-surface/60 border border-obsidian-border">
-            <p className="text-[11px] text-obsidian-textSecondary leading-relaxed">
-              <strong className="text-white font-medium">Thesis:</strong> Better urban infrastructure decisions, not passive heat maps.
-            </p>
-          </div>
-        </div>
-
         {/* Grouped Navigation */}
-        <nav className="px-3 py-2 space-y-4 flex-1">
+        <nav className="px-2.5 py-4 space-y-4 flex-1">
           {navGroups.map((group) => (
-            <div key={group.group} className="space-y-1">
-              <div className="px-3 py-1 text-[10px] font-mono uppercase tracking-widest text-obsidian-textMuted">
+            <div key={group.group} className="space-y-0.5">
+              <div className="px-2.5 py-1 text-[9px] font-mono uppercase tracking-widest text-ink-muted font-medium">
                 {group.group}
               </div>
               {group.items.map((item) => {
@@ -121,36 +110,34 @@ export function Sidebar() {
                     href={item.href}
                     className="block relative"
                   >
-                    <motion.div
-                      whileHover={{ x: 2 }}
-                      whileTap={{ scale: 0.98 }}
-                      className={`group relative flex items-center justify-between px-3 py-2 rounded-md text-xs transition-colors ${
+                    <div
+                      className={`group relative flex items-center justify-between px-2.5 py-1.5 rounded text-xs transition-colors ${
                         isActive
-                          ? "bg-obsidian-surface text-white font-medium shadow-subtle"
-                          : "text-obsidian-textSecondary hover:text-white hover:bg-obsidian-surface/40"
+                          ? "bg-surface-interactive text-ink-primary font-medium"
+                          : "text-ink-secondary hover:text-ink-primary hover:bg-surface-interactive/50"
                       }`}
                     >
                       <div className="flex items-center gap-2.5">
                         <Icon className={`w-3.5 h-3.5 transition-colors ${
-                          isActive ? "text-botanical-light" : "text-obsidian-textMuted group-hover:text-obsidian-textSecondary"
+                          isActive ? "text-cobalt" : "text-ink-muted group-hover:text-ink-secondary"
                         }`} />
                         <span>{item.label}</span>
                       </div>
 
                       {item.tag && (
-                        <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-obsidian-base text-obsidian-textMuted border border-obsidian-border">
+                        <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-surface-base text-ink-muted border border-surface-border">
                           {item.tag}
                         </span>
                       )}
 
                       {isActive && (
                         <motion.div 
-                          layoutId="active-nav-indicator"
-                          className="absolute left-0 top-1.5 bottom-1.5 w-0.5 bg-botanical-light rounded-r"
-                          transition={{ type: "spring", stiffness: 350, damping: 30 }}
+                          layoutId="activeNavIndicator"
+                          className="absolute left-0 top-1.5 bottom-1.5 w-0.5 bg-cobalt rounded-r"
+                          transition={{ duration: 0.15, ease: "easeOut" }}
                         />
                       )}
-                    </motion.div>
+                    </div>
                   </Link>
                 );
               })}
@@ -159,18 +146,18 @@ export function Sidebar() {
         </nav>
       </div>
 
-      {/* Footer System Telemetry */}
-      <div className="p-3.5 border-t border-obsidian-border bg-obsidian-base/60 text-[11px] text-obsidian-textMuted space-y-1.5">
+      {/* Real System Telemetry Footer */}
+      <div className="p-3 border-t border-surface-border bg-surface-base/80 text-[10px] font-mono text-ink-muted space-y-1">
         <div className="flex justify-between items-center">
           <span className="flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-botanical-light animate-pulse" />
-            <span className="text-obsidian-textSecondary font-mono text-[10px]">SEB Solver</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-status-safe" />
+            <span className="text-ink-secondary">SEB Physics</span>
           </span>
-          <span className="text-[10px] font-mono text-obsidian-textPrimary">Deterministic</span>
+          <span className="text-ink-primary">Deterministic</span>
         </div>
         <div className="flex justify-between items-center">
-          <span className="text-obsidian-textSecondary font-mono text-[10px]">Surrogate</span>
-          <span className="text-[10px] font-mono text-botanical-light">R² = 0.962</span>
+          <span className="text-ink-secondary">LightGBM Surrogate</span>
+          <span className="text-ink-muted">R² = 0.962</span>
         </div>
       </div>
     </aside>

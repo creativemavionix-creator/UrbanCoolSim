@@ -13,7 +13,6 @@ interface ValidationProps {
 }
 
 export function ValidationScatterChart({ valData }: ValidationProps) {
-  // Real satellite calibration curve (34°C - 48°C range)
   const defaultPoints = Array.from({ length: 45 }, (_, i) => {
     const obs = 35.0 + (i * 0.28);
     const noise = Math.sin(i * 1.7) * 0.32 + Math.cos(i * 0.9) * 0.15;
@@ -34,31 +33,31 @@ export function ValidationScatterChart({ valData }: ValidationProps) {
   const rmse = valData?.rmse || 0.465;
 
   return (
-    <div className="bg-obsidian-subtle border border-obsidian-border p-5 rounded-xl flex flex-col gap-4">
+    <div className="graphite-card p-6 rounded-lg flex flex-col gap-4">
       {/* Header */}
-      <div className="flex flex-wrap justify-between items-baseline gap-2 border-b border-obsidian-border pb-3">
+      <div className="flex flex-wrap justify-between items-baseline gap-2 border-b border-surface-border pb-3">
         <div>
-          <h2 className="text-sm font-semibold text-white tracking-tight">Observed Satellite vs Simulated Thermodynamics</h2>
-          <p className="text-xs text-obsidian-textMuted mt-0.5">
+          <h2 className="text-sm font-semibold text-ink-primary">Observed Satellite vs Simulated Thermodynamics</h2>
+          <p className="text-xs text-ink-muted mt-0.5">
             1:1 Spatial Validation Scatter across 10m Microgrid Cells
           </p>
         </div>
         <div className="flex items-center gap-3 font-mono text-[11px]">
-          <span className="text-obsidian-textSecondary">R² = <strong className="text-white">{r2.toFixed(3)}</strong></span>
-          <span className="text-obsidian-textSecondary">MAE = <strong className="text-white">{mae.toFixed(2)}°C</strong></span>
-          <span className="text-obsidian-textSecondary">RMSE = <strong className="text-white">{rmse.toFixed(2)}°C</strong></span>
+          <span className="text-ink-secondary">R² = <strong className="text-status-safe">{r2.toFixed(3)}</strong></span>
+          <span className="text-ink-secondary">MAE = <strong className="text-ink-primary">{mae.toFixed(2)}°C</strong></span>
+          <span className="text-ink-secondary">RMSE = <strong className="text-ink-primary">{rmse.toFixed(2)}°C</strong></span>
         </div>
       </div>
 
       {/* Composed 1:1 Scatter Plot */}
-      <div className="h-64 w-full">
+      <div className="h-64 w-full tabular-nums">
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart data={points} margin={{ top: 15, right: 15, left: -15, bottom: 0 }}>
             <XAxis 
               type="number" 
               dataKey="obs" 
               name="Observed Landsat LST" 
-              stroke="#6b7280" 
+              stroke="#5E6678" 
               fontSize={11} 
               tickLine={false}
               axisLine={{ stroke: "rgba(255, 255, 255, 0.08)" }}
@@ -69,7 +68,7 @@ export function ValidationScatterChart({ valData }: ValidationProps) {
               type="number" 
               dataKey="sim" 
               name="Simulated Temperature" 
-              stroke="#6b7280" 
+              stroke="#5E6678" 
               fontSize={11} 
               tickLine={false}
               axisLine={{ stroke: "rgba(255, 255, 255, 0.08)" }}
@@ -83,11 +82,11 @@ export function ValidationScatterChart({ valData }: ValidationProps) {
                   const p = payload[0].payload;
                   const err = Math.abs(p.sim - p.obs).toFixed(2);
                   return (
-                    <div className="bg-obsidian-surface border border-obsidian-border p-3 rounded-lg text-xs shadow-floating space-y-1 font-mono">
-                      <div className="text-obsidian-textSecondary font-sans font-medium">Cell Observation Calibration</div>
-                      <div className="text-white">Observed: <strong>{p.obs}°C</strong> (Landsat 8)</div>
-                      <div className="text-botanical-light">Simulated: <strong>{p.sim}°C</strong> (SEB Model)</div>
-                      <div className="text-[11px] text-obsidian-textMuted pt-1 border-t border-obsidian-border">
+                    <div className="graphite-card p-3 rounded text-xs space-y-1 font-mono shadow-floating">
+                      <div className="text-ink-primary font-medium">Cell Calibration Point</div>
+                      <div className="text-ink-secondary">Observed: <strong className="text-ink-primary">{p.obs}°C</strong> (Landsat 8)</div>
+                      <div className="text-cobalt">Simulated: <strong className="text-cobalt">{p.sim}°C</strong> (SEB Model)</div>
+                      <div className="text-[11px] text-ink-muted pt-1 border-t border-surface-border">
                         Residual: ±{err}°C
                       </div>
                     </div>
@@ -106,15 +105,15 @@ export function ValidationScatterChart({ valData }: ValidationProps) {
             />
             <Scatter 
               dataKey="sim" 
-              fill="#10b981" 
+              fill="#4A6CFF" 
             />
           </ComposedChart>
         </ResponsiveContainer>
       </div>
 
-      <div className="text-[11px] text-obsidian-textMuted flex justify-between items-center px-1">
-        <span>Dashed line indicates perfect 1:1 physical agreement ($y = x$)</span>
-        <span className="font-mono">Sensor: Landsat 8 TIRS Band 10</span>
+      <div className="text-[11px] text-ink-muted flex justify-between items-center px-1 font-mono">
+        <span>Dashed line denotes perfect 1:1 physical agreement (y = x)</span>
+        <span className="text-ink-primary">Sensor: Landsat 8 TIRS Band 10</span>
       </div>
     </div>
   );

@@ -113,11 +113,18 @@ class SimulationResultResponse(BaseModel):
 
 # --- Optimization Schemas ---
 class OptimizationRequest(BaseModel):
-    study_area_id: str
+    study_area_id: str = "delhi_cp"
     max_budget_usd: float = 500000.0
     max_water_demand_m3: float = 10000.0
     max_land_area_m2: float = 50000.0
     target_cooling_c: float = 2.5
+    weight_cooling: float = 0.35
+    weight_cost: float = 0.25
+    weight_population: float = 0.20
+    weight_water: float = 0.10
+    weight_energy: float = 0.10
+    min_cool_roof_reflectance: float = 0.70
+    max_tree_area_pct: float = 0.35
     population_size: int = 40
     n_gen: int = 30
 
@@ -132,6 +139,11 @@ class ParetoSolution(BaseModel):
     water_demand_m3: float
     land_area_m2: float
     heat_risk_score: float
+    hvac_energy_savings_kwh: Optional[float] = None
+    electricity_cost_savings_usd: Optional[float] = None
+    co2_avoided_tons: Optional[float] = None
+    payback_period_years: Optional[float] = None
+    composite_score: Optional[float] = None
     physics_validated: bool = True
     validated_delta_t: Optional[float] = None
     validation_error: Optional[float] = None
@@ -141,6 +153,7 @@ class OptimizationResponse(BaseModel):
     name: str
     objectives: List[str]
     constraints: Dict[str, Any]
+    weights: Optional[Dict[str, float]] = None
     pareto_solutions: List[ParetoSolution]
     recommended_solution: ParetoSolution
     physics_validated: bool

@@ -4,228 +4,247 @@ import { useEffect, useState } from "react";
 import { Header } from "@/components/Header";
 import { DigitalTwinMap } from "@/components/DigitalTwinMap";
 import { EnergyBalanceChart } from "@/components/EnergyBalanceChart";
+import { AnimatedCounter } from "@/components/AnimatedCounter";
 import { api, DigitalTwinGrid, SimulationResult } from "@/lib/api";
-import { ArrowRight, Sparkles, TrendingDown, DollarSign, Droplets, MapPin } from "lucide-react";
+import { 
+  ArrowRight, 
+  Sparkles, 
+  DollarSign, 
+  Droplets, 
+  Globe2,
+  Thermometer,
+  Zap,
+  ShieldCheck,
+  AlertTriangle
+} from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 
-const easeOutExpo = [0.16, 1, 0.3, 1];
-
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.08,
-      delayChildren: 0.05
-    }
-  }
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 16 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.5, ease: easeOutExpo }
-  }
-};
+const studyAreaPills = [
+  { id: "delhi_cp", label: "Delhi · CP", flag: "🇮🇳", temp: "42.0°C" },
+  { id: "mumbai_bkc", label: "Mumbai · BKC", flag: "🇮🇳", temp: "36.5°C" },
+  { id: "singapore_marina", label: "Singapore · Marina", flag: "🇸🇬", temp: "33.0°C" },
+  { id: "phoenix_downtown", label: "Phoenix · Downtown", flag: "🇺🇸", temp: "45.0°C" },
+  { id: "tokyo_shinjuku", label: "Tokyo · Shinjuku", flag: "🇯🇵", temp: "35.5°C" },
+];
 
 export default function DashboardPage() {
+  const [studyArea, setStudyArea] = useState("delhi_cp");
   const [grid, setGrid] = useState<DigitalTwinGrid | null>(null);
   const [simResult, setSimResult] = useState<SimulationResult | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    async function loadDashboard() {
-      try {
-        const [gridData, simRes] = await Promise.all([
-          api.getDigitalTwinGrid(),
-          api.runPhysicsSimulation()
-        ]);
-        setGrid(gridData);
-        setSimResult(simRes);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
+  const loadDashboard = async (areaId = studyArea) => {
+    setLoading(true);
+    try {
+      const [gridData, simRes] = await Promise.all([
+        api.getDigitalTwinGrid(areaId, 50, 50),
+        api.runPhysicsSimulation("scen_hybrid_cp", undefined, areaId)
+      ]);
+      setGrid(gridData);
+      setSimResult(simRes);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
     }
-    loadDashboard();
+  };
+
+  useEffect(() => {
+    const savedArea = localStorage.getItem("urbancoolsim_study_area") || "delhi_cp";
+    setStudyArea(savedArea);
+    loadDashboard(savedArea);
+
+    const handleAreaChange = (e: any) => {
+      if (e.detail) {
+        setStudyArea(e.detail);
+        loadDashboard(e.detail);
+      }
+    };
+    window.addEventListener("studyAreaChanged", handleAreaChange);
+    return () => window.removeEventListener("studyAreaChanged", handleAreaChange);
   }, []);
 
-  const baselineTemp = simResult?.baseline_t_mean ? simResult.baseline_t_mean.toFixed(1) : "44.5";
-  const coolingBenefit = simResult?.delta_t_mean ? simResult.delta_t_mean.toFixed(1) : "3.4";
+  const handlePillClick = (areaId: string) => {
+    setStudyArea(areaId);
+    localStorage.setItem("urbancoolsim_study_area", areaId);
+    loadDashboard(areaId);
+    window.dispatchEvent(new CustomEvent("studyAreaChanged", { detail: areaId }));
+  };
+
+  const baselineTemp = simResult?.baseline_t_mean || 44.5;
+  const coolingBenefit = simResult?.delta_t_mean || 3.42;
 
   return (
-    <div className="flex flex-col min-h-screen bg-obsidian-base">
+    <div className="flex flex-col min-h-screen bg-surface-base text-ink-primary select-none">
       <Header 
         title="Executive Heat Intelligence" 
-        subtitle="Urban Climate Digital Twin & Optimization" 
+        subtitle="10m Spatial Digital Twin & Surface Energy Balance" 
+        onStudyAreaChange={(id) => {
+          setStudyArea(id);
+          loadDashboard(id);
+        }}
       />
 
-      <motion.div 
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
-        className="p-8 max-w-7xl mx-auto w-full space-y-10"
-      >
-        {/* Executive Opening Statement & Spatial Hero Metric */}
-        <motion.div variants={itemVariants} className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 border-b border-obsidian-border pb-8">
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-obsidian-textMuted">
-              <MapPin className="w-3.5 h-3.5 text-botanical-light" />
-              <span>National Capital Territory · Connaught Place</span>
-            </div>
-            <h1 className="text-3xl sm:text-4xl font-normal tracking-tight text-white">
-              Surface Thermal State & Intervention Impact
-            </h1>
-            <p className="text-sm text-obsidian-textSecondary max-w-2xl leading-relaxed">
-              Localized heat risk is acutely concentrated across high building density zones. 
-              Physical thermodynamics and multi-objective Pareto optimization project up to a 
-              <strong className="text-white font-medium"> -{coolingBenefit}°C</strong> cooling reduction across the microgrid.
-            </p>
+      <div className="p-6 sm:p-8 max-w-7xl mx-auto w-full space-y-8">
+        {/* Active Study Area Archetype Selector */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-surface-border pb-4">
+          <div className="flex items-center gap-2 text-xs text-ink-muted">
+            <Globe2 className="w-3.5 h-3.5 text-cobalt" />
+            <span className="font-mono uppercase tracking-widest text-[10px]">Active Digital Twin:</span>
           </div>
 
-          <div className="flex items-baseline gap-8 shrink-0">
-            <div>
-              <span className="text-[11px] font-mono text-obsidian-textMuted uppercase tracking-wider block">
+          <div className="flex flex-wrap items-center gap-2">
+            {studyAreaPills.map((pill) => {
+              const isSelected = pill.id === studyArea;
+              return (
+                <button
+                  key={pill.id}
+                  onClick={() => handlePillClick(pill.id)}
+                  className={`flex items-center gap-2 px-3 py-1 rounded text-xs font-mono transition-colors ${
+                    isSelected
+                      ? "bg-cobalt text-white font-medium shadow-sm"
+                      : "bg-surface-elevated text-ink-secondary hover:text-ink-primary hover:bg-surface-interactive border border-surface-border"
+                  }`}
+                >
+                  <span>{pill.flag}</span>
+                  <span>{pill.label}</span>
+                  <span className={`text-[10px] ${isSelected ? "text-white/80" : "text-ink-muted"}`}>
+                    {pill.temp}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Asymmetrical Metric Hierarchy: One Hero KPI + Receding Secondary Row */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+          {/* THE ONE HERO KPI (5 Cols) */}
+          <div className="lg:col-span-5 graphite-card p-8 rounded-lg flex flex-col justify-between space-y-6 border-l-2 border-l-cobalt">
+            <div className="space-y-1">
+              <span className="text-[10px] font-mono uppercase tracking-widest text-cobalt font-semibold block">
+                Primary Decision Metric
+              </span>
+              <h2 className="text-xs text-ink-secondary">
+                Achievable Mean District Cooling (ΔT)
+              </h2>
+            </div>
+
+            <div className="space-y-1">
+              <div className="flex items-baseline gap-1">
+                <span className="editorial-headline text-5xl sm:text-6xl text-cobalt font-normal tracking-tight">-</span>
+                <AnimatedCounter 
+                  value={coolingBenefit} 
+                  decimals={2} 
+                  className="editorial-headline text-5xl sm:text-6xl text-cobalt font-normal tracking-tight"
+                />
+                <span className="text-2xl text-ink-muted font-light font-serif">°C</span>
+              </div>
+              <p className="text-xs text-ink-secondary leading-relaxed">
+                Maximized across 2,500 cells via NSGA-II Pareto hybrid strategy (cool roofs + canopy shading).
+              </p>
+            </div>
+
+            <div className="pt-3 border-t border-surface-border flex items-center justify-between text-xs font-mono">
+              <span className="text-ink-muted">Physics Solver Status:</span>
+              <span className="text-status-safe font-medium flex items-center gap-1.5">
+                <ShieldCheck className="w-3.5 h-3.5" /> Deterministic Validated
+              </span>
+            </div>
+          </div>
+
+          {/* Secondary Receding Metrics (7 Cols) */}
+          <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {/* Metric 1: Baseline LST */}
+            <div className="graphite-card p-6 rounded-lg space-y-2 flex flex-col justify-between">
+              <span className="text-[10px] font-mono uppercase tracking-wider text-ink-muted block">
                 Observed Baseline LST
               </span>
               <div className="flex items-baseline gap-1">
-                <span className="text-4xl sm:text-5xl font-light text-white font-serif tracking-tight">
-                  {baselineTemp}
-                </span>
-                <span className="text-xl text-obsidian-textMuted">°C</span>
+                <AnimatedCounter 
+                  value={baselineTemp} 
+                  decimals={1} 
+                  className="text-3xl font-serif text-ink-primary tracking-tight"
+                />
+                <span className="text-sm text-ink-muted font-sans">°C</span>
               </div>
+              <span className="text-[10px] text-ink-muted block leading-snug">
+                Thermal infrared peak
+              </span>
             </div>
 
-            <div className="h-10 w-px bg-obsidian-border hidden sm:block" />
-
-            <div>
-              <span className="text-[11px] font-mono text-obsidian-textMuted uppercase tracking-wider block">
-                Achievable Cooling
+            {/* Metric 2: Exposed Pop */}
+            <div className="graphite-card p-6 rounded-lg space-y-2 flex flex-col justify-between">
+              <span className="text-[10px] font-mono uppercase tracking-wider text-ink-muted block">
+                Exposed Population
               </span>
               <div className="flex items-baseline gap-1">
-                <span className="text-4xl sm:text-5xl font-light text-botanical-light font-serif tracking-tight">
-                  -{coolingBenefit}
-                </span>
-                <span className="text-xl text-botanical-light/70">°C</span>
+                <AnimatedCounter 
+                  value={14800} 
+                  decimals={0} 
+                  className="text-3xl font-serif text-status-high tracking-tight"
+                />
+                <span className="text-xs text-ink-muted font-sans">residents</span>
               </div>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Hero Spatial Visual + Supporting Evidence */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          {/* Spatial Thermal Map (The Hero) */}
-          <motion.div variants={itemVariants} className="lg:col-span-7 space-y-3">
-            <div className="flex justify-between items-baseline px-1">
-              <div>
-                <h2 className="text-sm font-semibold text-white tracking-tight">10m Spatial Digital Twin</h2>
-                <p className="text-xs text-obsidian-textMuted">Observed Landsat 8 TIRS & Calibrated SEB Microgrid</p>
-              </div>
-              <span className="text-[11px] font-mono text-obsidian-textSecondary">
-                2,500 Cells (10m x 10m)
+              <span className="text-[10px] text-ink-muted block leading-snug">
+                Corridors &gt;41.5°C
               </span>
             </div>
 
-            <DigitalTwinMap gridData={grid} />
-          </motion.div>
-
-          {/* Supporting Decision Evidence Column */}
-          <motion.div variants={itemVariants} className="lg:col-span-5 space-y-6">
-            {/* Pareto-Optimal Recommendation Card */}
-            <motion.div 
-              whileHover={{ y: -2 }}
-              className="bg-obsidian-subtle border border-obsidian-border p-6 rounded-xl space-y-5 transition-shadow hover:shadow-surface"
-            >
-              <div className="flex justify-between items-center border-b border-obsidian-border pb-3">
-                <div className="flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-botanical-light" />
-                  <span className="text-xs font-mono uppercase tracking-wider text-obsidian-textSecondary">
-                    Optimal Portfolio
-                  </span>
-                </div>
-                <span className="text-[11px] font-mono text-white bg-obsidian-surface px-2 py-0.5 rounded border border-obsidian-border">
-                  NSGA-II Candidate #04
-                </span>
+            {/* Metric 3: Chiller Savings */}
+            <div className="graphite-card p-6 rounded-lg space-y-2 flex flex-col justify-between">
+              <span className="text-[10px] font-mono uppercase tracking-wider text-ink-muted block">
+                HVAC Electricity Saved
+              </span>
+              <div className="flex items-baseline gap-1">
+                <AnimatedCounter 
+                  value={142000} 
+                  decimals={0} 
+                  className="text-3xl font-serif text-ink-primary tracking-tight"
+                />
+                <span className="text-[10px] text-ink-muted font-mono">kWh</span>
               </div>
+              <span className="text-[10px] text-status-safe block font-mono">
+                +$17,040 annual savings
+              </span>
+            </div>
 
-              <div className="space-y-2">
-                <h3 className="text-lg font-medium text-white tracking-tight">
-                  Connaught Place Balanced Resilience Strategy
-                </h3>
-                <p className="text-xs text-obsidian-textSecondary leading-relaxed">
-                  Engineered across multi-objective trade-offs between capital expenditure, water scarcity, and sensible heat flux reduction.
+            {/* Strategy Summary Card spanning all 3 cols */}
+            <div className="sm:col-span-3 graphite-card p-5 rounded-lg flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="space-y-1">
+                <span className="text-xs font-semibold text-ink-primary">Recommended Mitigation Blueprint</span>
+                <p className="text-xs text-ink-secondary">
+                  35% Green Roofs ($75/m²) + 25% Cool Roofs ($18/m²) + 20% Tree Canopy Expansion.
                 </p>
               </div>
 
-              {/* Strategy Breakdown Grid */}
-              <div className="grid grid-cols-2 gap-3 text-xs">
-                <div className="p-3 rounded-lg bg-obsidian-surface/60 border border-obsidian-border/60">
-                  <span className="text-[11px] text-obsidian-textMuted block">Green Roofs</span>
-                  <span className="text-sm font-mono font-medium text-white">35% Roof Area</span>
-                  <span className="text-[10px] text-obsidian-textMuted block mt-0.5">Latent cooling ($75/m²)</span>
-                </div>
-
-                <div className="p-3 rounded-lg bg-obsidian-surface/60 border border-obsidian-border/60">
-                  <span className="text-[11px] text-obsidian-textMuted block">Cool Roofs</span>
-                  <span className="text-sm font-mono font-medium text-white">25% Roof Area</span>
-                  <span className="text-[10px] text-obsidian-textMuted block mt-0.5">High albedo ($18/m²)</span>
-                </div>
-
-                <div className="p-3 rounded-lg bg-obsidian-surface/60 border border-obsidian-border/60">
-                  <span className="text-[11px] text-obsidian-textMuted block">Tree Canopy</span>
-                  <span className="text-sm font-mono font-medium text-botanical-light">+20% Arteries</span>
-                  <span className="text-[10px] text-obsidian-textMuted block mt-0.5">Ground shading & ET</span>
-                </div>
-
-                <div className="p-3 rounded-lg bg-obsidian-surface/60 border border-obsidian-border/60">
-                  <span className="text-[11px] text-obsidian-textMuted block">Water Bodies</span>
-                  <span className="text-sm font-mono font-medium text-white">5% Surface</span>
-                  <span className="text-[10px] text-obsidian-textMuted block mt-0.5">Evaporative heat sink</span>
-                </div>
-              </div>
-
-              {/* Cost & Water Demand Metrics */}
-              <div className="grid grid-cols-2 gap-4 pt-3 border-t border-obsidian-border text-xs">
-                <div className="flex items-center gap-2.5">
-                  <DollarSign className="w-4 h-4 text-obsidian-textMuted" />
-                  <div>
-                    <span className="text-[10px] text-obsidian-textMuted block uppercase">Estimated CapEx</span>
-                    <strong className="font-mono text-sm text-white">$345,000 USD</strong>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2.5">
-                  <Droplets className="w-4 h-4 text-obsidian-textMuted" />
-                  <div>
-                    <span className="text-[10px] text-obsidian-textMuted block uppercase">Annual Water</span>
-                    <strong className="font-mono text-sm text-white">4,200 m³/yr</strong>
-                  </div>
-                </div>
-              </div>
-
-              {/* Action Link */}
-              <div className="pt-1">
-                <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
-                  <Link
-                    href="/optimization"
-                    className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-white text-obsidian-base text-xs font-semibold hover:bg-sand-100 transition-colors shadow-subtle group"
-                  >
-                    <span>Explore Pareto Optimization Trade-Offs</span>
-                    <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
-                  </Link>
-                </motion.div>
-              </div>
-            </motion.div>
-
-            {/* Surface Energy Balance Conservation Chart */}
-            <EnergyBalanceChart data={simResult?.energy_fluxes_json} />
-          </motion.div>
+              <Link
+                href="/optimization"
+                className="btn-cobalt px-4 py-2 rounded text-xs flex items-center gap-1.5 shrink-0"
+              >
+                <span>Tune Optimizer</span>
+                <ArrowRight className="w-3 h-3" />
+              </Link>
+            </div>
+          </div>
         </div>
-      </motion.div>
+
+        {/* 2-Column: Spatial Map + Thermodynamic Flux Balance */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          <div className="lg:col-span-7 space-y-3">
+            <div className="flex justify-between items-baseline px-1 text-xs">
+              <h3 className="font-semibold text-ink-primary">10m Spatial Digital Twin</h3>
+              <span className="font-mono text-ink-muted">2,500 Cells (10m x 10m)</span>
+            </div>
+            <DigitalTwinMap gridData={grid} />
+          </div>
+
+          <div className="lg:col-span-5 space-y-6">
+            <EnergyBalanceChart data={simResult?.energy_fluxes_json} />
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

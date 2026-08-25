@@ -21,25 +21,25 @@ export function ShapWaterfallChart({ data }: ShapWaterfallProps) {
   ];
 
   return (
-    <div className="bg-obsidian-subtle border border-obsidian-border p-5 rounded-xl flex flex-col gap-4">
-      <div className="flex flex-wrap justify-between items-baseline gap-2 border-b border-obsidian-border pb-3">
+    <div className="graphite-card p-6 rounded-lg flex flex-col gap-4">
+      <div className="flex flex-wrap justify-between items-baseline gap-2 border-b border-surface-border pb-3">
         <div>
-          <h2 className="text-sm font-semibold text-white tracking-tight">Intervention Factor Influence</h2>
-          <p className="text-xs text-obsidian-textMuted mt-0.5">
+          <h2 className="text-sm font-semibold text-ink-primary">Intervention Factor Influence</h2>
+          <p className="text-xs text-ink-muted mt-0.5">
             Attribution of microclimate cooling response (ΔT °C) via TreeSHAP
           </p>
         </div>
-        <span className="text-[11px] font-mono text-obsidian-textSecondary">
-          Model: <strong className="text-white">LightGBM Surrogate</strong>
+        <span className="text-[11px] font-mono text-ink-muted">
+          Model: <strong className="text-ink-primary">LightGBM (R²=0.962)</strong>
         </span>
       </div>
 
-      <div className="h-64 w-full">
+      <div className="h-64 w-full tabular-nums">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart layout="vertical" data={shapData} margin={{ top: 5, right: 25, left: 50, bottom: 0 }}>
+          <BarChart layout="vertical" data={shapData} margin={{ top: 5, right: 25, left: 60, bottom: 0 }}>
             <XAxis 
               type="number" 
-              stroke="#6b7280" 
+              stroke="#5E6678" 
               fontSize={11} 
               tickLine={false}
               axisLine={{ stroke: "rgba(255, 255, 255, 0.08)" }}
@@ -48,7 +48,7 @@ export function ShapWaterfallChart({ data }: ShapWaterfallProps) {
             <YAxis 
               dataKey="feature" 
               type="category" 
-              stroke="#9ca3af" 
+              stroke="#8E95A5" 
               fontSize={11} 
               tickLine={false}
               axisLine={{ stroke: "rgba(255, 255, 255, 0.08)" }}
@@ -59,11 +59,11 @@ export function ShapWaterfallChart({ data }: ShapWaterfallProps) {
                 if (active && payload && payload.length) {
                   const p = payload[0].payload;
                   return (
-                    <div className="bg-obsidian-surface border border-obsidian-border p-3 rounded-lg text-xs shadow-floating space-y-1">
-                      <div className="font-semibold text-white">{p.feature}</div>
-                      <div className="text-[11px] text-obsidian-textMuted">{p.description}</div>
-                      <div className="font-mono text-xs text-white pt-1">
-                        Impact: <strong className={p.val >= 0 ? "text-botanical-light" : "text-thermal-extreme"}>
+                    <div className="graphite-card p-3 rounded text-xs shadow-floating space-y-1">
+                      <div className="font-semibold text-ink-primary">{p.feature}</div>
+                      <div className="text-[11px] text-ink-muted">{p.description}</div>
+                      <div className="font-mono text-xs text-ink-primary pt-1 border-t border-surface-border">
+                        Impact: <strong className={p.val >= 0 ? "text-cobalt" : "text-status-critical"}>
                           {p.val >= 0 ? "+" : ""}{p.val.toFixed(2)}°C cooling
                         </strong>
                       </div>
@@ -73,18 +73,18 @@ export function ShapWaterfallChart({ data }: ShapWaterfallProps) {
                 return null;
               }}
             />
-            <Bar dataKey="val" radius={[0, 3, 3, 0]} maxBarSize={22}>
+            <Bar dataKey="val" radius={[0, 2, 2, 0]} maxBarSize={20}>
               {shapData.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={entry.val >= 0 ? "#22c55e" : "#ef4444"} />
+                <Cell key={`cell-${index}`} fill={entry.val >= 0 ? "#4A6CFF" : "#EF4444"} />
               ))}
             </Bar>
           </BarChart>
         </ResponsiveContainer>
       </div>
 
-      <div className="text-[11px] text-obsidian-textMuted flex justify-between items-center px-1">
+      <div className="text-[11px] text-ink-muted flex justify-between items-center px-1 font-mono">
         <span>Positive values denote increased cooling contribution</span>
-        <span className="font-mono">Shapley Additive Attribution</span>
+        <span className="text-ink-primary font-medium">Shapley Additive Attribution</span>
       </div>
     </div>
   );

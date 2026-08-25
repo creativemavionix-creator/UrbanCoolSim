@@ -8,6 +8,7 @@ from app.database import engine, Base
 from app.api.auth_router import router as auth_router
 from app.api.digital_twin_router import router as dt_router
 from app.api.thermal_router import router as thermal_router
+from app.api.heat_risk_router import router as heat_risk_router
 from app.api.scenarios_router import router as scenarios_router
 from app.api.surrogate_router import router as surrogate_router
 from app.api.optimization_router import router as opt_router
@@ -29,38 +30,30 @@ from app.models.db_models import StudyArea, Scenario
 def seed_default_data():
     db = SessionLocal()
     try:
-        # Seed default pilot StudyArea
-        cp_area = db.query(StudyArea).filter(StudyArea.id == "default_cp").first()
-        if not cp_area:
-            cp_area = StudyArea(
-                id="default_cp",
-                name="Connaught Place Pilot Area",
-                description="Connaught Place, New Delhi 10m microclimate grid",
-                location_name="Connaught Place, New Delhi",
-                crs="EPSG:32643",
-                resolution_m=10.0,
-                grid_rows=50,
-                grid_cols=50,
-                is_synthetic=True
-            )
-            db.add(cp_area)
-            db.commit()
-
-        delhi_area = db.query(StudyArea).filter(StudyArea.id == "default_delhi").first()
-        if not delhi_area:
-            delhi_area = StudyArea(
-                id="default_delhi",
-                name="New Delhi Metropolitan District",
-                description="Greater New Delhi Study Area",
-                location_name="New Delhi, India",
-                crs="EPSG:32643",
-                resolution_m=10.0,
-                grid_rows=50,
-                grid_cols=50,
-                is_synthetic=True
-            )
-            db.add(delhi_area)
-            db.commit()
+        study_seeds = [
+            ("delhi_cp", "Connaught Place Radial District", "Connaught Place, New Delhi", "EPSG:32643"),
+            ("mumbai_bkc", "Bandra Kurla Complex (BKC)", "Mumbai, India", "EPSG:32643"),
+            ("singapore_marina", "Marina Bay Financial District", "Singapore", "EPSG:32648"),
+            ("phoenix_downtown", "Downtown Urban Core", "Phoenix, AZ, USA", "EPSG:32612"),
+            ("tokyo_shinjuku", "Shinjuku Skyscraper Center", "Tokyo, Japan", "EPSG:32654")
+        ]
+        
+        for sa_id, sa_name, sa_loc, sa_crs in study_seeds:
+            existing = db.query(StudyArea).filter(StudyArea.id == sa_id).first()
+            if not existing:
+                sa = StudyArea(
+                    id=sa_id,
+                    name=sa_name,
+                    description=f"{sa_name} 10m microclimate digital twin",
+                    location_name=sa_loc,
+                    crs=sa_crs,
+                    resolution_m=10.0,
+                    grid_rows=50,
+                    grid_cols=50,
+                    is_synthetic=True
+                )
+                db.add(sa)
+        db.commit()
 
         # Seed baseline scenario
         base_scen = db.query(Scenario).filter(Scenario.id == "scen_baseline").first()
@@ -72,7 +65,7 @@ def seed_default_data():
                 scenario_type="baseline",
                 parameters={},
                 is_baseline=True,
-                study_area_id="default_cp"
+                study_area_id="delhi_cp"
             )
             db.add(base_scen)
             db.commit()
@@ -83,18 +76,18 @@ def seed_default_data():
             hybrid_scen = Scenario(
                 id="scen_hybrid_cp",
                 name="Integrated Resilience Hybrid",
-                description="Combined 30% Green Roofs, 40% Cool Roofs, 25% Tree Canopy, 5% Water Features",
+                description="Combined 35% Green Roofs, 25% Cool Roofs, 20% Tree Canopy, 5% Water Features",
                 scenario_type="hybrid",
                 parameters={
-                    "green_roof_coverage": 0.30,
-                    "cool_roof_albedo_boost": 0.40,
-                    "tree_canopy_addition": 0.25,
+                    "green_roof_coverage": 0.35,
+                    "cool_roof_albedo_boost": 0.25,
+                    "tree_canopy_addition": 0.20,
                     "reflective_pavement_albedo": 0.15,
                     "water_feature_fraction": 0.05,
                     "wetness_factor": 0.60
                 },
                 is_baseline=False,
-                study_area_id="default_cp"
+                study_area_id="delhi_cp"
             )
             db.add(hybrid_scen)
             db.commit()
@@ -105,7 +98,6 @@ def seed_default_data():
 
 @app.on_event("startup")
 def on_startup():
-    # Attempt database table creation with retry for container startup
     max_retries = 5
     for attempt in range(max_retries):
         try:
@@ -163,6 +155,7 @@ def health_check():
 app.include_router(auth_router, prefix=settings.API_V1_STR)
 app.include_router(dt_router, prefix=settings.API_V1_STR)
 app.include_router(thermal_router, prefix=settings.API_V1_STR)
+app.include_router(heat_risk_router, prefix=settings.API_V1_STR)
 app.include_router(scenarios_router, prefix=settings.API_V1_STR)
 app.include_router(surrogate_router, prefix=settings.API_V1_STR)
 app.include_router(opt_router, prefix=settings.API_V1_STR)
