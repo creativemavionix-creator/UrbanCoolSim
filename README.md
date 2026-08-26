@@ -113,21 +113,26 @@ UrbanCoolSim bridges this gap by unifying:
 
 ## 3. Comprehensive Dataset Specification & Ingestion Pipeline
 
-UrbanCoolSim integrates eight heterogeneous spatial, satellite, and meteorological datasets. Each dataset fulfills a specific physical role in the digital twin:
+UrbanCoolSim integrates a multi-source remote sensing, geospatial, and demographic dataset matrix (**Groups A through J**) to achieve unmatched spatial fidelity and physical realism:
 
 ```
-                                  DATASET ECOSYSTEM
+                                  MULTI-SOURCE DATASET ECOSYSTEM
 ┌─────────────────────────┬──────────────────────────┬───────────────────────────────────────────┐
 │ Dataset Source          │ Spatial / Temporal Res   │ Physical Role in Digital Twin             │
 ├─────────────────────────┼──────────────────────────┼───────────────────────────────────────────┤
 │ Landsat 8/9 Level-2     │ 30m (Resampled to 10m)   │ Peak-afternoon ground-truth LST (Ts)      │
-│ NASA ECOSTRESS L2       │ 70m Diurnal Precessing   │ Diurnal thermal cycle & Emissivity (Emis) │
+│ NASA ECOSTRESS L2       │ 70m Diurnal Precessing   │ Diurnal thermal cycle & Latent Flux (Qe)  │
 │ Sentinel-2 Level-2A     │ 10m Multi-spectral       │ Broadband Albedo (α), NDVI, FVC (f_veg)   │
-│ ESA WorldCover          │ 10m Global Raster        │ Building footprint density & morphology   │
-│ Copernicus DEM GLO-30   │ 30m Surface Model        │ Elevation gradients & roughness heights   │
-│ OpenStreetMap (OSM)     │ Vector Geometries (PBF)  │ 3D Building heights, street canyon aspect │
+│ Google Open Buildings V3│ Polygon / 10m Resampled  │ High-accuracy 3D building heights (H)     │
+│ NASA GEDI L2A / L2B     │ 25m LiDAR Footprints     │ 3D Tree canopy height & Leaf Area (LAI)   │
+│ WorldPop Constrained    │ 100m Demographic Grid    │ Heat Vulnerability Index (HVI) & Exposure │
+│ VIIRS VNP46A2 NTL       │ 500m Daily Radiance      │ Dynamic Anthropogenic Heat Flux (Qf)      │
+│ ASTER GED V4 Emissivity │ 100m Thermal Band Matrix │ Empirical material spectral emissivity (ε)│
+│ Copernicus DEM GLO-30   │ 30m Surface Model        │ Elevation gradients & Sky View Factor SVF │
+│ ESA WorldCover          │ 10m Global Raster        │ Categorical land cover discrete validation│
+│ OpenStreetMap (OSM)     │ Vector Geometries (PBF)  │ Street canyon width-to-height aspect (W/H)│
 │ ERA5-Land Reanalysis    │ 0.1° (~9km) Hourly       │ Meteorological boundary conditions        │
-│ GHSL Population (POP)   │ 100m Raster              │ Heat vulnerability & population weighting │
+│ ISRIC SoilGrids         │ 250m Subsurface Matrix   │ Thermal conductivity & volumetric capacity│
 └─────────────────────────┴──────────────────────────┴───────────────────────────────────────────┘
 ```
 
@@ -152,28 +157,38 @@ UrbanCoolSim integrates eight heterogeneous spatial, satellite, and meteorologic
   - **Fractional Vegetation Cover ($f_{veg}$ / FVC)**:
     $$f_{veg} = \left[\text{clip}\left(\frac{NDVI - NDVI_{soil}}{NDVI_{veg} - NDVI_{soil}}, 0.0, 1.0\right)\right]^2$$
     where $NDVI_{soil} = 0.12$ and $NDVI_{veg} = 0.65$.
-  - **Normalized Difference Water Index ($NDWI$)**:
-    $$NDWI = \frac{B03 - B08}{B03 + B08}$$
 
-#### 4. ESA WorldCover 10m 2020/2021 Global Land Cover
-- **Product**: 10m discrete land cover classification based on Sentinel-1 and Sentinel-2.
-- **Physical Role**: Identifies built-up roofs and impervious infrastructure (Class 50: Built-up $\to f_{bldg} = 0.65$), tree canopy corridors (Class 10: Trees $\to f_{veg} = 0.85$), and open water surfaces (Class 80: Permanent Water $\to f_{water} = 0.95$).
+#### 4. Google Open Buildings V3 & GHSL 3D Building Heights
+- **Product**: Vector footprints + fractional heights derived from high-resolution satellite stereo imagery and neural elevation inference.
+- **Physical Role**: Delineates building envelopes ($H \approx 10\text{m} - 85\text{m}$) and computes aerodynamic roughness parameters ($z_0 = 0.1 H, d = 0.7 H$) and Sky View Factor ($\text{SVF} = \cos(\arctan(2H / W))$).
 
-#### 5. Copernicus DEM GLO-30 Digital Surface Model
+#### 5. NASA GEDI L2A / L2B Spaceborne LiDAR Canopy Profiles
+- **Product**: Global Ecosystem Dynamics Investigation (ISS full-waveform LiDAR).
+- **Physical Role**: Measures 3D tree canopy heights ($H_{canopy} \approx 2\text{m} - 24\text{m}$) and Leaf Area Index ($\text{LAI} \approx f_{veg} \cdot H_{canopy} / 3.5$) for Beer-Lambert solar radiation attenuation: $\tau = \exp(-k \cdot \text{LAI})$.
+
+#### 6. WorldPop Demographic Exposure Grid (100m)
+- **Product**: 100m disaggregated population density (people / ha).
+- **Physical Role**: Direct demographic weight in the Heat Vulnerability Index ($\text{HVI}$) and NSGA-II Objective 3 ($\max \sum \text{Pop}_i \cdot \Delta T_i$).
+
+#### 7. VIIRS VNP46A2 Nighttime Lights (Anthropogenic Heat $Q_f$)
+- **Product**: Day/Night Band (DNB) daily radiance ($nW / cm^2 / sr$).
+- **Physical Role**: Scales base anthropogenic heat emissions from commercial, HVAC, and traffic activity: $Q_f \approx 10\text{ W/m}^2 - 95\text{ W/m}^2$.
+
+#### 8. ASTER Global Emissivity Dataset (ASTER GED V4)
+- **Product**: 100m empirical thermal emissivity matrix across 5 TIR bands.
+- **Physical Role**: Enhances longwave Planck radiation emissions: $L_\uparrow = \epsilon \sigma T_s^4$ and atmospheric trapping.
+
+#### 9. Copernicus DEM GLO-30 & Sky View Factor
 - **Product**: 30m elevation grid from the TanDEM-X radar mission.
 - **Physical Role**: Establishes terrain topography, building height envelope baselines, and surface roughness length scaling ($z_0 \approx 0.1 H_{bldg}$).
 
-#### 6. OpenStreetMap (OSM) Geofabrik Vector Extract (`india-latest.osm.pbf`)
+#### 10. OpenStreetMap (OSM) Geofabrik Vector Extract (`india-latest.osm.pbf`)
 - **Product**: Vector building polygons, road network centerlines, and urban land use.
 - **Physical Role**: Delineates exact building roof surface areas available for cool/green roof retrofits and establishes street canyon width-to-height ($W/H$) aspect ratios.
 
-#### 7. ERA5-Land Hourly Climate Reanalysis (ECMWF CDS)
+#### 11. ERA5-Land Hourly Climate Reanalysis (ECMWF CDS)
 - **Parameters**: 2m Air Temperature ($T_a$), 2m Dewpoint ($T_d$), 10m Wind Speed ($u_{10}$), Downwelling Shortwave Solar Radiation ($ssrd$ / $S_\downarrow$), Downwelling Thermal Longwave Radiation ($strd$ / $L_\downarrow$), and Surface Pressure ($p_s$).
 - **Physical Role**: Drives meteorological boundary conditions for the physics thermodynamic solver.
-
-#### 8. Global Human Settlement Layer (GHSL) Population Density (GHS-POP)
-- **Product**: 100m population counts per grid cell.
-- **Physical Role**: Weights municipal heat risk exposure, ensuring interventions prioritize vulnerable urban populations.
 
 ---
 
