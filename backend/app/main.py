@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 import time
 
 from app.config import settings
@@ -117,6 +118,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# GZip compression for large raster / JSON matrix responses (>500 bytes)
+app.add_middleware(GZipMiddleware, minimum_size=500)
 
 # Security headers middleware & Request Timing
 @app.middleware("http")

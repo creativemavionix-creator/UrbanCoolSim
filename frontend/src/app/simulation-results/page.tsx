@@ -1,10 +1,22 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import dynamic from "next/dynamic";
 import { Header } from "@/components/Header";
-import { ShapWaterfallChart } from "@/components/ShapWaterfallChart";
 import { AnimatedCounter } from "@/components/AnimatedCounter";
 import { api, SimulationResult, DiurnalProfileResponse } from "@/lib/api";
+
+const ShapWaterfallChart = dynamic(
+  () => import("@/components/ShapWaterfallChart").then((mod) => mod.ShapWaterfallChart),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="w-full h-80 flex items-center justify-center bg-surface-base text-xs font-mono text-ink-muted">
+        Loading TreeSHAP Explainability Tree…
+      </div>
+    ),
+  }
+);
 import { 
   Clock, 
   PieChart as PieIcon, 

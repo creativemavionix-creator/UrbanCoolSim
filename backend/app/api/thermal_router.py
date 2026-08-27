@@ -1,11 +1,11 @@
 from typing import Optional, List, Dict, Any
 import numpy as np
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 
 from app.database import get_db
-from app.auth.security import get_current_user_optional
+from app.auth.security import get_current_user_optional, rate_limiter
 from app.models.db_models import User, Scenario
 from app.schemas.schemas import PhysicsSimulationRequest, SimulationResultResponse
 from app.physics.energy_balance import EnergyBalanceSolver
@@ -36,11 +36,14 @@ class DiurnalProfileResponse(BaseModel):
 
 @router.post("/simulate", response_model=SimulationResultResponse)
 def run_physics_simulation(
+    request: Request,
     req: PhysicsSimulationRequest,
     study_area_id: str = Query(default="delhi_cp"),
     db: Session = Depends(get_db),
     current_user: Optional[User] = Depends(get_current_user_optional)
 ):
+    if request.client:
+        rate_limiter.check(request.client.host)
     # Fetch scenario parameters if available
     interventions = {}
     if req.scenario_id:

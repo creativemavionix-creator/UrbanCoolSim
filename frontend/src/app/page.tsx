@@ -17,7 +17,19 @@ import {
   Thermometer,
   Layers
 } from "lucide-react";
-import { Hero3DCanvas } from "@/components/Hero3DCanvas";
+import dynamic from "next/dynamic";
+
+const Hero3DCanvas = dynamic(
+  () => import("@/components/Hero3DCanvas").then((mod) => mod.Hero3DCanvas),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="w-full h-full flex items-center justify-center bg-surface-base text-xs font-mono text-ink-muted">
+        Loading 3D Thermodynamic Field…
+      </div>
+    ),
+  }
+);
 
 export default function LandingPage() {
   const [isCooled, setIsCooled] = useState<boolean>(false);

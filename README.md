@@ -50,7 +50,27 @@ UrbanCoolSim bridges this gap by unifying:
 
 ---
 
-## 2. End-to-End System Architecture
+## 2. End-to-End System Architecture & Two-Tier Spatial Data Model
+
+UrbanCoolSim deploys an explicit **Two-Tier Spatial Architecture** balancing planetary coverage with computational thermodynamic rigor:
+
+```
+                                  TWO-TIER SPATIAL ARCHITECTURE
+┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
+│              TIER 2: GLOBAL REFERENCE LAYER (PLANETARY WORLDWIDE COVERAGE)                       │
+│  NASA EOSDIS GIBS MODIS Terra / VIIRS Daytime LST (~1km Resolution, Native Rainbow Colormap)     │
+│  * Note: Surface Temperature (LST) is the only layer with true global satellite coverage.       │
+└───────────────────────────────────────────────┬──────────────────────────────────────────────────┘
+                                                │  [Continuous Zoom-Driven Cross-Fade: 12 ≤ z < 14]
+                                                ▼
+┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
+│              TIER 1: HIGH-RESOLUTION 10m PHYSICS-SIMULATED DIGITAL TWINS (5 STUDY AREAS)         │
+│  Full Multi-Layer Energy Balance Physics, 3D Building Extrusions, LiDAR Canopy & NSGA-II Opt    │
+│  1. Connaught Place (New Delhi, IN)      4. Downtown Urban Core (Phoenix, USA)                   │
+│  2. Bandra Kurla Complex (Mumbai, IN)    5. Shinjuku Skyscraper Center (Tokyo, JP)               │
+│  3. Marina Bay District (Singapore, SG)                                                          │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+```
 
 ```text
 ┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
@@ -120,6 +140,7 @@ UrbanCoolSim integrates a multi-source remote sensing, geospatial, and demograph
 ┌─────────────────────────┬──────────────────────────┬───────────────────────────────────────────┐
 │ Dataset Source          │ Spatial / Temporal Res   │ Physical Role in Digital Twin             │
 ├─────────────────────────┼──────────────────────────┼───────────────────────────────────────────┤
+│ NASA EOSDIS GIBS LST    │ ~1km Daily Daytime LST   │ Tier 2 Global Planetary Reference Layer   │
 │ Landsat 8/9 Level-2     │ 30m (Resampled to 10m)   │ Peak-afternoon ground-truth LST (Ts)      │
 │ NASA ECOSTRESS L2       │ 70m Diurnal Precessing   │ Diurnal thermal cycle & Latent Flux (Qe)  │
 │ Sentinel-2 Level-2A     │ 10m Multi-spectral       │ Broadband Albedo (α), NDVI, FVC (f_veg)   │
@@ -135,6 +156,16 @@ UrbanCoolSim integrates a multi-source remote sensing, geospatial, and demograph
 │ ISRIC SoilGrids         │ 250m Subsurface Matrix   │ Thermal conductivity & volumetric capacity│
 └─────────────────────────┴──────────────────────────┴───────────────────────────────────────────┘
 ```
+
+### High-Resolution Archetype Study Areas (Tier 1)
+Full 10m physics-informed thermodynamics, 3D building extrusion, and optimization are active across 5 registered urban archetypes:
+1. **Connaught Place Radial District (New Delhi, India)**: Semi-arid commercial radial ring with dense asphalt and high thermal inertia.
+2. **Bandra Kurla Complex (Mumbai, India)**: Coastal humid high-rise commercial core bordering the Mithi River.
+3. **Marina Bay Financial District (Singapore)**: Tropical equatorial high-rise waterfront with intense air humidity and water cooling interactions.
+4. **Downtown Urban Core (Phoenix, USA)**: Arid desert urban grid with high daytime insolation and wide asphalt roadway corridors.
+5. **Shinjuku Skyscraper Center (Tokyo, Japan)**: Hyperdense urban canyons with extreme building heights and high HVAC anthropogenic emissions ($Q_f$).
+
+> **Data Integrity Notice**: Microclimate layers including Building Heights ($H$), Tree Canopy ($GEDI$), Demographic Exposure ($WorldPop$), Waste Heat ($Q_f$), and Albedo ($\alpha$) are **strictly high-resolution Tier 1 microgrid layers** available within the 5 registered study areas. When panning globally outside these study areas, the system displays the genuine NASA GIBS LST reference layer for Surface Temperature, and displays an honest "No global reference available" notice for other layers rather than rendering fabricated global estimates.
 
 ### Detailed Dataset Breakdown
 
@@ -568,6 +599,24 @@ npm run dev
 - **Rate Limiting**: Built-in slowapi / Redis rate limiting protecting CPU-intensive optimization and training runs.
 - **Non-Root Container Execution**: Backend and frontend containers execute under dedicated non-root users (`appuser` UID 1000, `nextjs` UID 1001).
 - **Zero Hallucination Guarantee**: All simulated temperatures derive strictly from Newton-Raphson thermodynamic convergence or physically validated surrogate predictions.
+
+---
+
+## 13. Known Limitations & Technical Roadmap
+
+### Global Coverage vs. High-Resolution Simulation
+- **Current Operational Reality**: 
+  - **Worldwide Geocoding & Reference**: Users can search and fly the camera to any global location via OpenStreetMap Nominatim. For any arbitrary location worldwide, the platform displays genuine satellite remote sensing data (NASA GIBS MODIS/VIIRS LST at ~1km resolution).
+  - **10m Physics-Simulated Microgrids**: First-principles thermodynamic modeling, 3D building extrusions, and NSGA-II multi-objective optimization are currently pre-computed and active for the **five archetype study areas** (New Delhi Connaught Place, Mumbai BKC, Singapore Marina Bay, Phoenix Downtown, and Tokyo Shinjuku).
+  - **Data Integrity Guarantee**: For non-LST layers (Building Heights, Tree Canopy LiDAR, Population Exposure, Waste Heat, Albedo), the platform displays a clear, intentional "No global reference available" notice when outside the 5 study areas rather than fabricating unverified global numbers.
+
+### Future Roadmap: On-Demand Global Physics Ingestion
+- **On-Demand Microgrid Generation**: Expanding full 10m thermodynamic simulations to arbitrary user-selected bounding boxes anywhere on Earth requires executing the full data pipeline on-demand:
+  1. Automated Earth Engine / STAC querying for cloud-free Landsat 8/9, Sentinel-2 Level-2A, and ECOSTRESS granules.
+  2. Ingesting global ESA WorldCover 10m land cover rasters and Copernicus GLO-30 DEM.
+  3. Extracting vector building footprints from OpenStreetMap (Overpass API) and Google Open Buildings V3.
+  4. Querying global ERA5-Land reanalysis for hourly meteorological forcing ($T_a$, $u_{10}$, $S_\downarrow$, $L_\downarrow$, $RH$).
+- **Cloud Infrastructure Scaling**: This on-demand pipeline is an asynchronous distributed data engineering effort slated for future enterprise cluster deployments.
 
 ---
 

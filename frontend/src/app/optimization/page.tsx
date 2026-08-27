@@ -1,10 +1,22 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import dynamic from "next/dynamic";
 import { Header } from "@/components/Header";
-import { ParetoFrontChart } from "@/components/ParetoFrontChart";
 import { AnimatedCounter } from "@/components/AnimatedCounter";
 import { api, OptimizationResponse, ParetoSolution } from "@/lib/api";
+
+const ParetoFrontChart = dynamic(
+  () => import("@/components/ParetoFrontChart").then((mod) => mod.ParetoFrontChart),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="w-full h-80 flex items-center justify-center bg-surface-base text-xs font-mono text-ink-muted">
+        Loading Pareto 4D Visualizer…
+      </div>
+    ),
+  }
+);
 import { 
   Sparkles, 
   DollarSign, 

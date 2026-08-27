@@ -1,11 +1,23 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import dynamic from "next/dynamic";
 import { Header } from "@/components/Header";
-import { ValidationScatterChart } from "@/components/ValidationScatterChart";
 import { AnimatedCounter } from "@/components/AnimatedCounter";
 import { api, ValidationResponse } from "@/lib/api";
 import { ShieldCheck, Satellite } from "lucide-react";
+
+const ValidationScatterChart = dynamic(
+  () => import("@/components/ValidationScatterChart").then((mod) => mod.ValidationScatterChart),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="w-full h-80 flex items-center justify-center bg-surface-base text-xs font-mono text-ink-muted">
+        Loading Validation Scatter Plot…
+      </div>
+    ),
+  }
+);
 
 export default function ValidationPage() {
   const [studyArea, setStudyArea] = useState("delhi_cp");

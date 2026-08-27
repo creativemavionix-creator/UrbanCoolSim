@@ -1,10 +1,10 @@
 from typing import Optional
 import numpy as np
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Request
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.auth.security import get_current_user_optional
+from app.auth.security import get_current_user_optional, rate_limiter
 from app.models.db_models import User, ValidationRun
 from app.schemas.schemas import ValidationResponse
 from app.validation.evaluator import ValidationEvaluator
@@ -14,10 +14,13 @@ router = APIRouter(prefix="/validation", tags=["Validation & Calibration"])
 
 @router.post("/run", response_model=ValidationResponse)
 def execute_validation(
+    request: Request,
     scenario_id: str = Query(default="scen_baseline"),
     db: Session = Depends(get_db),
     current_user: Optional[User] = Depends(get_current_user_optional)
 ):
+    if request.client:
+        rate_limiter.check(request.client.host)
     grid = generate_synthetic_connaught_place_grid(rows=40, cols=40)
     simulated_ts = np.array(grid["layers"]["baseline_temperature_c"])
     

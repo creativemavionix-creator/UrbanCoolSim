@@ -1,11 +1,11 @@
 from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 import uuid
 import datetime
 
 from app.database import get_db
-from app.auth.security import get_current_user_optional
+from app.auth.security import get_current_user_optional, rate_limiter
 from app.models.db_models import User, OptimizationRun
 from app.schemas.schemas import OptimizationRequest, OptimizationResponse
 from app.optimization.pareto_optimizer import run_multi_objective_optimization
@@ -14,10 +14,13 @@ router = APIRouter(prefix="/optimization", tags=["Multi-Objective Optimization"]
 
 @router.post("/run", response_model=OptimizationResponse)
 def execute_optimization(
+    request: Request,
     req: OptimizationRequest,
     db: Session = Depends(get_db),
     current_user: Optional[User] = Depends(get_current_user_optional)
 ):
+    if request.client:
+        rate_limiter.check(request.client.host)
     res = run_multi_objective_optimization(
         study_area_id=req.study_area_id,
         max_budget_usd=req.max_budget_usd,

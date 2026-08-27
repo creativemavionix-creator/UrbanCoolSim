@@ -210,12 +210,31 @@ export default function ScenarioLabPage() {
       ctx.imageSmoothingEnabled = true;
       ctx.drawImage(offscreen, 0, 0, renderSize, renderSize);
 
-      ctx.strokeStyle = "rgba(255, 255, 255, 0.15)";
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.18)";
       ctx.lineWidth = 1.0;
       ctx.setLineDash([3, 4]);
       ctx.beginPath();
-      ctx.arc(renderSize / 2, renderSize / 2, renderSize * 0.18, 0, Math.PI * 2);
-      ctx.arc(renderSize / 2, renderSize / 2, renderSize * 0.38, 0, Math.PI * 2);
+      if (studyArea === "delhi_cp") {
+        ctx.arc(renderSize / 2, renderSize / 2, renderSize * 0.18, 0, Math.PI * 2);
+        ctx.arc(renderSize / 2, renderSize / 2, renderSize * 0.38, 0, Math.PI * 2);
+      } else if (studyArea === "mumbai_bkc") {
+        ctx.moveTo(renderSize * 0.1, renderSize * 0.8);
+        ctx.bezierCurveTo(renderSize * 0.4, renderSize * 0.6, renderSize * 0.6, renderSize * 0.4, renderSize * 0.9, renderSize * 0.2);
+        ctx.strokeRect(renderSize * 0.25, renderSize * 0.25, renderSize * 0.5, renderSize * 0.45);
+      } else if (studyArea === "singapore_marina") {
+        ctx.arc(renderSize * 0.5, renderSize * 0.6, renderSize * 0.4, Math.PI * 1.1, Math.PI * 1.9);
+        ctx.strokeRect(renderSize * 0.2, renderSize * 0.15, renderSize * 0.6, renderSize * 0.35);
+      } else if (studyArea === "phoenix_downtown") {
+        for (let i = 1; i <= 3; i++) {
+          ctx.moveTo(renderSize * (i / 4), renderSize * 0.1);
+          ctx.lineTo(renderSize * (i / 4), renderSize * 0.9);
+          ctx.moveTo(renderSize * 0.1, renderSize * (i / 4));
+          ctx.lineTo(renderSize * 0.9, renderSize * (i / 4));
+        }
+      } else {
+        ctx.strokeRect(renderSize * 0.15, renderSize * 0.15, renderSize * 0.32, renderSize * 0.32);
+        ctx.strokeRect(renderSize * 0.53, renderSize * 0.15, renderSize * 0.32, renderSize * 0.32);
+      }
       ctx.stroke();
 
       if (hoveredCell) {

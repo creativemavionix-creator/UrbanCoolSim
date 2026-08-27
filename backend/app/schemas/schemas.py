@@ -87,12 +87,12 @@ class ScenarioResponse(BaseModel):
 # --- Physics Simulation Request & Result Schemas ---
 class PhysicsSimulationRequest(BaseModel):
     scenario_id: str
-    grid_resolution_m: float = 10.0
-    air_temperature_c: float = 38.5      # Baseline Delhi summer peak ambient air temp
-    relative_humidity: float = 0.45       # Relative humidity (0.0 - 1.0)
-    wind_speed_ms: float = 2.5            # Wind speed m/s
-    solar_radiation_wm2: float = 850.0    # Peak solar irradiance W/m²
-    anthropogenic_heat_wm2: float = 35.0  # Qf baseline traffic/AC heat
+    grid_resolution_m: float = Field(default=10.0, ge=1.0, le=100.0)
+    air_temperature_c: float = Field(default=38.5, ge=-20.0, le=65.0)       # Ambient air temp (°C)
+    relative_humidity: float = Field(default=0.45, ge=0.01, le=1.0)          # Relative humidity (0.01 - 1.0)
+    wind_speed_ms: float = Field(default=2.5, ge=0.1, le=50.0)               # Wind speed m/s (min 0.1 to avoid zero division)
+    solar_radiation_wm2: float = Field(default=850.0, ge=0.0, le=1400.0)     # Peak solar irradiance W/m²
+    anthropogenic_heat_wm2: float = Field(default=35.0, ge=0.0, le=500.0)    # Qf baseline traffic/AC heat
 
 class SimulationResultResponse(BaseModel):
     id: str
@@ -114,19 +114,19 @@ class SimulationResultResponse(BaseModel):
 # --- Optimization Schemas ---
 class OptimizationRequest(BaseModel):
     study_area_id: str = "delhi_cp"
-    max_budget_usd: float = 500000.0
-    max_water_demand_m3: float = 10000.0
-    max_land_area_m2: float = 50000.0
-    target_cooling_c: float = 2.5
-    weight_cooling: float = 0.35
-    weight_cost: float = 0.25
-    weight_population: float = 0.20
-    weight_water: float = 0.10
-    weight_energy: float = 0.10
-    min_cool_roof_reflectance: float = 0.70
-    max_tree_area_pct: float = 0.35
-    population_size: int = 40
-    n_gen: int = 30
+    max_budget_usd: float = Field(default=500000.0, ge=1000.0, le=100000000.0)
+    max_water_demand_m3: float = Field(default=10000.0, ge=0.0, le=1000000.0)
+    max_land_area_m2: float = Field(default=50000.0, ge=0.0, le=10000000.0)
+    target_cooling_c: float = Field(default=2.5, ge=0.0, le=15.0)
+    weight_cooling: float = Field(default=0.35, ge=0.0, le=1.0)
+    weight_cost: float = Field(default=0.25, ge=0.0, le=1.0)
+    weight_population: float = Field(default=0.20, ge=0.0, le=1.0)
+    weight_water: float = Field(default=0.10, ge=0.0, le=1.0)
+    weight_energy: float = Field(default=0.10, ge=0.0, le=1.0)
+    min_cool_roof_reflectance: float = Field(default=0.70, ge=0.10, le=0.95)
+    max_tree_area_pct: float = Field(default=0.35, ge=0.0, le=0.90)
+    population_size: int = Field(default=40, ge=10, le=200)                  # Capped to prevent CPU exhaustion
+    n_gen: int = Field(default=30, ge=5, le=100)                             # Capped to prevent CPU exhaustion
 
 class ParetoSolution(BaseModel):
     solution_id: int

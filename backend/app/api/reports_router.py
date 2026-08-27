@@ -1,13 +1,13 @@
 import os
 import uuid
 from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
 from app.config import settings
 from app.database import get_db
-from app.auth.security import get_current_user_optional
+from app.auth.security import get_current_user_optional, rate_limiter
 from app.models.db_models import User, Report
 from app.schemas.schemas import ReportCreate, ReportResponse
 from app.reports.report_builder import ReportBuilder
@@ -16,10 +16,13 @@ router = APIRouter(prefix="/reports", tags=["Decision Support Reports"])
 
 @router.post("/generate", response_model=ReportResponse)
 def generate_report(
+    request: Request,
     req: ReportCreate,
     db: Session = Depends(get_db),
     current_user: Optional[User] = Depends(get_current_user_optional)
 ):
+    if request.client:
+        rate_limiter.check(request.client.host)
     report_id = str(uuid.uuid4())
     md_content = ReportBuilder.generate_markdown_report(study_area_name="Connaught Place, New Delhi")
     

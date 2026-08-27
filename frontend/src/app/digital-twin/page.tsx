@@ -1,10 +1,22 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import dynamic from "next/dynamic";
 import { Header } from "@/components/Header";
-import { DigitalTwinMap } from "@/components/DigitalTwinMap";
 import { api, DigitalTwinGrid } from "@/lib/api";
 import { Download, Compass } from "lucide-react";
+
+const DigitalTwinMap = dynamic(
+  () => import("@/components/DigitalTwinMap").then((mod) => mod.DigitalTwinMap),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="w-full h-full flex items-center justify-center bg-surface-base text-xs font-mono text-ink-muted">
+        Loading 10m Geospatial Digital Twin Engine…
+      </div>
+    ),
+  }
+);
 
 export default function DigitalTwinPage() {
   const [studyArea, setStudyArea] = useState("delhi_cp");

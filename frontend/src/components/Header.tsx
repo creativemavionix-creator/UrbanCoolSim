@@ -8,7 +8,11 @@ import {
   Building2, 
   Landmark, 
   Microscope,
-  Activity
+  Activity,
+  Search,
+  Loader2,
+  Globe,
+  X,
 } from "lucide-react";
 import { OnboardingModal } from "@/components/OnboardingModal";
 import { motion, AnimatePresence } from "framer-motion";
@@ -29,6 +33,8 @@ const studyAreas = [
     flag: "🇮🇳",
     baseTemp: "42.0°C",
     typology: "Semi-Arid Radial Core",
+    center: [77.2167, 28.6315],
+    zoom: 15.5,
   },
   { 
     id: "mumbai_bkc", 
@@ -39,6 +45,8 @@ const studyAreas = [
     flag: "🇮🇳",
     baseTemp: "36.5°C",
     typology: "Coastal Humid Core",
+    center: [72.8683, 19.0657],
+    zoom: 15.0,
   },
   { 
     id: "singapore_marina", 
@@ -49,6 +57,8 @@ const studyAreas = [
     flag: "🇸🇬",
     baseTemp: "33.0°C",
     typology: "Tropical High-Rise Waterfront",
+    center: [103.8565, 1.2847],
+    zoom: 15.2,
   },
   { 
     id: "phoenix_downtown", 
@@ -59,6 +69,8 @@ const studyAreas = [
     flag: "🇺🇸",
     baseTemp: "45.0°C",
     typology: "Arid Desert Grid",
+    center: [-112.0740, 33.4484],
+    zoom: 15.0,
   },
   { 
     id: "tokyo_shinjuku", 
@@ -69,6 +81,8 @@ const studyAreas = [
     flag: "🇯🇵",
     baseTemp: "35.5°C",
     typology: "High-Density Urban Canyons",
+    center: [139.7034, 35.6938],
+    zoom: 15.0,
   },
 ];
 
@@ -85,6 +99,12 @@ export function Header({ title, subtitle, onStudyAreaChange }: HeaderProps) {
   const [showPersonaDropdown, setShowPersonaDropdown] = useState(false);
   const [showTour, setShowTour] = useState(false);
 
+  // Global search state in Header
+  const [headerSearchQuery, setHeaderSearchQuery] = useState("");
+  const [isHeaderSearchOpen, setIsHeaderSearchOpen] = useState(false);
+  const [isHeaderSearching, setIsHeaderSearching] = useState(false);
+  const [headerSearchResults, setHeaderSearchResults] = useState<any[]>([]);
+
   useEffect(() => {
     const savedArea = localStorage.getItem("urbancoolsim_study_area");
     if (savedArea) setSelectedArea(savedArea);
@@ -96,8 +116,19 @@ export function Header({ title, subtitle, onStudyAreaChange }: HeaderProps) {
     setSelectedArea(id);
     localStorage.setItem("urbancoolsim_study_area", id);
     setShowAreaDropdown(false);
+    setIsHeaderSearchOpen(false);
+    setHeaderSearchQuery("");
     if (onStudyAreaChange) onStudyAreaChange(id);
     window.dispatchEvent(new CustomEvent("studyAreaChanged", { detail: id }));
+
+    const area = studyAreas.find((s) => s.id === id);
+    if (area) {
+      window.dispatchEvent(
+        new CustomEvent("mapFlyTo", {
+          detail: { lon: area.center[0], lat: area.center[1], zoom: area.zoom },
+        })
+      );
+    }
   };
 
   const handleSelectPersona = (id: string) => {
@@ -107,9 +138,64 @@ export function Header({ title, subtitle, onStudyAreaChange }: HeaderProps) {
     window.dispatchEvent(new CustomEvent("personaChanged", { detail: id }));
   };
 
+  const handleHeaderSearch = (query: string) => {
+    setHeaderSearchQuery(query);
+    setIsHeaderSearchOpen(true);
+
+    if (!query.trim()) {
+      setHeaderSearchResults([]);
+      setIsHeaderSearching(false);
+      return;
+    }
+
+    setIsHeaderSearching(true);
+    const timeout = setTimeout(async () => {
+      try {
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+            query.trim()
+          )}&limit=5&addressdetails=1`,
+          {
+            headers: { "Accept-Language": "en" },
+          }
+        );
+        if (res.ok) {
+          const data = await res.json();
+          setHeaderSearchResults(data || []);
+        }
+      } catch (err) {
+        console.warn("Header geocoding error:", err);
+      } finally {
+        setIsHeaderSearching(false);
+      }
+    }, 350);
+
+    return () => clearTimeout(timeout);
+  };
+
+  const handleSelectNominatimHeader = (result: any) => {
+    setIsHeaderSearchOpen(false);
+    setHeaderSearchQuery(result.display_name.split(",")[0] || headerSearchQuery);
+    const lon = parseFloat(result.lon);
+    const lat = parseFloat(result.lat);
+    if (!isNaN(lon) && !isNaN(lat)) {
+      window.dispatchEvent(
+        new CustomEvent("mapFlyTo", {
+          detail: { lon, lat, zoom: 12.0 },
+        })
+      );
+    }
+  };
+
   const currentAreaObj = studyAreas.find((s) => s.id === selectedArea) || studyAreas[0];
   const currentPersonaObj = personas.find((p) => p.id === selectedPersona) || personas[0];
   const PersonaIcon = currentPersonaObj.icon;
+
+  const filteredStudyAreas = studyAreas.filter((s) =>
+    `${s.name} ${s.city} ${s.country}`
+      .toLowerCase()
+      .includes(headerSearchQuery.toLowerCase().trim())
+  );
 
   return (
     <>
@@ -126,12 +212,126 @@ export function Header({ title, subtitle, onStudyAreaChange }: HeaderProps) {
 
         {/* Action Controls & Multi-City Switcher */}
         <div className="flex items-center gap-3 text-xs">
+          {/* Global Location Search Input in Header */}
+          <div className="relative hidden sm:block">
+            <div className="flex items-center bg-surface-elevated border border-surface-border hover:border-surface-borderHover focus-within:border-cobalt rounded px-2.5 py-1.5 text-xs text-ink-primary transition-all w-52 lg:w-64">
+              <Search className="w-3.5 h-3.5 text-ink-muted mr-1.5 shrink-0" />
+              <input
+                type="text"
+                placeholder="Search global city..."
+                value={headerSearchQuery}
+                onChange={(e) => handleHeaderSearch(e.target.value)}
+                onFocus={() => setIsHeaderSearchOpen(true)}
+                className="bg-transparent border-none outline-none text-xs text-ink-primary placeholder-ink-muted w-full font-sans"
+              />
+              {isHeaderSearching ? (
+                <Loader2 className="w-3.5 h-3.5 text-cobalt animate-spin shrink-0" />
+              ) : headerSearchQuery ? (
+                <button
+                  onClick={() => {
+                    setHeaderSearchQuery("");
+                    setHeaderSearchResults([]);
+                  }}
+                  className="text-ink-muted hover:text-ink-primary"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              ) : null}
+            </div>
+
+            {/* Header Search Dropdown */}
+            <AnimatePresence>
+              {isHeaderSearchOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 6 }}
+                  transition={{ duration: 0.15 }}
+                  className="absolute right-0 mt-1.5 w-80 max-h-96 overflow-y-auto bg-surface-elevated border border-surface-border rounded-lg p-2 shadow-floating z-50 space-y-2 text-xs"
+                >
+                  {/* Pinned Study Areas */}
+                  <div>
+                    <div className="px-2 py-1 text-[10px] font-mono uppercase tracking-wider text-cobalt font-semibold flex items-center gap-1.5 border-b border-surface-border/60 pb-1 mb-1">
+                      <MapPin className="w-3 h-3" />
+                      <span>10m Physics Study Areas</span>
+                    </div>
+                    {filteredStudyAreas.map((area) => (
+                      <button
+                        key={area.id}
+                        onClick={() => handleSelectArea(area.id)}
+                        className={`w-full flex items-center justify-between p-1.5 rounded text-left transition-colors ${
+                          area.id === selectedArea
+                            ? "bg-surface-interactive text-ink-primary font-medium"
+                            : "text-ink-secondary hover:text-ink-primary hover:bg-surface-interactive/60"
+                        }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm">{area.flag}</span>
+                          <div>
+                            <div className="font-medium text-xs text-ink-primary">
+                              {area.name}
+                            </div>
+                            <div className="text-[10px] text-ink-muted">
+                              {area.city}, {area.country}
+                            </div>
+                          </div>
+                        </div>
+                        <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                          10m Physics
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Worldwide Nominatim Results */}
+                  {headerSearchQuery.trim() && (
+                    <div className="border-t border-surface-border pt-1.5">
+                      <div className="px-2 py-1 text-[10px] font-mono uppercase tracking-wider text-ink-muted flex items-center gap-1.5 mb-1">
+                        <Globe className="w-3 h-3" />
+                        <span>Global Locations (OSM Reference)</span>
+                      </div>
+                      {isHeaderSearching ? (
+                        <div className="p-3 text-center text-ink-muted flex items-center justify-center gap-2 text-xs">
+                          <Loader2 className="w-3.5 h-3.5 animate-spin text-cobalt" />
+                          <span>Searching global geocoder...</span>
+                        </div>
+                      ) : headerSearchResults.length > 0 ? (
+                        headerSearchResults.map((item, idx) => (
+                          <button
+                            key={idx}
+                            onClick={() => handleSelectNominatimHeader(item)}
+                            className="w-full flex items-start gap-2 p-1.5 rounded text-left text-ink-secondary hover:text-ink-primary hover:bg-surface-interactive/60 transition-colors"
+                          >
+                            <MapPin className="w-3.5 h-3.5 text-ink-muted shrink-0 mt-0.5" />
+                            <div className="truncate">
+                              <div className="font-medium text-xs text-ink-primary truncate">
+                                {item.display_name.split(",")[0]}
+                              </div>
+                              <div className="text-[10px] text-ink-muted truncate">
+                                {item.display_name}
+                              </div>
+                            </div>
+                          </button>
+                        ))
+                      ) : (
+                        <div className="p-2 text-center text-ink-muted text-xs italic">
+                          No global locations found
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
           {/* Multi-City Study Area Dropdown */}
           <div className="relative">
             <button
               onClick={() => {
                 setShowAreaDropdown(!showAreaDropdown);
                 setShowPersonaDropdown(false);
+                setIsHeaderSearchOpen(false);
               }}
               className="flex items-center gap-2 px-2.5 py-1.5 rounded bg-surface-elevated border border-surface-border hover:border-surface-borderHover text-ink-primary transition-all"
             >

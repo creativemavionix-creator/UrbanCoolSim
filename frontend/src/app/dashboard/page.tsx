@@ -1,11 +1,34 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import dynamic from "next/dynamic";
 import { Header } from "@/components/Header";
-import { DigitalTwinMap } from "@/components/DigitalTwinMap";
-import { EnergyBalanceChart } from "@/components/EnergyBalanceChart";
 import { AnimatedCounter } from "@/components/AnimatedCounter";
 import { api, DigitalTwinGrid, SimulationResult } from "@/lib/api";
+
+const DigitalTwinMap = dynamic(
+  () => import("@/components/DigitalTwinMap").then((mod) => mod.DigitalTwinMap),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="w-full h-full flex items-center justify-center bg-surface-base text-xs font-mono text-ink-muted">
+        Loading 10m Geospatial Digital Twin…
+      </div>
+    ),
+  }
+);
+
+const EnergyBalanceChart = dynamic(
+  () => import("@/components/EnergyBalanceChart").then((mod) => mod.EnergyBalanceChart),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="w-full h-48 flex items-center justify-center bg-surface-base text-xs font-mono text-ink-muted">
+        Loading Flux Dynamics…
+      </div>
+    ),
+  }
+);
 import { 
   ArrowRight, 
   Sparkles, 

@@ -151,14 +151,41 @@ export default function InterventionStudioPage() {
     ctx.imageSmoothingEnabled = true;
     ctx.drawImage(offscreen, 0, 0, renderSize, renderSize);
 
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.15)";
+    // City-specific morphology guideline overlays
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.18)";
     ctx.lineWidth = 1.0;
     ctx.setLineDash([3, 4]);
     ctx.beginPath();
-    ctx.arc(renderSize / 2, renderSize / 2, renderSize * 0.18, 0, Math.PI * 2);
-    ctx.arc(renderSize / 2, renderSize / 2, renderSize * 0.38, 0, Math.PI * 2);
+
+    if (studyArea === "delhi_cp") {
+      // Radial concentric rings (Connaught Place inner & outer circle)
+      ctx.arc(renderSize / 2, renderSize / 2, renderSize * 0.18, 0, Math.PI * 2);
+      ctx.arc(renderSize / 2, renderSize / 2, renderSize * 0.38, 0, Math.PI * 2);
+    } else if (studyArea === "mumbai_bkc") {
+      // Mithi River corridor and commercial axis
+      ctx.moveTo(renderSize * 0.1, renderSize * 0.8);
+      ctx.bezierCurveTo(renderSize * 0.4, renderSize * 0.6, renderSize * 0.6, renderSize * 0.4, renderSize * 0.9, renderSize * 0.2);
+      ctx.strokeRect(renderSize * 0.25, renderSize * 0.25, renderSize * 0.5, renderSize * 0.45);
+    } else if (studyArea === "singapore_marina") {
+      // Marina Bay waterfront arc & financial grid
+      ctx.arc(renderSize * 0.5, renderSize * 0.6, renderSize * 0.4, Math.PI * 1.1, Math.PI * 1.9);
+      ctx.strokeRect(renderSize * 0.2, renderSize * 0.15, renderSize * 0.6, renderSize * 0.35);
+    } else if (studyArea === "phoenix_downtown") {
+      // Orthogonal desert street grid
+      for (let i = 1; i <= 3; i++) {
+        ctx.moveTo(renderSize * (i / 4), renderSize * 0.1);
+        ctx.lineTo(renderSize * (i / 4), renderSize * 0.9);
+        ctx.moveTo(renderSize * 0.1, renderSize * (i / 4));
+        ctx.lineTo(renderSize * 0.9, renderSize * (i / 4));
+      }
+    } else {
+      // Tokyo Shinjuku skyscraper canyon blocks
+      ctx.strokeRect(renderSize * 0.15, renderSize * 0.15, renderSize * 0.32, renderSize * 0.32);
+      ctx.strokeRect(renderSize * 0.53, renderSize * 0.15, renderSize * 0.32, renderSize * 0.32);
+      ctx.strokeRect(renderSize * 0.15, renderSize * 0.53, renderSize * 0.70, renderSize * 0.32);
+    }
     ctx.stroke();
-  }, [grid, greenRoof, coolRoof, treeCanopy, reflectPave, waterFeat, targetZone, getThermalColor]);
+  }, [grid, greenRoof, coolRoof, treeCanopy, reflectPave, waterFeat, targetZone, studyArea, getThermalColor]);
 
   const handleSave = () => {
     setSavedStatus(true);
@@ -192,7 +219,7 @@ export default function InterventionStudioPage() {
             </p>
           </div>
 
-          {/* Real-time Outcomes Ticker with Tabular Figures */}
+          {/* Real-time Outcomes Ticker with Tabular Figures & Animated Counters */}
           <div className="flex items-baseline gap-6 graphite-card p-4 rounded-lg tabular-nums">
             <div>
               <span className="text-[10px] font-mono text-ink-muted uppercase block">Cooling Impact (ΔT)</span>
@@ -205,14 +232,19 @@ export default function InterventionStudioPage() {
             <div className="h-8 w-px bg-surface-border" />
             <div>
               <span className="text-[10px] font-mono text-ink-muted uppercase block">Estimated CapEx</span>
-              <span className="editorial-headline text-3xl text-ink-primary tracking-tight">${Math.round(totalCost / 1000)}k</span>
+              <div className="flex items-baseline gap-0.5">
+                <span className="editorial-headline text-3xl text-ink-primary tracking-tight">$</span>
+                <AnimatedCounter value={Math.round(totalCost / 1000)} decimals={0} className="editorial-headline text-3xl text-ink-primary tracking-tight" />
+                <span className="text-sm text-ink-muted font-light font-serif">k</span>
+              </div>
             </div>
             <div className="h-8 w-px bg-surface-border" />
             <div>
               <span className="text-[10px] font-mono text-ink-muted uppercase block">Annual Water</span>
-              <span className="editorial-headline text-3xl text-ink-primary tracking-tight">
-                {Math.round(waterDemandM3).toLocaleString()} <span className="text-xs font-sans text-ink-muted font-normal">m³</span>
-              </span>
+              <div className="flex items-baseline gap-1">
+                <AnimatedCounter value={Math.round(waterDemandM3)} decimals={0} className="editorial-headline text-3xl text-ink-primary tracking-tight" />
+                <span className="text-xs font-sans text-ink-muted font-normal">m³</span>
+              </div>
             </div>
           </div>
         </div>

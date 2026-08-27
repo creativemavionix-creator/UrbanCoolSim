@@ -1,7 +1,7 @@
 from typing import Dict, Any, Optional
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 
-from app.auth.security import get_current_user_optional
+from app.auth.security import get_current_user_optional, rate_limiter
 from app.models.db_models import User
 from app.ml.surrogate import SurrogateModelPipeline
 
@@ -10,9 +10,12 @@ pipeline = SurrogateModelPipeline()
 
 @router.post("/train")
 def train_surrogate(
+    request: Request,
     n_samples: int = Query(default=1200, ge=200, le=5000),
     current_user: Optional[User] = Depends(get_current_user_optional)
 ):
+    if request.client:
+        rate_limiter.check(request.client.host)
     metrics = pipeline.train_and_evaluate(n_samples=n_samples)
     return {
         "status": "SUCCESS",
