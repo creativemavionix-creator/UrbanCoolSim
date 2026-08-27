@@ -16,7 +16,8 @@
     background-color: #0B0C10;
     color: #F2F3F5;
     font-family: var(--font-sans);
-    font-feature-settings: "cv02", "cv03", "cv04", "cv11", "tnum" 1;
+    font-variant-ligatures: none;
+    font-feature-settings: "liga" 0, "clig" 0, "calt" 0, "cv02", "cv03", "cv04", "cv11", "tnum" 1;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
