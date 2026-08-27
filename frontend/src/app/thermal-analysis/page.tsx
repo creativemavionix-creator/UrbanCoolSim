@@ -72,8 +72,11 @@ export default function ThermalAnalysisPage() {
               Thermodynamic Flux Decomposition
             </h1>
             <p className="text-xs text-ink-secondary max-w-xl leading-relaxed">
-              Enforcing deterministic conservation of energy: <span className="font-mono text-ink-primary">Q* + Q_f = Q_h + Q_e + ΔQ_s</span>. 
-              Sensible turbulent flux ($Q_h$) heats the pedestrian air layer, while latent flux ($Q_e$) provides natural evaporative cooling.
+              Enforcing deterministic conservation of energy:{" "}
+              <span className="text-ink-primary font-medium">
+                <i>Q</i>* + <i>Q</i><sub>f</sub> = <i>Q</i><sub>h</sub> + <i>Q</i><sub>e</sub> + Δ<i>Q</i><sub>s</sub>
+              </span>
+              . Sensible turbulent flux (<i>Q</i><sub>h</sub>) heats the pedestrian air layer, while latent flux (<i>Q</i><sub>e</sub>) provides natural evaporative cooling.
             </p>
           </div>
 
