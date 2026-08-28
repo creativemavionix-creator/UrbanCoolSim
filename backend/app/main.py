@@ -110,10 +110,10 @@ def on_startup():
             print(f"[UrbanCoolSim] Database connection attempt {attempt+1}/{max_retries} waiting: {e}")
             time.sleep(2)
 
-# Strict CORS configuration
+# Permissive CORS configuration for local development and production deployments (Vercel, Render)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:3001"],
+    allow_origin_regex=r"^https?://.*",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
