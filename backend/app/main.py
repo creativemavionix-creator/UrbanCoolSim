@@ -110,13 +110,25 @@ def on_startup():
             print(f"[UrbanCoolSim] Database connection attempt {attempt+1}/{max_retries} waiting: {e}")
             time.sleep(2)
 
-# Permissive CORS configuration for local development and production deployments (Vercel, Render)
+# Production & Development CORS Configuration
+ALLOWED_ORIGINS = [
+    "https://urban-cool-sim.vercel.app",
+    "https://urbancoolsim.onrender.com",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://localhost:3001",
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origin_regex=r"^https?://.*",
+    allow_origins=ALLOWED_ORIGINS,
+    allow_origin_regex=r"^https://.*(\.vercel\.app|\.onrender\.com)$",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
 
 # GZip compression for large raster / JSON matrix responses (>500 bytes)
