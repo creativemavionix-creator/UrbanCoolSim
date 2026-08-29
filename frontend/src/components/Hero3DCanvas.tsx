@@ -26,8 +26,13 @@ export function Hero3DCanvas({ isCooled = false }: Hero3DCanvasProps) {
       const scene = new THREE.Scene();
       sceneRef.current = scene;
 
-      // Atmospheric fog for depth
-      scene.fog = new THREE.FogExp2(0x0B0C10, 0.035);
+      // Determine initial theme state
+      const isDarkMode = () => document.documentElement.classList.contains("dark");
+      const isDarkInitial = typeof document !== "undefined" ? isDarkMode() : true;
+
+      // Atmospheric fog (adapts to light/dark background)
+      const fog = new THREE.FogExp2(isDarkInitial ? 0x0B0C10 : 0xF8FAFC, 0.012);
+      scene.fog = fog;
 
       const camera = new THREE.PerspectiveCamera(42, width / height, 0.1, 120);
       camera.position.set(0, 16, 20);
@@ -39,27 +44,34 @@ export function Hero3DCanvas({ isCooled = false }: Hero3DCanvasProps) {
       renderer.shadowMap.enabled = true;
       renderer.shadowMap.type = THREE.PCFSoftShadowMap;
       renderer.toneMapping = THREE.ACESFilmicToneMapping;
-      renderer.toneMappingExposure = 0.9;
+      renderer.toneMappingExposure = 1.25;
       rendererRef.current = renderer;
       container.appendChild(renderer.domElement);
 
-      // Lighting for depth and dimensionality
-      const ambientLight = new THREE.AmbientLight(0x303050, 0.6);
+      // Luminous multi-point lighting for clear 3D definition
+      const ambientLight = new THREE.AmbientLight(0xffffff, isDarkInitial ? 0.75 : 0.85);
       scene.add(ambientLight);
 
-      const dirLight = new THREE.DirectionalLight(0xffeedd, 0.8);
+      const hemiLight = new THREE.HemisphereLight(
+        0xffffff, 
+        isDarkInitial ? 0x1e293b : 0xe2e8f0, 
+        isDarkInitial ? 0.5 : 0.65
+      );
+      scene.add(hemiLight);
+
+      const dirLight = new THREE.DirectionalLight(0xffffff, 1.3);
       dirLight.position.set(8, 20, 10);
       dirLight.castShadow = true;
       scene.add(dirLight);
 
-      const fillLight = new THREE.DirectionalLight(0x4A6CFF, 0.15);
+      const fillLight = new THREE.DirectionalLight(0x60A5FA, 0.45);
       fillLight.position.set(-6, 8, -4);
       scene.add(fillLight);
 
-      // Ground plane with radial gradient
+      // Ground plane (adapts to theme)
       const groundGeo = new THREE.PlaneGeometry(24, 24, 1, 1);
       const groundMat = new THREE.MeshStandardMaterial({
-        color: 0x0B0C10,
+        color: isDarkInitial ? 0x0B0C10 : 0xF1F5F9,
         roughness: 0.95,
         metalness: 0.0,
       });
@@ -69,10 +81,45 @@ export function Hero3DCanvas({ isCooled = false }: Hero3DCanvasProps) {
       groundMesh.receiveShadow = true;
       scene.add(groundMesh);
 
-      // Subtle grid helper
-      const gridHelper = new THREE.GridHelper(20, 24, 0x222631, 0x181B22);
+      // Subtle grid helper (adapts to theme)
+      const gridHelper = new THREE.GridHelper(
+        20, 
+        24, 
+        isDarkInitial ? 0x222631 : 0xCBD5E1, 
+        isDarkInitial ? 0x181B22 : 0xE2E8F0
+      );
       gridHelper.position.y = -0.01;
       scene.add(gridHelper);
+
+      // Dynamic theme sync function
+      const applyThemeToScene = () => {
+        const dark = isDarkMode();
+        fog.color.setHex(dark ? 0x0B0C10 : 0xF8FAFC);
+        groundMat.color.setHex(dark ? 0x0B0C10 : 0xF1F5F9);
+        
+        // Update grid colors
+        const gridMat = gridHelper.material;
+        if (Array.isArray(gridMat)) {
+          (gridMat[0] as THREE.LineBasicMaterial).color.setHex(dark ? 0x222631 : 0xCBD5E1);
+          (gridMat[1] as THREE.LineBasicMaterial).color.setHex(dark ? 0x181B22 : 0xE2E8F0);
+        } else {
+          (gridMat as THREE.LineBasicMaterial).color.setHex(dark ? 0x222631 : 0xCBD5E1);
+        }
+
+        hemiLight.groundColor.setHex(dark ? 0x1e293b : 0xe2e8f0);
+        ambientLight.intensity = dark ? 0.75 : 0.85;
+      };
+
+      // Listen for custom theme events and DOM class mutations
+      window.addEventListener("themeChanged", applyThemeToScene);
+      const observer = new MutationObserver((mutations) => {
+        for (const m of mutations) {
+          if (m.attributeName === "class") {
+            applyThemeToScene();
+          }
+        }
+      });
+      observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
 
       // Create varied urban morphology
       const group = new THREE.Group();
@@ -132,15 +179,17 @@ export function Hero3DCanvas({ isCooled = false }: Hero3DCanvasProps) {
           const baseColor = colorPalette[colorIdx].clone();
 
           // Vary brightness based on height and distance
-          const brightnessVar = 0.7 + seed3 * 0.5;
+          const brightnessVar = 0.85 + seed3 * 0.35;
           baseColor.multiplyScalar(brightnessVar);
 
           const mat = new THREE.MeshStandardMaterial({
             color: baseColor,
-            roughness: 0.6 + seed2 * 0.3,
-            metalness: 0.05,
-            transparent: true,
-            opacity: 0.75 + densityFalloff * 0.2,
+            emissive: baseColor,
+            emissiveIntensity: 0.22,
+            roughness: 0.35,
+            metalness: 0.1,
+            transparent: false,
+            opacity: 1.0,
           });
 
           const mesh = new THREE.Mesh(boxGeo, mat);
@@ -191,7 +240,9 @@ export function Hero3DCanvas({ isCooled = false }: Hero3DCanvasProps) {
             const targetPalette = isCooled ? coolColors : hotColors;
             const ci = Math.floor(((b.phase / (Math.PI * 2)) * targetPalette.length) % targetPalette.length);
             const targetColor = targetPalette[ci];
-            (b.mesh.material as THREE.MeshStandardMaterial).color.lerp(targetColor, 0.02);
+            const meshMat = b.mesh.material as THREE.MeshStandardMaterial;
+            meshMat.color.lerp(targetColor, 0.02);
+            meshMat.emissive.lerp(targetColor, 0.02);
           }
         }
 
@@ -214,6 +265,8 @@ export function Hero3DCanvas({ isCooled = false }: Hero3DCanvasProps) {
         cancelAnimationFrame(animId);
         window.removeEventListener("mousemove", handleMouseMove);
         window.removeEventListener("resize", handleResize);
+        window.removeEventListener("themeChanged", applyThemeToScene);
+        observer.disconnect();
         if (renderer.domElement.parentNode) {
           renderer.domElement.parentNode.removeChild(renderer.domElement);
         }

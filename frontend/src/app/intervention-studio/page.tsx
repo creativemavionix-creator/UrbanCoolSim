@@ -280,24 +280,27 @@ export default function InterventionStudioPage() {
 
             <div className="space-y-3.5 text-xs tabular-nums">
               {/* Green Roofs */}
-              <div className="space-y-2 p-3 rounded-lg surface-inset">
+              <div className="space-y-2.5 p-3 rounded-lg surface-inset">
                 <div className="flex justify-between items-baseline">
                   <span className="font-medium text-ink-primary">Green Roof Coverage</span>
-                  <span className="font-mono text-cobalt font-medium">{Math.round(greenRoof * 100)}% roof area</span>
+                  <span className="font-mono text-cobalt font-medium">+{Math.round(greenRoof * 100)}% roof area</span>
                 </div>
                 <input
                   type="range" min="0" max="0.80" step="0.05" value={greenRoof}
                   onChange={(e) => setGreenRoof(Number(e.target.value))}
+                  style={{
+                    background: `linear-gradient(to right, #4A6CFF 0%, #4A6CFF ${(greenRoof / 0.8) * 100}%, var(--surface-hover) ${(greenRoof / 0.8) * 100}%, var(--surface-hover) 100%)`
+                  }}
                   className="w-full"
                 />
-                <div className="flex justify-between text-[10px] text-ink-dim">
+                <div className="flex justify-between text-[11px] text-ink-muted">
                   <span>Rooftop evapotranspiration & latent flux</span>
                   <span>$75/m² · 450 L/m²/yr</span>
                 </div>
               </div>
 
               {/* Cool Roofs */}
-              <div className="space-y-2 p-3 rounded-lg surface-inset">
+              <div className="space-y-2.5 p-3 rounded-lg surface-inset">
                 <div className="flex justify-between items-baseline">
                   <span className="font-medium text-ink-primary">Cool Roofs High-Albedo Boost</span>
                   <span className="font-mono text-ink-primary font-medium">+{coolRoof.toFixed(2)} Δα</span>
@@ -305,16 +308,19 @@ export default function InterventionStudioPage() {
                 <input
                   type="range" min="0" max="0.40" step="0.05" value={coolRoof}
                   onChange={(e) => setCoolRoof(Number(e.target.value))}
+                  style={{
+                    background: `linear-gradient(to right, #4A6CFF 0%, #4A6CFF ${(coolRoof / 0.4) * 100}%, var(--surface-hover) ${(coolRoof / 0.4) * 100}%, var(--surface-hover) 100%)`
+                  }}
                   className="w-full"
                 />
-                <div className="flex justify-between text-[10px] text-ink-dim">
+                <div className="flex justify-between text-[11px] text-ink-muted">
                   <span>High solar reflectance coatings</span>
                   <span>$18/m² · Zero water</span>
                 </div>
               </div>
 
               {/* Urban Tree Canopy */}
-              <div className="space-y-2 p-3 rounded-lg surface-inset">
+              <div className="space-y-2.5 p-3 rounded-lg surface-inset">
                 <div className="flex justify-between items-baseline">
                   <span className="font-medium text-ink-primary">Urban Tree Canopy Expansion</span>
                   <span className="font-mono text-cobalt font-medium">+{Math.round(treeCanopy * 100)}% ground</span>
@@ -322,16 +328,19 @@ export default function InterventionStudioPage() {
                 <input
                   type="range" min="0" max="0.40" step="0.05" value={treeCanopy}
                   onChange={(e) => setTreeCanopy(Number(e.target.value))}
+                  style={{
+                    background: `linear-gradient(to right, #4A6CFF 0%, #4A6CFF ${(treeCanopy / 0.4) * 100}%, var(--surface-hover) ${(treeCanopy / 0.4) * 100}%, var(--surface-hover) 100%)`
+                  }}
                   className="w-full"
                 />
-                <div className="flex justify-between text-[10px] text-ink-dim">
+                <div className="flex justify-between text-[11px] text-ink-muted">
                   <span>Corridor shading & microclimate transpiration</span>
                   <span>$35/m² · 600 L/m²/yr</span>
                 </div>
               </div>
 
               {/* Reflective Pavements */}
-              <div className="space-y-2 p-3 rounded-lg surface-inset">
+              <div className="space-y-2.5 p-3 rounded-lg surface-inset">
                 <div className="flex justify-between items-baseline">
                   <span className="font-medium text-ink-primary">Reflective Street Pavements</span>
                   <span className="font-mono text-ink-primary font-medium">+{reflectPave.toFixed(2)} Δα</span>
@@ -339,16 +348,19 @@ export default function InterventionStudioPage() {
                 <input
                   type="range" min="0" max="0.30" step="0.05" value={reflectPave}
                   onChange={(e) => setReflectPave(Number(e.target.value))}
+                  style={{
+                    background: `linear-gradient(to right, #4A6CFF 0%, #4A6CFF ${(reflectPave / 0.3) * 100}%, var(--surface-hover) ${(reflectPave / 0.3) * 100}%, var(--surface-hover) 100%)`
+                  }}
                   className="w-full"
                 />
-                <div className="flex justify-between text-[10px] text-ink-dim">
+                <div className="flex justify-between text-[11px] text-ink-muted">
                   <span>Street-level sensible heat mitigation</span>
                   <span>$22/m²</span>
                 </div>
               </div>
 
               {/* Water Features */}
-              <div className="space-y-2 p-3 rounded-lg surface-inset">
+              <div className="space-y-2.5 p-3 rounded-lg surface-inset">
                 <div className="flex justify-between items-baseline">
                   <span className="font-medium text-ink-primary">Urban Water Retention Bodies</span>
                   <span className="font-mono text-ink-primary font-medium">+{Math.round(waterFeat * 100)}% surface</span>
@@ -356,9 +368,12 @@ export default function InterventionStudioPage() {
                 <input
                   type="range" min="0" max="0.15" step="0.01" value={waterFeat}
                   onChange={(e) => setWaterFeat(Number(e.target.value))}
+                  style={{
+                    background: `linear-gradient(to right, #4A6CFF 0%, #4A6CFF ${(waterFeat / 0.15) * 100}%, var(--surface-hover) ${(waterFeat / 0.15) * 100}%, var(--surface-hover) 100%)`
+                  }}
                   className="w-full"
                 />
-                <div className="flex justify-between text-[10px] text-ink-dim">
+                <div className="flex justify-between text-[11px] text-ink-muted">
                   <span>Evaporative heat sink</span>
                   <span>$120/m² · 1,200 L/m²/yr</span>
                 </div>

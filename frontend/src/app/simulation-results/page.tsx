@@ -298,6 +298,9 @@ export default function SimulationResultsPage() {
               <input
                 type="range" min="0.06" max="0.25" step="0.01" value={tariffRate}
                 onChange={(e) => setTariffRate(Number(e.target.value))}
+                style={{
+                  background: `linear-gradient(to right, #4A6CFF 0%, #4A6CFF ${((tariffRate - 0.06) / (0.25 - 0.06)) * 100}%, var(--surface-hover) ${((tariffRate - 0.06) / (0.25 - 0.06)) * 100}%, var(--surface-hover) 100%)`
+                }}
                 className="w-full"
               />
             </div>

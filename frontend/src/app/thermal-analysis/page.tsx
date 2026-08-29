@@ -121,6 +121,9 @@ export default function ThermalAnalysisPage() {
               <input
                 type="range" min="30" max="48" step="0.5" value={airTemp}
                 onChange={(e) => setAirTemp(Number(e.target.value))}
+                style={{
+                  background: `linear-gradient(to right, #4A6CFF 0%, #4A6CFF ${((airTemp - 30) / (48 - 30)) * 100}%, var(--surface-hover) ${((airTemp - 30) / (48 - 30)) * 100}%, var(--surface-hover) 100%)`
+                }}
                 className="w-full"
               />
             </div>
@@ -135,6 +138,9 @@ export default function ThermalAnalysisPage() {
               <input
                 type="range" min="400" max="1100" step="25" value={solarRad}
                 onChange={(e) => setSolarRad(Number(e.target.value))}
+                style={{
+                  background: `linear-gradient(to right, #4A6CFF 0%, #4A6CFF ${((solarRad - 400) / (1100 - 400)) * 100}%, var(--surface-hover) ${((solarRad - 400) / (1100 - 400)) * 100}%, var(--surface-hover) 100%)`
+                }}
                 className="w-full"
               />
             </div>
@@ -149,6 +155,9 @@ export default function ThermalAnalysisPage() {
               <input
                 type="range" min="0.5" max="8.0" step="0.5" value={windSpeed}
                 onChange={(e) => setWindSpeed(Number(e.target.value))}
+                style={{
+                  background: `linear-gradient(to right, #4A6CFF 0%, #4A6CFF ${((windSpeed - 0.5) / (8.0 - 0.5)) * 100}%, var(--surface-hover) ${((windSpeed - 0.5) / (8.0 - 0.5)) * 100}%, var(--surface-hover) 100%)`
+                }}
                 className="w-full"
               />
             </div>

@@ -170,6 +170,9 @@ export default function OptimizationPage() {
               <input
                 type="range" min="5" max="60" value={weightCooling}
                 onChange={(e) => setWeightCooling(Number(e.target.value))}
+                style={{
+                  background: `linear-gradient(to right, #4A6CFF 0%, #4A6CFF ${((weightCooling - 5) / (60 - 5)) * 100}%, var(--surface-hover) ${((weightCooling - 5) / (60 - 5)) * 100}%, var(--surface-hover) 100%)`
+                }}
                 className="w-full"
               />
             </div>
@@ -185,6 +188,9 @@ export default function OptimizationPage() {
               <input
                 type="range" min="5" max="60" value={weightCost}
                 onChange={(e) => setWeightCost(Number(e.target.value))}
+                style={{
+                  background: `linear-gradient(to right, #4A6CFF 0%, #4A6CFF ${((weightCost - 5) / (60 - 5)) * 100}%, var(--surface-hover) ${((weightCost - 5) / (60 - 5)) * 100}%, var(--surface-hover) 100%)`
+                }}
                 className="w-full"
               />
             </div>
@@ -200,6 +206,9 @@ export default function OptimizationPage() {
               <input
                 type="range" min="5" max="60" value={weightPopulation}
                 onChange={(e) => setWeightPopulation(Number(e.target.value))}
+                style={{
+                  background: `linear-gradient(to right, #4A6CFF 0%, #4A6CFF ${((weightPopulation - 5) / (60 - 5)) * 100}%, var(--surface-hover) ${((weightPopulation - 5) / (60 - 5)) * 100}%, var(--surface-hover) 100%)`
+                }}
                 className="w-full"
               />
             </div>
@@ -215,6 +224,9 @@ export default function OptimizationPage() {
               <input
                 type="range" min="5" max="60" value={weightWater}
                 onChange={(e) => setWeightWater(Number(e.target.value))}
+                style={{
+                  background: `linear-gradient(to right, #4A6CFF 0%, #4A6CFF ${((weightWater - 5) / (60 - 5)) * 100}%, var(--surface-hover) ${((weightWater - 5) / (60 - 5)) * 100}%, var(--surface-hover) 100%)`
+                }}
                 className="w-full"
               />
             </div>
@@ -230,6 +242,9 @@ export default function OptimizationPage() {
               <input
                 type="range" min="5" max="60" value={weightEnergy}
                 onChange={(e) => setWeightEnergy(Number(e.target.value))}
+                style={{
+                  background: `linear-gradient(to right, #4A6CFF 0%, #4A6CFF ${((weightEnergy - 5) / (60 - 5)) * 100}%, var(--surface-hover) ${((weightEnergy - 5) / (60 - 5)) * 100}%, var(--surface-hover) 100%)`
+                }}
                 className="w-full"
               />
             </div>
@@ -246,6 +261,9 @@ export default function OptimizationPage() {
             <input
               type="range" min="100000" max="1000000" step="50000" value={maxBudget}
               onChange={(e) => setMaxBudget(Number(e.target.value))}
+              style={{
+                background: `linear-gradient(to right, #4A6CFF 0%, #4A6CFF ${((maxBudget - 100000) / (1000000 - 100000)) * 100}%, var(--surface-hover) ${((maxBudget - 100000) / (1000000 - 100000)) * 100}%, var(--surface-hover) 100%)`
+              }}
               className="w-full"
             />
           </div>
@@ -258,6 +276,9 @@ export default function OptimizationPage() {
             <input
               type="range" min="1000" max="10000" step="500" value={maxWater}
               onChange={(e) => setMaxWater(Number(e.target.value))}
+              style={{
+                background: `linear-gradient(to right, #4A6CFF 0%, #4A6CFF ${((maxWater - 1000) / (10000 - 1000)) * 100}%, var(--surface-hover) ${((maxWater - 1000) / (10000 - 1000)) * 100}%, var(--surface-hover) 100%)`
+              }}
               className="w-full"
             />
           </div>
@@ -270,6 +291,9 @@ export default function OptimizationPage() {
             <input
               type="range" min="0.60" max="0.85" step="0.05" value={minReflectance}
               onChange={(e) => setMinReflectance(Number(e.target.value))}
+              style={{
+                background: `linear-gradient(to right, #4A6CFF 0%, #4A6CFF ${((minReflectance - 0.60) / (0.85 - 0.60)) * 100}%, var(--surface-hover) ${((minReflectance - 0.60) / (0.85 - 0.60)) * 100}%, var(--surface-hover) 100%)`
+              }}
               className="w-full"
             />
           </div>
@@ -282,6 +306,9 @@ export default function OptimizationPage() {
             <input
               type="range" min="0.10" max="0.50" step="0.05" value={maxTreePct}
               onChange={(e) => setMaxTreePct(Number(e.target.value))}
+              style={{
+                background: `linear-gradient(to right, #4A6CFF 0%, #4A6CFF ${((maxTreePct - 0.10) / (0.50 - 0.10)) * 100}%, var(--surface-hover) ${((maxTreePct - 0.10) / (0.50 - 0.10)) * 100}%, var(--surface-hover) 100%)`
+              }}
               className="w-full"
             />
           </div>
