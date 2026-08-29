@@ -5,18 +5,6 @@ import dynamic from "next/dynamic";
 import { Header } from "@/components/Header";
 import { AnimatedCounter } from "@/components/AnimatedCounter";
 import { api, OptimizationResponse, ParetoSolution } from "@/lib/api";
-
-const ParetoFrontChart = dynamic(
-  () => import("@/components/ParetoFrontChart").then((mod) => mod.ParetoFrontChart),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="w-full h-80 flex items-center justify-center bg-surface-base text-xs font-mono text-ink-muted">
-        Loading Pareto 4D Visualizer…
-      </div>
-    ),
-  }
-);
 import { 
   Sparkles, 
   DollarSign, 
@@ -28,8 +16,19 @@ import {
   Flame,
   Users,
   Zap,
-  Scale
 } from "lucide-react";
+
+const ParetoFrontChart = dynamic(
+  () => import("@/components/ParetoFrontChart").then((mod) => mod.ParetoFrontChart),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="w-full h-80 flex items-center justify-center surface-inset rounded-lg text-xs font-mono text-ink-muted skeleton-pulse">
+        Initializing Pareto 4D Visualizer…
+      </div>
+    ),
+  }
+);
 
 export default function OptimizationPage() {
   const [studyArea, setStudyArea] = useState("delhi_cp");
@@ -117,56 +116,56 @@ export default function OptimizationPage() {
         }}
       />
 
-      <div className="p-6 sm:p-8 max-w-7xl mx-auto w-full space-y-8">
+      <div className="p-5 sm:p-7 max-w-7xl mx-auto w-full space-y-6">
         {/* Lab Header */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 border-b border-surface-border pb-8">
-          <div className="space-y-1">
-            <span className="text-xs font-mono uppercase tracking-widest text-cobalt font-semibold">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 pb-6 border-b border-surface-border/60">
+          <div className="space-y-1.5">
+            <span className="text-label text-cobalt">
               Pareto Frontier Decision Support
             </span>
-            <h1 className="editorial-headline text-3xl sm:text-4xl font-normal text-ink-primary">
+            <h1 className="text-2xl sm:text-3xl font-medium tracking-tight text-ink-primary">
               Multi-Criteria Optimization Engine
             </h1>
             <p className="text-xs text-ink-secondary max-w-xl leading-relaxed">
-              Explores tens of thousands of spatial intervention combinations to discover non-dominated Pareto portfolios 
-              optimizing temperature reduction (°C), municipal CapEx ($), water scarcity ($m^3$), and HVAC energy ($kWh$).
+              Explores tens of thousands of spatial combinations to discover non-dominated Pareto portfolios 
+              optimizing cooling, municipal CapEx, water demand, and HVAC energy.
             </p>
           </div>
 
           <button
             onClick={() => handleRunOptimization()}
             disabled={loading}
-            className="btn-cobalt px-5 py-2.5 rounded text-xs flex items-center gap-2 shrink-0 font-mono"
+            className="btn-cobalt px-4 py-2 rounded-md text-xs flex items-center gap-2 shrink-0 font-mono"
           >
             <Sparkles className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
             <span>{loading ? "Solving NSGA-II..." : "Re-Run Optimization"}</span>
           </button>
         </div>
 
-        {/* 5 Objective Function Weights with Tabular Numbers */}
-        <div className="graphite-card p-6 rounded-lg space-y-5">
+        {/* 5 Objective Function Weights */}
+        <div className="graphite-card p-5 sm:p-6 rounded-lg space-y-4">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-surface-border pb-3">
             <div>
-              <h3 className="text-xs font-mono uppercase tracking-wider text-ink-secondary font-semibold">
+              <h3 className="text-xs font-semibold text-ink-primary">
                 Objective Priority Weights (0–100%)
               </h3>
-              <p className="text-xs text-ink-muted mt-0.5">
+              <p className="text-[11px] text-ink-dim mt-0.5">
                 Adjust relative importance across competing municipal climate, budget, and resource goals
               </p>
             </div>
-            <span className="text-xs font-mono text-cobalt font-semibold">
+            <span className="text-xs font-mono text-cobalt font-medium">
               Total: {weightCooling + weightCost + weightPopulation + weightWater + weightEnergy}%
             </span>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 text-xs tabular-nums">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5 text-xs tabular-nums">
             {/* 1. Cooling */}
-            <div className="space-y-2 p-3 rounded bg-surface-base border border-surface-border">
+            <div className="space-y-2 p-3 rounded-lg surface-inset">
               <div className="flex justify-between items-baseline">
-                <span className="text-ink-primary font-medium flex items-center gap-1.5">
+                <span className="text-ink-primary font-medium flex items-center gap-1.5 text-[11px]">
                   <Flame className="w-3.5 h-3.5 text-status-critical" /> Max Cooling (ΔT)
                 </span>
-                <span className="font-mono text-cobalt font-bold">{weightCooling}%</span>
+                <span className="font-mono text-cobalt font-semibold">{weightCooling}%</span>
               </div>
               <input
                 type="range" min="5" max="60" value={weightCooling}
@@ -176,12 +175,12 @@ export default function OptimizationPage() {
             </div>
 
             {/* 2. CapEx Cost */}
-            <div className="space-y-2 p-3 rounded bg-surface-base border border-surface-border">
+            <div className="space-y-2 p-3 rounded-lg surface-inset">
               <div className="flex justify-between items-baseline">
-                <span className="text-ink-primary font-medium flex items-center gap-1.5">
+                <span className="text-ink-primary font-medium flex items-center gap-1.5 text-[11px]">
                   <DollarSign className="w-3.5 h-3.5 text-status-safe" /> Min CapEx Cost
                 </span>
-                <span className="font-mono text-ink-primary font-bold">{weightCost}%</span>
+                <span className="font-mono text-ink-primary font-semibold">{weightCost}%</span>
               </div>
               <input
                 type="range" min="5" max="60" value={weightCost}
@@ -191,12 +190,12 @@ export default function OptimizationPage() {
             </div>
 
             {/* 3. Population */}
-            <div className="space-y-2 p-3 rounded bg-surface-base border border-surface-border">
+            <div className="space-y-2 p-3 rounded-lg surface-inset">
               <div className="flex justify-between items-baseline">
-                <span className="text-ink-primary font-medium flex items-center gap-1.5">
-                  <Users className="w-3.5 h-3.5 text-status-high" /> Max Pop Protected
+                <span className="text-ink-primary font-medium flex items-center gap-1.5 text-[11px]">
+                  <Users className="w-3.5 h-3.5 text-status-high" /> Pop Protected
                 </span>
-                <span className="font-mono text-status-high font-bold">{weightPopulation}%</span>
+                <span className="font-mono text-status-high font-semibold">{weightPopulation}%</span>
               </div>
               <input
                 type="range" min="5" max="60" value={weightPopulation}
@@ -206,12 +205,12 @@ export default function OptimizationPage() {
             </div>
 
             {/* 4. Water */}
-            <div className="space-y-2 p-3 rounded bg-surface-base border border-surface-border">
+            <div className="space-y-2 p-3 rounded-lg surface-inset">
               <div className="flex justify-between items-baseline">
-                <span className="text-ink-primary font-medium flex items-center gap-1.5">
-                  <Droplets className="w-3.5 h-3.5 text-ink-secondary" /> Min Water Scarcity
+                <span className="text-ink-primary font-medium flex items-center gap-1.5 text-[11px]">
+                  <Droplets className="w-3.5 h-3.5 text-ink-muted" /> Water Conservation
                 </span>
-                <span className="font-mono text-ink-secondary font-bold">{weightWater}%</span>
+                <span className="font-mono text-ink-secondary font-semibold">{weightWater}%</span>
               </div>
               <input
                 type="range" min="5" max="60" value={weightWater}
@@ -221,12 +220,12 @@ export default function OptimizationPage() {
             </div>
 
             {/* 5. Energy */}
-            <div className="space-y-2 p-3 rounded bg-surface-base border border-surface-border">
+            <div className="space-y-2 p-3 rounded-lg surface-inset">
               <div className="flex justify-between items-baseline">
-                <span className="text-ink-primary font-medium flex items-center gap-1.5">
-                  <Zap className="w-3.5 h-3.5 text-status-high" /> Max HVAC Energy
+                <span className="text-ink-primary font-medium flex items-center gap-1.5 text-[11px]">
+                  <Zap className="w-3.5 h-3.5 text-status-high" /> HVAC Energy Saved
                 </span>
-                <span className="font-mono text-status-high font-bold">{weightEnergy}%</span>
+                <span className="font-mono text-status-high font-semibold">{weightEnergy}%</span>
               </div>
               <input
                 type="range" min="5" max="60" value={weightEnergy}
@@ -238,10 +237,10 @@ export default function OptimizationPage() {
         </div>
 
         {/* Policy & Physical Constraints */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 graphite-card p-5 rounded-lg text-xs tabular-nums">
-          <div className="space-y-2 p-3 rounded bg-surface-base border border-surface-border">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 graphite-card p-4 rounded-lg text-xs tabular-nums">
+          <div className="space-y-2 p-2.5 rounded-lg surface-inset">
             <div className="flex justify-between items-baseline">
-              <span className="text-ink-secondary">Max Budget Cap:</span>
+              <span className="text-ink-secondary text-[11px]">Max Budget Cap:</span>
               <span className="font-mono text-ink-primary font-semibold">${Math.round(maxBudget / 1000)}k</span>
             </div>
             <input
@@ -251,9 +250,9 @@ export default function OptimizationPage() {
             />
           </div>
 
-          <div className="space-y-2 p-3 rounded bg-surface-base border border-surface-border">
+          <div className="space-y-2 p-2.5 rounded-lg surface-inset">
             <div className="flex justify-between items-baseline">
-              <span className="text-ink-secondary">Max Annual Water:</span>
+              <span className="text-ink-secondary text-[11px]">Max Annual Water:</span>
               <span className="font-mono text-ink-primary font-semibold">{maxWater.toLocaleString()} m³</span>
             </div>
             <input
@@ -263,9 +262,9 @@ export default function OptimizationPage() {
             />
           </div>
 
-          <div className="space-y-2 p-3 rounded bg-surface-base border border-surface-border">
+          <div className="space-y-2 p-2.5 rounded-lg surface-inset">
             <div className="flex justify-between items-baseline">
-              <span className="text-ink-secondary">Cool Roof Min Albedo:</span>
+              <span className="text-ink-secondary text-[11px]">Cool Roof Min α:</span>
               <span className="font-mono text-ink-primary font-semibold">{minReflectance.toFixed(2)} α</span>
             </div>
             <input
@@ -275,9 +274,9 @@ export default function OptimizationPage() {
             />
           </div>
 
-          <div className="space-y-2 p-3 rounded bg-surface-base border border-surface-border">
+          <div className="space-y-2 p-2.5 rounded-lg surface-inset">
             <div className="flex justify-between items-baseline">
-              <span className="text-ink-secondary">Max Tree Ground Cover:</span>
+              <span className="text-ink-secondary text-[11px]">Max Tree Cover:</span>
               <span className="font-mono text-cobalt font-semibold">{Math.round(maxTreePct * 100)}%</span>
             </div>
             <input
@@ -289,7 +288,7 @@ export default function OptimizationPage() {
         </div>
 
         {/* 4D Pareto Front Visualizer + Selected Solution Deep Dive */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           <div className="lg:col-span-7">
             <ParetoFrontChart 
               solutions={solutions}
@@ -298,102 +297,105 @@ export default function OptimizationPage() {
             />
           </div>
 
-          <div className="lg:col-span-5 space-y-6">
+          <div className="lg:col-span-5 space-y-5">
             {selectedSolution ? (
-              <div className="graphite-card p-6 rounded-lg space-y-5 tabular-nums">
+              <div className="graphite-card p-5 sm:p-6 rounded-lg space-y-4 tabular-nums">
                 <div className="flex justify-between items-center border-b border-surface-border pb-3">
                   <div>
-                    <span className="text-[10px] font-mono uppercase tracking-wider text-ink-muted block">
-                      Candidate Portfolio #{selectedSolution.solution_id}
+                    <span className="text-label text-ink-dim block mb-0.5">
+                      Candidate #{selectedSolution.solution_id}
                     </span>
                     <span className="text-xs font-mono text-cobalt font-semibold">
                       Composite Score: {selectedSolution.composite_score || 88.5} / 100
                     </span>
                   </div>
                   {selectedSolution.physics_validated && (
-                    <span className="text-[10px] font-mono text-status-safe flex items-center gap-1 bg-status-safe/10 px-2 py-0.5 rounded border border-status-safe/25">
-                      <ShieldCheck className="w-3 h-3" /> Physics Re-Validated
+                    <span className="text-[10px] font-mono text-status-safe flex items-center gap-1 bg-status-safe/10 px-2 py-0.5 rounded border border-status-safe/20">
+                      <ShieldCheck className="w-3 h-3" /> Physics Validated
                     </span>
                   )}
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <span className="text-[10px] font-mono text-ink-muted uppercase block">Cooling Delta</span>
-                    <div className="flex items-baseline gap-1">
-                      <span className="editorial-headline text-3xl text-cobalt tracking-tight">-</span>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="surface-inset p-3 rounded-lg">
+                    <span className="text-[10px] font-mono text-ink-dim uppercase block mb-0.5">Cooling Delta</span>
+                    <div className="flex items-baseline gap-0.5">
+                      <span className="editorial-headline text-3xl text-cobalt tracking-tight">−</span>
                       <AnimatedCounter 
                         value={selectedSolution.validated_delta_t || selectedSolution.delta_t_mean || 0} 
                         decimals={2} 
                         className="editorial-headline text-3xl text-cobalt tracking-tight"
                       />
-                      <span className="text-sm text-ink-muted font-light font-serif">°C</span>
+                      <span className="text-xs text-ink-muted font-serif ml-0.5">°C</span>
                     </div>
                   </div>
 
-                  <div>
-                    <span className="text-[10px] font-mono text-ink-muted uppercase block">Estimated CapEx</span>
-                    <span className="editorial-headline text-3xl text-ink-primary tracking-tight">
-                      ${Math.round(selectedSolution.total_cost_usd / 1000)}k
-                    </span>
+                  <div className="surface-inset p-3 rounded-lg">
+                    <span className="text-[10px] font-mono text-ink-dim uppercase block mb-0.5">Estimated CapEx</span>
+                    <div className="flex items-baseline gap-0.5">
+                      <span className="text-ink-muted text-sm">$</span>
+                      <span className="editorial-headline text-3xl text-ink-primary tracking-tight">
+                        {Math.round(selectedSolution.total_cost_usd / 1000)}k
+                      </span>
+                    </div>
                   </div>
                 </div>
 
                 {/* Energy & Financial ROI Section */}
-                <div className="p-3.5 bg-surface-base border border-surface-border rounded grid grid-cols-2 gap-3 text-xs">
+                <div className="p-3 surface-inset rounded-lg grid grid-cols-2 gap-2.5 text-xs">
                   <div>
-                    <span className="text-[10px] text-ink-muted uppercase block">HVAC Electricity Saved</span>
-                    <span className="font-mono text-ink-primary font-medium">
+                    <span className="text-[9px] text-ink-dim font-mono uppercase block">HVAC Saved</span>
+                    <span className="font-mono text-ink-primary font-medium text-[11px]">
                       {(selectedSolution.hvac_energy_savings_kwh || 124000).toLocaleString()} kWh/yr
                     </span>
                   </div>
                   <div>
-                    <span className="text-[10px] text-ink-muted uppercase block">Annual Utility Savings</span>
-                    <span className="font-mono text-status-safe font-medium">
+                    <span className="text-[9px] text-ink-dim font-mono uppercase block">Utility Savings</span>
+                    <span className="font-mono text-status-safe font-medium text-[11px]">
                       +${(selectedSolution.electricity_cost_savings_usd || 14880).toLocaleString()} /yr
                     </span>
                   </div>
                   <div>
-                    <span className="text-[10px] text-ink-muted uppercase block">Avoided CO₂ Offset</span>
-                    <span className="font-mono text-ink-primary font-medium">
+                    <span className="text-[9px] text-ink-dim font-mono uppercase block">Avoided CO₂</span>
+                    <span className="font-mono text-ink-primary font-medium text-[11px]">
                       {(selectedSolution.co2_avoided_tons || 89.3)} tCO₂e/yr
                     </span>
                   </div>
                   <div>
-                    <span className="text-[10px] text-ink-muted uppercase block">CapEx Payback</span>
-                    <span className="font-mono text-ink-primary font-medium">
+                    <span className="text-[9px] text-ink-dim font-mono uppercase block">Payback</span>
+                    <span className="font-mono text-ink-primary font-medium text-[11px]">
                       {selectedSolution.payback_period_years || 5.2} years
                     </span>
                   </div>
                 </div>
 
-                <div className="space-y-2 pt-2 border-t border-surface-border text-xs">
-                  <div className="flex justify-between items-center py-0.5 border-b border-surface-border/40">
-                    <span className="text-ink-secondary">Green Roof Coverage:</span>
+                <div className="space-y-1.5 pt-1 text-xs">
+                  <div className="flex justify-between items-center py-1 border-b border-surface-border/30">
+                    <span className="text-ink-secondary">Green Roof:</span>
                     <span className="font-mono text-ink-primary">{(selectedSolution.green_roof_pct).toFixed(0)}% roof area</span>
                   </div>
 
-                  <div className="flex justify-between items-center py-0.5 border-b border-surface-border/40">
-                    <span className="text-ink-secondary">Cool Roof Coverage:</span>
+                  <div className="flex justify-between items-center py-1 border-b border-surface-border/30">
+                    <span className="text-ink-secondary">Cool Roof:</span>
                     <span className="font-mono text-ink-primary">{(selectedSolution.cool_roof_pct).toFixed(0)}% roof area</span>
                   </div>
 
-                  <div className="flex justify-between items-center py-0.5 border-b border-surface-border/40">
-                    <span className="text-ink-secondary">Tree Canopy Expansion:</span>
+                  <div className="flex justify-between items-center py-1 border-b border-surface-border/30">
+                    <span className="text-ink-secondary">Tree Canopy:</span>
                     <span className="font-mono text-cobalt">+{(selectedSolution.tree_canopy_pct).toFixed(0)}% corridors</span>
                   </div>
 
-                  <div className="flex justify-between items-center py-0.5 border-b border-surface-border/40">
-                    <span className="text-ink-secondary">Annual Water Demand:</span>
+                  <div className="flex justify-between items-center py-1 border-b border-surface-border/30">
+                    <span className="text-ink-secondary">Water Demand:</span>
                     <span className="font-mono text-ink-primary">{Math.round(selectedSolution.water_demand_m3).toLocaleString()} m³/yr</span>
                   </div>
                 </div>
 
                 {/* Actions */}
-                <div className="grid grid-cols-2 gap-3 pt-2 font-mono">
+                <div className="grid grid-cols-2 gap-2.5 pt-1 font-mono">
                   <button
                     onClick={handleApplySolution}
-                    className="btn-cobalt py-2 px-3 rounded text-xs flex items-center justify-center gap-1.5"
+                    className="btn-cobalt py-2 px-3 rounded-md text-xs flex items-center justify-center gap-1.5"
                   >
                     {appliedStatus ? <Check className="w-3.5 h-3.5" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
                     <span>{appliedStatus ? "Applied" : "Apply to Twin"}</span>
@@ -401,7 +403,7 @@ export default function OptimizationPage() {
 
                   <button
                     onClick={handleExportGeoJSON}
-                    className="py-2 px-3 rounded bg-surface-elevated hover:bg-surface-interactive border border-surface-border text-ink-primary text-xs font-medium transition-colors flex items-center justify-center gap-1.5"
+                    className="py-2 px-3 rounded-md bg-surface-elevated hover:bg-surface-interactive border border-surface-border text-ink-primary text-xs font-medium transition-colors flex items-center justify-center gap-1.5"
                   >
                     <Download className="w-3.5 h-3.5 text-cobalt" />
                     <span>Export GeoJSON</span>

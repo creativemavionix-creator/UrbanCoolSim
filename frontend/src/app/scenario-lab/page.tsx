@@ -26,7 +26,7 @@ interface ScenarioPreset {
 const presets: ScenarioPreset[] = [
   {
     id: "baseline",
-    name: "01 · Current Baseline (No Action)",
+    name: "Current Baseline (No Action)",
     tag: "Observed",
     deltaT: 0.0,
     cost: 0,
@@ -39,7 +39,7 @@ const presets: ScenarioPreset[] = [
   },
   {
     id: "albedo",
-    name: "02 · High-Albedo Cool Roof Program",
+    name: "High-Albedo Cool Roofs",
     tag: "Budget Priority",
     deltaT: 1.85,
     cost: 85000,
@@ -52,7 +52,7 @@ const presets: ScenarioPreset[] = [
   },
   {
     id: "green",
-    name: "03 · Intensive Green Infrastructure",
+    name: "Intensive Green Infrastructure",
     tag: "Ecological",
     deltaT: 2.65,
     cost: 290000,
@@ -65,7 +65,7 @@ const presets: ScenarioPreset[] = [
   },
   {
     id: "hybrid",
-    name: "04 · Pareto-Optimal Hybrid Matrix",
+    name: "Pareto-Optimal Hybrid Matrix",
     tag: "Recommended",
     deltaT: 3.42,
     cost: 345000,
@@ -133,23 +133,22 @@ export default function ScenarioLabPage() {
     }
   }, []);
 
-  const getDiffColor = useCallback((norm: number): [number, number, number] => {
-    const clamped = Math.max(0, Math.min(1, norm));
-    const r = Math.round(10 + clamped * 15);
-    const g = Math.round(30 + clamped * 210);
-    const b = Math.round(50 + clamped * 190);
-    return [r, g, b];
+  const getDiffColor = useCallback((diffNorm: number): [number, number, number] => {
+    const clamped = Math.max(0, Math.min(1, diffNorm));
+    const R = Math.round(16 + clamped * (74 - 16));
+    const G = Math.round(185 - clamped * (108 - 185));
+    const B = Math.round(129 + clamped * (255 - 129));
+    return [R, G, B];
   }, []);
 
+  // Redraw Comparison Canvases
   useEffect(() => {
     if (!grid || !grid.layers) return;
+
     const rows = 50;
     const cols = 50;
-    const renderSize = 380;
-
     const baseT = grid.layers.baseline_temperature_c;
     const bldgDens = grid.layers.building_density;
-    const vegFrac = grid.layers.veg_fraction;
 
     const scenT: number[][] = [];
     const diffT: number[][] = [];
@@ -159,14 +158,13 @@ export default function ScenarioLabPage() {
       for (let c = 0; c < cols; c++) {
         const b = baseT[r][c];
         const dens = bldgDens[r][c];
-        
-        const coolEffect = (selectedScenario.coolRoof * dens * 2.8) +
-                           (selectedScenario.greenRoof * dens * 2.2) +
-                           (selectedScenario.trees * (1.0 - dens) * 2.5) +
-                           (selectedScenario.waterPct * 3.8);
-        const cellScen = Math.max(26.0, b - coolEffect);
-        scenT[r][c] = cellScen;
-        diffT[r][c] = b - cellScen;
+        const coolDrop = (selectedScenario.coolRoof * dens * 2.8) +
+                         (selectedScenario.greenRoof * dens * 2.2) +
+                         (selectedScenario.trees * (1.0 - dens) * 2.5) +
+                         (selectedScenario.waterPct * 3.8);
+        const s = Math.max(26.0, b - coolDrop);
+        scenT[r][c] = s;
+        diffT[r][c] = b - s;
       }
     }
 
@@ -177,8 +175,8 @@ export default function ScenarioLabPage() {
       if (!canvas) return;
       const ctx = canvas.getContext("2d");
       if (!ctx) return;
-      canvas.width = renderSize;
-      canvas.height = renderSize;
+      canvas.width = 380;
+      canvas.height = 380;
 
       const offscreen = document.createElement("canvas");
       offscreen.width = cols;
@@ -190,57 +188,32 @@ export default function ScenarioLabPage() {
       for (let r = 0; r < rows; r++) {
         for (let c = 0; c < cols; c++) {
           const val = matrix[r][c];
-          let rgb: [number, number, number];
+          let R = 0, G = 0, B = 0;
+
           if (isDiff) {
-            const norm = val / 4.5;
-            rgb = getDiffColor(norm);
+            const diffNorm = val / 5.0;
+            [R, G, B] = getDiffColor(diffNorm);
           } else {
             const norm = (val - minT) / (maxT - minT);
-            rgb = getThermalColor(norm);
+            [R, G, B] = getThermalColor(norm);
           }
+
           const idx = (r * cols + c) * 4;
-          imgData.data[idx] = rgb[0];
-          imgData.data[idx + 1] = rgb[1];
-          imgData.data[idx + 2] = rgb[2];
+          imgData.data[idx] = R;
+          imgData.data[idx + 1] = G;
+          imgData.data[idx + 2] = B;
           imgData.data[idx + 3] = 255;
         }
       }
       offCtx.putImageData(imgData, 0, 0);
 
       ctx.imageSmoothingEnabled = true;
-      ctx.drawImage(offscreen, 0, 0, renderSize, renderSize);
-
-      ctx.strokeStyle = "rgba(255, 255, 255, 0.18)";
-      ctx.lineWidth = 1.0;
-      ctx.setLineDash([3, 4]);
-      ctx.beginPath();
-      if (studyArea === "delhi_cp") {
-        ctx.arc(renderSize / 2, renderSize / 2, renderSize * 0.18, 0, Math.PI * 2);
-        ctx.arc(renderSize / 2, renderSize / 2, renderSize * 0.38, 0, Math.PI * 2);
-      } else if (studyArea === "mumbai_bkc") {
-        ctx.moveTo(renderSize * 0.1, renderSize * 0.8);
-        ctx.bezierCurveTo(renderSize * 0.4, renderSize * 0.6, renderSize * 0.6, renderSize * 0.4, renderSize * 0.9, renderSize * 0.2);
-        ctx.strokeRect(renderSize * 0.25, renderSize * 0.25, renderSize * 0.5, renderSize * 0.45);
-      } else if (studyArea === "singapore_marina") {
-        ctx.arc(renderSize * 0.5, renderSize * 0.6, renderSize * 0.4, Math.PI * 1.1, Math.PI * 1.9);
-        ctx.strokeRect(renderSize * 0.2, renderSize * 0.15, renderSize * 0.6, renderSize * 0.35);
-      } else if (studyArea === "phoenix_downtown") {
-        for (let i = 1; i <= 3; i++) {
-          ctx.moveTo(renderSize * (i / 4), renderSize * 0.1);
-          ctx.lineTo(renderSize * (i / 4), renderSize * 0.9);
-          ctx.moveTo(renderSize * 0.1, renderSize * (i / 4));
-          ctx.lineTo(renderSize * 0.9, renderSize * (i / 4));
-        }
-      } else {
-        ctx.strokeRect(renderSize * 0.15, renderSize * 0.15, renderSize * 0.32, renderSize * 0.32);
-        ctx.strokeRect(renderSize * 0.53, renderSize * 0.15, renderSize * 0.32, renderSize * 0.32);
-      }
-      ctx.stroke();
+      ctx.drawImage(offscreen, 0, 0, 380, 380);
 
       if (hoveredCell) {
-        const cellW = renderSize / cols;
-        const cellH = renderSize / rows;
-        ctx.strokeStyle = "#ffffff";
+        const cellW = 380 / cols;
+        const cellH = 380 / rows;
+        ctx.strokeStyle = "#4A6CFF";
         ctx.lineWidth = 1.5;
         ctx.strokeRect(hoveredCell.col * cellW, hoveredCell.row * cellH, cellW, cellH);
       }
@@ -307,7 +280,7 @@ export default function ScenarioLabPage() {
       ctx.restore();
 
       ctx.strokeStyle = "#ffffff";
-      ctx.lineWidth = 2.0;
+      ctx.lineWidth = 1.5;
       ctx.beginPath();
       ctx.moveTo(splitX, 0);
       ctx.lineTo(splitX, 540);
@@ -315,7 +288,7 @@ export default function ScenarioLabPage() {
 
       ctx.fillStyle = "#4A6CFF";
       ctx.beginPath();
-      ctx.arc(splitX, 270, 12, 0, Math.PI * 2);
+      ctx.arc(splitX, 270, 10, 0, Math.PI * 2);
       ctx.fill();
     }
   }, [grid, selectedScenario, viewMode, swipePos, hoveredCell, getThermalColor, getDiffColor]);
@@ -355,11 +328,12 @@ export default function ScenarioLabPage() {
         }}
       />
 
-      <div className="p-6 sm:p-8 max-w-7xl mx-auto w-full space-y-8">
+      <div className="p-5 sm:p-7 max-w-7xl mx-auto w-full space-y-6">
         {/* Header & Mode Switcher */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 border-b border-surface-border pb-6">
-          <div className="space-y-1">
-            <h1 className="editorial-headline text-3xl font-normal text-ink-primary">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 pb-6 border-b border-surface-border/60">
+          <div className="space-y-1.5">
+            <span className="text-label text-cobalt">Comparative Analysis</span>
+            <h1 className="text-2xl sm:text-3xl font-medium tracking-tight text-ink-primary">
               Comparative Urban Microclimate Scenarios
             </h1>
             <p className="text-xs text-ink-secondary max-w-xl leading-relaxed">
@@ -367,50 +341,50 @@ export default function ScenarioLabPage() {
             </p>
           </div>
 
-          <div className="p-0.5 rounded bg-surface-elevated border border-surface-border flex items-center">
+          <div className="p-0.5 rounded-md bg-surface-elevated border border-surface-border flex items-center">
             <button
               onClick={() => setViewMode("side_by_side")}
-              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded text-xs font-mono transition-colors ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-mono transition-colors ${
                 viewMode === "side_by_side"
                   ? "bg-cobalt text-white font-medium shadow-sm"
                   : "text-ink-secondary hover:text-ink-primary"
               }`}
             >
               <Columns className="w-3.5 h-3.5" />
-              <span>Side-by-Side Dual</span>
+              <span>Side-by-Side</span>
             </button>
             <button
               onClick={() => setViewMode("swipe")}
-              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded text-xs font-mono transition-colors ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-mono transition-colors ${
                 viewMode === "swipe"
                   ? "bg-cobalt text-white font-medium shadow-sm"
                   : "text-ink-secondary hover:text-ink-primary"
               }`}
             >
               <SplitSquareVertical className="w-3.5 h-3.5" />
-              <span>A/B Swipe Divider</span>
+              <span>A/B Swipe</span>
             </button>
           </div>
         </div>
 
         {/* 4 Comparative Scenario Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 tabular-nums">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3.5 tabular-nums">
           {presets.map((preset) => {
             const isSelected = selectedScenario.id === preset.id;
             return (
               <div
                 key={preset.id}
                 onClick={() => setSelectedScenario(preset)}
-                className={`graphite-card p-5 rounded-lg cursor-pointer flex flex-col justify-between space-y-4 transition-colors ${
+                className={`graphite-card p-4 rounded-lg cursor-pointer flex flex-col justify-between space-y-3.5 transition-all ${
                   isSelected
-                    ? "border-cobalt bg-surface-interactive shadow-sm"
+                    ? "border-cobalt/60 bg-surface-interactive shadow-sm"
                     : "hover:border-surface-borderHover"
                 }`}
               >
                 <div className="space-y-1.5">
                   <div className="flex justify-between items-center">
-                    <span className={`text-[10px] font-mono uppercase px-2 py-0.2 rounded ${
-                      isSelected ? "bg-cobalt/20 text-cobalt font-semibold" : "bg-surface-base text-ink-muted border border-surface-border"
+                    <span className={`text-[10px] font-mono uppercase px-1.5 py-0.5 rounded ${
+                      isSelected ? "bg-cobalt/15 text-cobalt font-medium" : "bg-surface-base text-ink-dim border border-surface-border"
                     }`}>
                       {preset.tag}
                     </span>
@@ -425,21 +399,21 @@ export default function ScenarioLabPage() {
                   </p>
                 </div>
 
-                <div className="space-y-1 pt-2 border-t border-surface-border text-xs">
+                <div className="space-y-1 pt-2 border-t border-surface-border/50 text-xs">
                   <div className="flex justify-between items-center text-[11px]">
-                    <span className="text-ink-muted">Projected Cooling:</span>
-                    <strong className={preset.deltaT > 0 ? "font-mono text-cobalt font-semibold" : "font-mono text-ink-muted"}>
-                      {preset.deltaT > 0 ? `-${preset.deltaT.toFixed(1)}°C` : "0.0°C"}
+                    <span className="text-ink-dim">Cooling (ΔT):</span>
+                    <strong className={preset.deltaT > 0 ? "font-mono text-cobalt font-medium" : "font-mono text-ink-dim"}>
+                      {preset.deltaT > 0 ? `−${preset.deltaT.toFixed(1)}°C` : "0.0°C"}
                     </strong>
                   </div>
 
                   <div className="flex justify-between items-center text-[11px]">
-                    <span className="text-ink-muted">Capital Cost:</span>
+                    <span className="text-ink-dim">CapEx:</span>
                     <span className="font-mono text-ink-primary">${preset.cost.toLocaleString()}</span>
                   </div>
 
                   <div className="flex justify-between items-center text-[11px]">
-                    <span className="text-ink-muted">Annual Water:</span>
+                    <span className="text-ink-dim">Annual Water:</span>
                     <span className="font-mono text-ink-primary">{preset.water.toLocaleString()} m³</span>
                   </div>
                 </div>
@@ -449,26 +423,26 @@ export default function ScenarioLabPage() {
         </div>
 
         {/* Spatial Comparison Workspace */}
-        <div className="graphite-card p-6 rounded-lg space-y-6">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-surface-border pb-4">
+        <div className="graphite-card p-5 sm:p-6 rounded-lg space-y-5">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-surface-border pb-3.5">
             <div>
-              <span className="text-[10px] font-mono uppercase tracking-widest text-cobalt block font-semibold">
-                Comparative Spatial Raster
+              <span className="text-label text-cobalt block mb-0.5">
+                Spatial Raster Comparison
               </span>
-              <h2 className="text-sm font-medium text-ink-primary mt-0.5">
-                Baseline LST vs. {selectedScenario.name.split("·")[1]?.trim()}
+              <h2 className="text-xs font-medium text-ink-primary">
+                Baseline LST vs. {selectedScenario.name}
               </h2>
             </div>
 
             {hoveredCell ? (
-              <div className="flex items-center gap-4 text-xs font-mono bg-surface-base px-3.5 py-1.5 rounded border border-surface-border tabular-nums">
-                <span className="text-ink-muted">[{hoveredCell.row}, {hoveredCell.col}]</span>
+              <div className="flex items-center gap-3 text-xs font-mono bg-surface-base px-3 py-1 rounded border border-surface-border tabular-nums">
+                <span className="text-ink-dim">[{hoveredCell.row}, {hoveredCell.col}]</span>
                 <span>Base: <strong className="text-status-critical">{hoveredCell.baseT.toFixed(1)}°C</strong></span>
                 <span>Scen: <strong className="text-ink-primary">{hoveredCell.scenT.toFixed(1)}°C</strong></span>
-                <span>ΔT: <strong className="text-cobalt font-bold">-{hoveredCell.deltaT.toFixed(2)}°C</strong></span>
+                <span>ΔT: <strong className="text-cobalt font-semibold">−{hoveredCell.deltaT.toFixed(2)}°C</strong></span>
               </div>
             ) : (
-              <div className="text-xs text-ink-muted font-mono">
+              <div className="text-[11px] text-ink-dim font-mono">
                 Hover cursor over map to inspect coordinates
               </div>
             )}
@@ -476,13 +450,13 @@ export default function ScenarioLabPage() {
 
           {/* View Mode 1: Side-by-Side Dual */}
           {viewMode === "side_by_side" && (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5 items-start">
               <div className="space-y-2">
-                <div className="flex justify-between items-baseline px-1 text-xs">
-                  <span className="font-medium text-ink-primary">01. Baseline LST (Observed)</span>
-                  <span className="font-mono text-status-critical">Peak 48.5°C</span>
+                <div className="flex justify-between items-baseline px-0.5 text-xs">
+                  <span className="text-xs font-medium text-ink-primary">01. Baseline LST</span>
+                  <span className="font-mono text-status-critical text-[11px]">Peak 48.5°C</span>
                 </div>
-                <div className="aspect-square bg-surface-base border border-surface-border rounded overflow-hidden flex items-center justify-center">
+                <div className="aspect-square bg-surface-base border border-surface-border rounded-lg overflow-hidden flex items-center justify-center surface-inset">
                   <canvas 
                     ref={baseCanvasRef} 
                     className="w-full h-full cursor-crosshair"
@@ -493,11 +467,11 @@ export default function ScenarioLabPage() {
               </div>
 
               <div className="space-y-2">
-                <div className="flex justify-between items-baseline px-1 text-xs">
-                  <span className="font-medium text-ink-primary">02. Mitigated Scenario LST</span>
-                  <span className="font-mono text-cobalt font-semibold">-{selectedScenario.deltaT.toFixed(1)}°C Drop</span>
+                <div className="flex justify-between items-baseline px-0.5 text-xs">
+                  <span className="text-xs font-medium text-ink-primary">02. Mitigated LST</span>
+                  <span className="font-mono text-cobalt text-[11px]">−{selectedScenario.deltaT.toFixed(1)}°C</span>
                 </div>
-                <div className="aspect-square bg-surface-base border border-surface-border rounded overflow-hidden flex items-center justify-center">
+                <div className="aspect-square bg-surface-base border border-surface-border rounded-lg overflow-hidden flex items-center justify-center surface-inset">
                   <canvas 
                     ref={scenCanvasRef} 
                     className="w-full h-full cursor-crosshair"
@@ -508,11 +482,11 @@ export default function ScenarioLabPage() {
               </div>
 
               <div className="space-y-2">
-                <div className="flex justify-between items-baseline px-1 text-xs">
-                  <span className="font-medium text-ink-primary">03. Spatial Delta Difference</span>
-                  <span className="font-mono text-ink-primary font-semibold">Up to -4.5°C Local</span>
+                <div className="flex justify-between items-baseline px-0.5 text-xs">
+                  <span className="text-xs font-medium text-ink-primary">03. Spatial Delta Difference</span>
+                  <span className="font-mono text-ink-primary text-[11px]">Up to −4.5°C</span>
                 </div>
-                <div className="aspect-square bg-surface-base border border-surface-border rounded overflow-hidden flex items-center justify-center">
+                <div className="aspect-square bg-surface-base border border-surface-border rounded-lg overflow-hidden flex items-center justify-center surface-inset">
                   <canvas 
                     ref={diffCanvasRef} 
                     className="w-full h-full cursor-crosshair"
@@ -526,9 +500,9 @@ export default function ScenarioLabPage() {
 
           {/* View Mode 2: A/B Swipe Handle */}
           {viewMode === "swipe" && (
-            <div className="space-y-5">
+            <div className="space-y-4">
               <div 
-                className="relative max-w-lg mx-auto aspect-square bg-surface-base border border-surface-border rounded overflow-hidden select-none cursor-ew-resize"
+                className="relative max-w-lg mx-auto aspect-square bg-surface-base border border-surface-border rounded-lg overflow-hidden select-none cursor-ew-resize surface-inset"
                 onMouseDown={() => setIsDraggingSwipe(true)}
                 onMouseUp={() => setIsDraggingSwipe(false)}
               >
@@ -542,21 +516,21 @@ export default function ScenarioLabPage() {
                   }}
                 />
                 
-                <div className="absolute top-3 left-3 px-2.5 py-1 rounded bg-surface-base/80 text-[10px] font-mono text-status-critical border border-surface-border pointer-events-none">
+                <div className="absolute top-2.5 left-2.5 px-2 py-0.5 rounded bg-surface-base/85 text-[10px] font-mono text-status-critical border border-surface-border pointer-events-none">
                   ← Baseline Hotspots
                 </div>
-                <div className="absolute top-3 right-3 px-2.5 py-1 rounded bg-surface-base/80 text-[10px] font-mono text-cobalt border border-surface-border pointer-events-none">
-                  {selectedScenario.name.split("·")[1]?.trim()} →
+                <div className="absolute top-2.5 right-2.5 px-2 py-0.5 rounded bg-surface-base/85 text-[10px] font-mono text-cobalt border border-surface-border pointer-events-none">
+                  {selectedScenario.name} →
                 </div>
               </div>
 
               <div className="max-w-lg mx-auto space-y-1.5 text-xs">
                 <div className="flex justify-between text-ink-muted">
-                  <span className="flex items-center gap-1.5 font-mono">
+                  <span className="flex items-center gap-1.5 font-mono text-[11px]">
                     <MoveHorizontal className="w-3.5 h-3.5 text-cobalt" />
                     <span>Drag divider:</span>
                   </span>
-                  <span className="font-mono text-ink-primary font-medium">{Math.round(swipePos)}% Split</span>
+                  <span className="font-mono text-ink-primary font-medium text-[11px]">{Math.round(swipePos)}% Split</span>
                 </div>
                 <input
                   type="range" min="0" max="100" value={swipePos}

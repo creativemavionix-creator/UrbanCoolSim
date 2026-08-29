@@ -94,14 +94,14 @@ export default function ReportsPage() {
         }}
       />
 
-      <div className="p-6 sm:p-8 max-w-7xl mx-auto w-full space-y-8">
+      <div className="p-5 sm:p-7 max-w-7xl mx-auto w-full space-y-6">
         {/* Header & Generation Action */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-b border-surface-border pb-8">
-          <div className="space-y-1">
-            <span className="text-xs font-mono uppercase tracking-widest text-cobalt font-semibold">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 pb-6 border-b border-surface-border/60">
+          <div className="space-y-1.5">
+            <span className="text-label text-cobalt">
               Municipal Handoff Documentation
             </span>
-            <h1 className="editorial-headline text-3xl sm:text-4xl font-normal text-ink-primary">
+            <h1 className="text-2xl sm:text-3xl font-medium tracking-tight text-ink-primary">
               Decision-Support Packages & GIS Blueprints
             </h1>
             <p className="text-xs text-ink-secondary max-w-xl leading-relaxed">
@@ -113,7 +113,7 @@ export default function ReportsPage() {
           <button
             onClick={() => loadReportAndData()}
             disabled={loading}
-            className="btn-cobalt px-5 py-2.5 rounded text-xs flex items-center gap-2 shrink-0 font-mono"
+            className="btn-cobalt px-4 py-2 rounded-md text-xs flex items-center gap-2 shrink-0 font-mono"
           >
             <Sparkles className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
             <span>{loading ? "Compiling..." : "Regenerate Technical Report"}</span>
@@ -121,16 +121,16 @@ export default function ReportsPage() {
         </div>
 
         {/* 3 Export Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           {/* Card 1: Executive PDF */}
-          <div className="graphite-card p-6 rounded-lg space-y-4 flex flex-col justify-between">
+          <div className="graphite-card p-5 sm:p-6 rounded-lg space-y-4 flex flex-col justify-between">
             <div className="space-y-2">
-              <div className="w-8 h-8 rounded bg-surface-interactive flex items-center justify-center text-status-critical">
+              <div className="w-8 h-8 rounded-md bg-status-critical/10 flex items-center justify-center text-status-critical">
                 <FileText className="w-4 h-4" />
               </div>
               <h3 className="text-sm font-semibold text-ink-primary">Executive Decision PDF</h3>
               <p className="text-xs text-ink-secondary leading-relaxed">
-                Official ReportLab PDF complete with Surface Energy Balance equations, Pareto curves, and financial ROI metrics.
+                Official publication-ready PDF with Surface Energy Balance equations, Pareto curves, and financial ROI metrics.
               </p>
             </div>
             {reportId ? (
@@ -139,20 +139,20 @@ export default function ReportsPage() {
                 download={`UrbanCoolSim_Executive_Report_${studyArea}.pdf`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="btn-cobalt w-full py-2.5 rounded text-xs flex items-center justify-center gap-1.5 font-mono"
+                className="btn-cobalt w-full py-2 rounded-md text-xs flex items-center justify-center gap-1.5 font-mono"
               >
                 <Download className="w-3.5 h-3.5" />
                 <span>Download PDF Dossier</span>
               </a>
             ) : (
-              <span className="text-xs text-ink-muted font-mono">Compiling report ID...</span>
+              <span className="text-xs text-ink-dim font-mono">Compiling report ID…</span>
             )}
           </div>
 
           {/* Card 2: Vector GeoJSON */}
-          <div className="graphite-card p-6 rounded-lg space-y-4 flex flex-col justify-between">
+          <div className="graphite-card p-5 sm:p-6 rounded-lg space-y-4 flex flex-col justify-between">
             <div className="space-y-2">
-              <div className="w-8 h-8 rounded bg-surface-interactive flex items-center justify-center text-cobalt">
+              <div className="w-8 h-8 rounded-md bg-cobalt/10 flex items-center justify-center text-cobalt">
                 <Map className="w-4 h-4" />
               </div>
               <h3 className="text-sm font-semibold text-ink-primary">GIS Vector GeoJSON</h3>
@@ -162,7 +162,7 @@ export default function ReportsPage() {
             </div>
             <button
               onClick={handleExportGeoJSON}
-              className="w-full py-2.5 rounded bg-surface-interactive hover:bg-surface-hover border border-surface-border text-ink-primary text-xs font-mono transition-colors flex items-center justify-center gap-1.5"
+              className="w-full py-2 rounded-md bg-surface-elevated hover:bg-surface-interactive border border-surface-border text-ink-primary text-xs font-mono transition-colors flex items-center justify-center gap-1.5"
             >
               {downloadingFormat === "geojson" ? (
                 <FileCheck className="w-3.5 h-3.5 text-status-safe" />
@@ -174,9 +174,9 @@ export default function ReportsPage() {
           </div>
 
           {/* Card 3: CSV Microclimate Grid */}
-          <div className="graphite-card p-6 rounded-lg space-y-4 flex flex-col justify-between">
+          <div className="graphite-card p-5 sm:p-6 rounded-lg space-y-4 flex flex-col justify-between">
             <div className="space-y-2">
-              <div className="w-8 h-8 rounded bg-surface-interactive flex items-center justify-center text-ink-secondary">
+              <div className="w-8 h-8 rounded-md bg-surface-interactive flex items-center justify-center text-ink-secondary">
                 <Table className="w-4 h-4" />
               </div>
               <h3 className="text-sm font-semibold text-ink-primary">2,500 Cell Microgrid CSV</h3>
@@ -186,7 +186,7 @@ export default function ReportsPage() {
             </div>
             <button
               onClick={handleExportCSV}
-              className="w-full py-2.5 rounded bg-surface-interactive hover:bg-surface-hover border border-surface-border text-ink-primary text-xs font-mono transition-colors flex items-center justify-center gap-1.5"
+              className="w-full py-2 rounded-md bg-surface-elevated hover:bg-surface-interactive border border-surface-border text-ink-primary text-xs font-mono transition-colors flex items-center justify-center gap-1.5"
             >
               {downloadingFormat === "csv" ? (
                 <FileCheck className="w-3.5 h-3.5 text-status-safe" />
@@ -200,7 +200,7 @@ export default function ReportsPage() {
 
         {/* Generated Report Viewer */}
         {reportMd && (
-          <div className="graphite-card rounded-lg p-6 sm:p-8 space-y-4">
+          <div className="graphite-card rounded-lg p-5 sm:p-6 space-y-3.5">
             <div className="flex justify-between items-center border-b border-surface-border pb-3 text-xs font-mono">
               <div className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-status-safe" />
@@ -211,14 +211,14 @@ export default function ReportsPage() {
 
               <button
                 onClick={() => window.print()}
-                className="px-3 py-1 bg-surface-interactive hover:bg-surface-hover border border-surface-border text-ink-secondary hover:text-ink-primary rounded text-xs flex items-center gap-1.5 transition-colors"
+                className="px-2.5 py-1 bg-surface-interactive hover:bg-surface-hover border border-surface-border text-ink-secondary hover:text-ink-primary rounded-md text-xs flex items-center gap-1.5 transition-colors"
               >
                 <Printer className="w-3.5 h-3.5" />
                 <span>Print Document</span>
               </button>
             </div>
 
-            <div className="bg-surface-base p-6 rounded border border-surface-border text-xs text-ink-secondary font-mono leading-relaxed whitespace-pre-wrap max-h-[500px] overflow-y-auto">
+            <div className="surface-inset p-5 rounded-lg text-xs text-ink-secondary font-mono leading-relaxed whitespace-pre-wrap max-h-[500px] overflow-y-auto">
               {reportMd}
             </div>
           </div>

@@ -20,7 +20,7 @@ module.exports = {
           borderHover: "rgba(255, 255, 255, 0.14)",
           borderActive: "rgba(255, 255, 255, 0.28)",
         },
-        // 2. Signature Brand Accent (Electric Cobalt / Indigo — used sparingly)
+        // 2. Signature Brand Accent (Electric Cobalt — used sparingly)
         cobalt: {
           DEFAULT: "#4A6CFF",
           hover: "#5B7FFF",
@@ -34,13 +34,13 @@ module.exports = {
           muted: "#5E6678",
           dim: "#3A404F",
         },
-        // 4. Semantic / Status Colors (Reserved strictly for state mapping)
+        // 4. Semantic / Status Colors
         status: {
-          safe: "#10B981",       // Validated / Physics Ground Truth
-          high: "#F59E0B",       // High Heat / Risk Tier
-          critical: "#EF4444",   // Critical Risk Tier / >41.5°C
+          safe: "#10B981",
+          high: "#F59E0B",
+          critical: "#EF4444",
         },
-        // 5. Scientific Colormap Scale (Domain data only: LST rasters)
+        // 5. Scientific Colormap Scale (Domain data only)
         thermal: {
           cool: "#2563eb",
           mild: "#06b6d4",
@@ -75,10 +75,16 @@ module.exports = {
         mono: ["var(--font-mono)", "JetBrains Mono", "SF Mono", "monospace"],
       },
       boxShadow: {
-        surface: "0 4px 20px -2px rgba(0, 0, 0, 0.45)",
-        floating: "0 12px 32px -4px rgba(0, 0, 0, 0.65)",
-        cobaltGlow: "0 0 20px -2px rgba(74, 108, 255, 0.35)",
-        specular: "inset 0 1px 0 0 rgba(255, 255, 255, 0.08)",
+        surface: "0 2px 12px -2px rgba(0, 0, 0, 0.35)",
+        floating: "0 8px 24px -4px rgba(0, 0, 0, 0.55)",
+        cobaltGlow: "0 0 16px -2px rgba(74, 108, 255, 0.3)",
+      },
+      borderRadius: {
+        sm: "6px",
+        DEFAULT: "8px",
+        md: "8px",
+        lg: "12px",
+        xl: "16px",
       },
       letterSpacing: {
         tightest: "-0.04em",
@@ -88,6 +94,25 @@ module.exports = {
         wide: "0.025em",
         wider: "0.05em",
         widest: "0.12em",
+      },
+      keyframes: {
+        fadeIn: {
+          "0%": { opacity: "0" },
+          "100%": { opacity: "1" },
+        },
+        slideUp: {
+          "0%": { opacity: "0", transform: "translateY(6px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
+        },
+        subtlePulse: {
+          "0%, 100%": { opacity: "1" },
+          "50%": { opacity: "0.6" },
+        },
+      },
+      animation: {
+        "fade-in": "fadeIn 0.3s ease-out",
+        "slide-up": "slideUp 0.25s ease-out",
+        "subtle-pulse": "subtlePulse 2.5s ease-in-out infinite",
       },
     },
   },

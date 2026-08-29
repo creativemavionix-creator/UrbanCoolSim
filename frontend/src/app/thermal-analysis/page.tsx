@@ -5,7 +5,7 @@ import { Header } from "@/components/Header";
 import { EnergyBalanceChart } from "@/components/EnergyBalanceChart";
 import { AnimatedCounter } from "@/components/AnimatedCounter";
 import { api, SimulationResult } from "@/lib/api";
-import { Flame, Wind, Sun, ShieldCheck, Thermometer } from "lucide-react";
+import { Wind, Sun, Thermometer } from "lucide-react";
 
 export default function ThermalAnalysisPage() {
   const [studyArea, setStudyArea] = useState("delhi_cp");
@@ -61,60 +61,60 @@ export default function ThermalAnalysisPage() {
         }}
       />
 
-      <div className="p-6 sm:p-8 max-w-7xl mx-auto w-full space-y-8">
+      <div className="p-5 sm:p-7 max-w-7xl mx-auto w-full space-y-6">
         {/* Header Statement */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 border-b border-surface-border pb-8">
-          <div className="space-y-1">
-            <span className="text-xs font-mono uppercase tracking-widest text-cobalt font-semibold">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 pb-6 border-b border-surface-border/60">
+          <div className="space-y-1.5">
+            <span className="text-label text-cobalt">
               Deterministic SEB Thermodynamics
             </span>
-            <h1 className="editorial-headline text-3xl sm:text-4xl font-normal text-ink-primary">
+            <h1 className="text-2xl sm:text-3xl font-medium tracking-tight text-ink-primary">
               Thermodynamic Flux Decomposition
             </h1>
             <p className="text-xs text-ink-secondary max-w-xl leading-relaxed">
               Enforcing deterministic conservation of energy:{" "}
-              <span className="text-ink-primary font-medium">
-                <i>Q</i>* + <i>Q</i><sub>f</sub> = <i>Q</i><sub>h</sub> + <i>Q</i><sub>e</sub> + Δ<i>Q</i><sub>s</sub>
+              <span className="text-ink-primary font-medium font-mono">
+                Q* + Qf = Qh + Qe + ΔQs
               </span>
-              . Sensible turbulent flux (<i>Q</i><sub>h</sub>) heats the pedestrian air layer, while latent flux (<i>Q</i><sub>e</sub>) provides natural evaporative cooling.
+              . Sensible turbulent flux (Qh) heats pedestrian air, while latent flux (Qe) provides evaporative cooling.
             </p>
           </div>
 
-          <div className="flex items-baseline gap-6 shrink-0">
+          <div className="flex items-baseline gap-6 shrink-0 tabular-nums">
             <div>
-              <span className="text-[10px] font-mono text-ink-muted uppercase block">Net All-Wave Influx (Q*)</span>
+              <span className="text-label text-ink-dim block mb-0.5">Net All-Wave Influx (Q*)</span>
               <div className="flex items-baseline gap-1">
-                <AnimatedCounter value={fluxes.Q_star_mean} decimals={0} className="editorial-headline text-4xl text-ink-primary font-normal tracking-tight" />
-                <span className="text-xs text-ink-muted font-mono">W/m²</span>
+                <AnimatedCounter value={fluxes.Q_star_mean} decimals={0} className="editorial-headline text-3xl text-ink-primary font-normal tracking-tight" />
+                <span className="text-xs text-ink-dim font-mono">W/m²</span>
               </div>
             </div>
             <div className="h-8 w-px bg-surface-border" />
             <div>
-              <span className="text-[10px] font-mono text-ink-muted uppercase block">Sensible Heat (Q_h)</span>
+              <span className="text-label text-ink-dim block mb-0.5">Sensible Heat (Qh)</span>
               <div className="flex items-baseline gap-1">
-                <AnimatedCounter value={fluxes.Q_h_mean} decimals={0} className="editorial-headline text-4xl text-status-critical font-normal tracking-tight" />
-                <span className="text-xs text-ink-muted font-mono">W/m²</span>
+                <AnimatedCounter value={fluxes.Q_h_mean} decimals={0} className="editorial-headline text-3xl text-status-critical font-normal tracking-tight" />
+                <span className="text-xs text-ink-dim font-mono">W/m²</span>
               </div>
             </div>
           </div>
         </div>
 
         {/* Boundary Condition Controls */}
-        <div className="graphite-card p-6 rounded-lg space-y-4">
+        <div className="graphite-card p-5 sm:p-6 rounded-lg space-y-4">
           <div className="flex justify-between items-center border-b border-surface-border pb-3">
-            <h3 className="text-xs font-mono uppercase tracking-wider text-ink-secondary font-semibold">
+            <h3 className="text-xs font-semibold text-ink-primary">
               Atmospheric Boundary Conditions
             </h3>
-            <span className="text-[11px] font-mono text-ink-muted">
-              Numerical Root-Finding: Active
+            <span className="text-label text-status-safe">
+              Newton-Raphson Active
             </span>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-xs tabular-nums">
-            <div className="space-y-2 p-3 rounded bg-surface-base border border-surface-border">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs tabular-nums">
+            <div className="space-y-2 p-3 rounded-lg surface-inset">
               <div className="flex justify-between items-baseline">
-                <span className="text-ink-secondary flex items-center gap-1.5">
-                  <Thermometer className="w-3.5 h-3.5 text-status-critical" /> Ambient Air Temp (T_a):
+                <span className="text-ink-secondary flex items-center gap-1.5 text-[11px]">
+                  <Thermometer className="w-3.5 h-3.5 text-status-critical" /> Ambient Air Temp (Ta):
                 </span>
                 <span className="font-mono font-medium text-ink-primary">{airTemp.toFixed(1)}°C</span>
               </div>
@@ -125,10 +125,10 @@ export default function ThermalAnalysisPage() {
               />
             </div>
 
-            <div className="space-y-2 p-3 rounded bg-surface-base border border-surface-border">
+            <div className="space-y-2 p-3 rounded-lg surface-inset">
               <div className="flex justify-between items-baseline">
-                <span className="text-ink-secondary flex items-center gap-1.5">
-                  <Sun className="w-3.5 h-3.5 text-status-high" /> Solar Downwelling Flux:
+                <span className="text-ink-secondary flex items-center gap-1.5 text-[11px]">
+                  <Sun className="w-3.5 h-3.5 text-status-high" /> Solar Downwelling:
                 </span>
                 <span className="font-mono font-medium text-ink-primary">{solarRad} W/m²</span>
               </div>
@@ -139,9 +139,9 @@ export default function ThermalAnalysisPage() {
               />
             </div>
 
-            <div className="space-y-2 p-3 rounded bg-surface-base border border-surface-border">
+            <div className="space-y-2 p-3 rounded-lg surface-inset">
               <div className="flex justify-between items-baseline">
-                <span className="text-ink-secondary flex items-center gap-1.5">
+                <span className="text-ink-secondary flex items-center gap-1.5 text-[11px]">
                   <Wind className="w-3.5 h-3.5 text-cobalt" /> Canopy Wind Speed:
                 </span>
                 <span className="font-mono font-medium text-ink-primary">{windSpeed.toFixed(1)} m/s</span>
@@ -156,22 +156,22 @@ export default function ThermalAnalysisPage() {
         </div>
 
         {/* 2-Column: Surface Energy Balance Breakdown + Technical Physics Notes */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           <div className="lg:col-span-8">
             <EnergyBalanceChart data={fluxes} />
           </div>
 
-          <div className="lg:col-span-4 graphite-card p-6 rounded-lg space-y-4 text-xs font-mono">
+          <div className="lg:col-span-4 graphite-card p-5 rounded-lg space-y-3.5 text-xs font-mono">
             <div className="border-b border-surface-border pb-2">
-              <h3 className="font-medium text-ink-primary">Equilibrium Formulation</h3>
+              <h3 className="text-xs font-semibold text-ink-primary font-sans">Equilibrium Formulation</h3>
             </div>
 
-            <div className="space-y-3 text-ink-secondary leading-relaxed">
-              <div className="p-3 rounded bg-surface-base border border-surface-border text-center text-cobalt font-semibold text-xs">
-                f(Ts) = Q*(Ts) + Qf - Qh(Ts) - Qe(Ts) - ΔQs(Ts) = 0
+            <div className="space-y-2.5 text-ink-secondary leading-relaxed">
+              <div className="p-3 rounded-lg surface-inset text-center text-cobalt font-medium text-xs">
+                f(Ts) = Q*(Ts) + Qf − Qh(Ts) − Qe(Ts) − ΔQs(Ts) = 0
               </div>
-              <p className="text-[11px]">
-                Solved cell-by-cell using Newton-Raphson iteration. Canopy aerodynamic resistance $r_a$ is coupled to building height $H$ and roughness length $z_0 = 0.1 H$.
+              <p className="text-[11px] font-sans text-ink-dim leading-relaxed">
+                Solved cell-by-cell using Newton-Raphson iteration. Canopy aerodynamic resistance ra is coupled to building height H and roughness length z0 = 0.1 H.
               </p>
             </div>
           </div>

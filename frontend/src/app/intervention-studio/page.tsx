@@ -5,16 +5,9 @@ import { Header } from "@/components/Header";
 import { AnimatedCounter } from "@/components/AnimatedCounter";
 import { api, DigitalTwinGrid } from "@/lib/api";
 import { 
-  SlidersHorizontal, 
-  DollarSign, 
-  Droplets, 
-  Trees, 
-  Building, 
-  Sparkles, 
   Check,
-  Target,
   ShieldCheck,
-  Paintbrush
+  Sparkles,
 } from "lucide-react";
 
 export default function InterventionStudioPage() {
@@ -152,26 +145,22 @@ export default function InterventionStudioPage() {
     ctx.drawImage(offscreen, 0, 0, renderSize, renderSize);
 
     // City-specific morphology guideline overlays
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.18)";
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.16)";
     ctx.lineWidth = 1.0;
     ctx.setLineDash([3, 4]);
     ctx.beginPath();
 
     if (studyArea === "delhi_cp") {
-      // Radial concentric rings (Connaught Place inner & outer circle)
       ctx.arc(renderSize / 2, renderSize / 2, renderSize * 0.18, 0, Math.PI * 2);
       ctx.arc(renderSize / 2, renderSize / 2, renderSize * 0.38, 0, Math.PI * 2);
     } else if (studyArea === "mumbai_bkc") {
-      // Mithi River corridor and commercial axis
       ctx.moveTo(renderSize * 0.1, renderSize * 0.8);
       ctx.bezierCurveTo(renderSize * 0.4, renderSize * 0.6, renderSize * 0.6, renderSize * 0.4, renderSize * 0.9, renderSize * 0.2);
       ctx.strokeRect(renderSize * 0.25, renderSize * 0.25, renderSize * 0.5, renderSize * 0.45);
     } else if (studyArea === "singapore_marina") {
-      // Marina Bay waterfront arc & financial grid
       ctx.arc(renderSize * 0.5, renderSize * 0.6, renderSize * 0.4, Math.PI * 1.1, Math.PI * 1.9);
       ctx.strokeRect(renderSize * 0.2, renderSize * 0.15, renderSize * 0.6, renderSize * 0.35);
     } else if (studyArea === "phoenix_downtown") {
-      // Orthogonal desert street grid
       for (let i = 1; i <= 3; i++) {
         ctx.moveTo(renderSize * (i / 4), renderSize * 0.1);
         ctx.lineTo(renderSize * (i / 4), renderSize * 0.9);
@@ -179,7 +168,6 @@ export default function InterventionStudioPage() {
         ctx.lineTo(renderSize * 0.9, renderSize * (i / 4));
       }
     } else {
-      // Tokyo Shinjuku skyscraper canyon blocks
       ctx.strokeRect(renderSize * 0.15, renderSize * 0.15, renderSize * 0.32, renderSize * 0.32);
       ctx.strokeRect(renderSize * 0.53, renderSize * 0.15, renderSize * 0.32, renderSize * 0.32);
       ctx.strokeRect(renderSize * 0.15, renderSize * 0.53, renderSize * 0.70, renderSize * 0.32);
@@ -203,14 +191,14 @@ export default function InterventionStudioPage() {
         }}
       />
 
-      <div className="p-6 sm:p-8 max-w-7xl mx-auto w-full space-y-8">
-        {/* Studio Title & Real-Time Impact Ribbon */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 border-b border-surface-border pb-8">
-          <div className="space-y-1">
-            <span className="text-xs font-mono uppercase tracking-widest text-cobalt font-semibold">
+      <div className="p-5 sm:p-7 max-w-7xl mx-auto w-full space-y-6">
+        {/* Studio Header & Real-Time Impact Ribbon */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 pb-6 border-b border-surface-border/60">
+          <div className="space-y-1.5">
+            <span className="text-label text-cobalt">
               Real-Time Simulation Sandbox
             </span>
-            <h1 className="editorial-headline text-3xl sm:text-4xl font-normal text-ink-primary">
+            <h1 className="text-2xl sm:text-3xl font-medium tracking-tight text-ink-primary">
               Design a Cooler Urban District
             </h1>
             <p className="text-xs text-ink-secondary max-w-xl leading-relaxed">
@@ -219,51 +207,51 @@ export default function InterventionStudioPage() {
             </p>
           </div>
 
-          {/* Real-time Outcomes Ticker with Tabular Figures & Animated Counters */}
-          <div className="flex items-baseline gap-6 graphite-card p-4 rounded-lg tabular-nums">
+          {/* Real-time Outcomes Ticker */}
+          <div className="flex items-baseline gap-6 graphite-card p-3.5 rounded-lg tabular-nums">
             <div>
-              <span className="text-[10px] font-mono text-ink-muted uppercase block">Cooling Impact (ΔT)</span>
-              <div className="flex items-baseline gap-1">
-                <span className="editorial-headline text-3xl text-cobalt tracking-tight">-</span>
-                <AnimatedCounter value={estimatedDeltaT} decimals={2} className="editorial-headline text-3xl text-cobalt tracking-tight" />
-                <span className="text-sm text-ink-muted font-light font-serif">°C</span>
-              </div>
-            </div>
-            <div className="h-8 w-px bg-surface-border" />
-            <div>
-              <span className="text-[10px] font-mono text-ink-muted uppercase block">Estimated CapEx</span>
+              <span className="text-label text-ink-dim block mb-0.5">Cooling Impact</span>
               <div className="flex items-baseline gap-0.5">
-                <span className="editorial-headline text-3xl text-ink-primary tracking-tight">$</span>
-                <AnimatedCounter value={Math.round(totalCost / 1000)} decimals={0} className="editorial-headline text-3xl text-ink-primary tracking-tight" />
-                <span className="text-sm text-ink-muted font-light font-serif">k</span>
+                <span className="editorial-headline text-3xl text-cobalt tracking-tight">−</span>
+                <AnimatedCounter value={estimatedDeltaT} decimals={2} className="editorial-headline text-3xl text-cobalt tracking-tight" />
+                <span className="text-xs text-ink-muted font-serif ml-0.5">°C</span>
               </div>
             </div>
             <div className="h-8 w-px bg-surface-border" />
             <div>
-              <span className="text-[10px] font-mono text-ink-muted uppercase block">Annual Water</span>
-              <div className="flex items-baseline gap-1">
+              <span className="text-label text-ink-dim block mb-0.5">Estimated CapEx</span>
+              <div className="flex items-baseline gap-0.5">
+                <span className="text-ink-muted text-sm">$</span>
+                <AnimatedCounter value={Math.round(totalCost / 1000)} decimals={0} className="editorial-headline text-3xl text-ink-primary tracking-tight" />
+                <span className="text-xs text-ink-muted font-sans ml-0.5">k</span>
+              </div>
+            </div>
+            <div className="h-8 w-px bg-surface-border" />
+            <div>
+              <span className="text-label text-ink-dim block mb-0.5">Annual Water</span>
+              <div className="flex items-baseline gap-0.5">
                 <AnimatedCounter value={Math.round(waterDemandM3)} decimals={0} className="editorial-headline text-3xl text-ink-primary tracking-tight" />
-                <span className="text-xs font-sans text-ink-muted font-normal">m³</span>
+                <span className="text-xs text-ink-muted font-sans ml-0.5">m³</span>
               </div>
             </div>
           </div>
         </div>
 
         {/* Spatial Zone Focus Pills */}
-        <div className="graphite-card p-3.5 rounded-lg flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
-          <span className="text-ink-secondary font-medium font-mono text-[11px]">Spatial Focus Zone:</span>
+        <div className="graphite-card p-3 rounded-lg flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 text-xs">
+          <span className="text-label text-ink-dim">Spatial Focus Zone:</span>
 
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-1.5">
             {[
               { id: "global", label: "Global (All District)" },
-              { id: "zone4_dense", label: "Zone 4: Dense Built-Up Core" },
+              { id: "zone4_dense", label: "Zone 4: Built-Up Core" },
               { id: "zone3_albedo", label: "Zone 3: Commercial Roofs" },
               { id: "zone1_green", label: "Zone 1: Shaded Corridors" }
             ].map((z) => (
               <button
                 key={z.id}
                 onClick={() => setTargetZone(z.id)}
-                className={`px-3 py-1 rounded font-mono text-[11px] transition-colors ${
+                className={`px-2.5 py-1 rounded-md text-[11px] font-mono transition-colors ${
                   targetZone === z.id
                     ? "bg-cobalt text-white font-medium shadow-sm"
                     : "bg-surface-base text-ink-secondary border border-surface-border hover:text-ink-primary"
@@ -276,102 +264,102 @@ export default function InterventionStudioPage() {
         </div>
 
         {/* Main 2-Column Grid: Sandbox Controls + Live Canvas Preview */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           {/* Controls Sandbox */}
-          <div className="lg:col-span-7 graphite-card p-6 rounded-lg space-y-5">
+          <div className="lg:col-span-7 graphite-card p-5 sm:p-6 rounded-lg space-y-4">
             <div className="flex justify-between items-center border-b border-surface-border pb-3">
-              <h3 className="text-sm font-semibold text-ink-primary">Intervention Parameter Sandbox</h3>
+              <h3 className="text-xs font-semibold text-ink-primary">Intervention Parameters</h3>
               <button 
                 onClick={handleSave}
-                className="btn-cobalt px-3.5 py-1.5 rounded text-xs flex items-center gap-1.5"
+                className="btn-cobalt px-3 py-1 rounded-md text-xs flex items-center gap-1.5"
               >
                 {savedStatus ? <Check className="w-3.5 h-3.5" /> : <Sparkles className="w-3.5 h-3.5" />}
                 <span>{savedStatus ? "Saved" : "Save Strategy"}</span>
               </button>
             </div>
 
-            <div className="space-y-5 text-xs tabular-nums">
+            <div className="space-y-3.5 text-xs tabular-nums">
               {/* Green Roofs */}
-              <div className="space-y-2 p-3.5 rounded bg-surface-base border border-surface-border">
+              <div className="space-y-2 p-3 rounded-lg surface-inset">
                 <div className="flex justify-between items-baseline">
                   <span className="font-medium text-ink-primary">Green Roof Coverage</span>
-                  <span className="font-mono text-cobalt font-semibold">{Math.round(greenRoof * 100)}% roof area</span>
+                  <span className="font-mono text-cobalt font-medium">{Math.round(greenRoof * 100)}% roof area</span>
                 </div>
                 <input
                   type="range" min="0" max="0.80" step="0.05" value={greenRoof}
                   onChange={(e) => setGreenRoof(Number(e.target.value))}
                   className="w-full"
                 />
-                <div className="flex justify-between text-[11px] text-ink-muted">
-                  <span>Rooftop evapotranspiration & latent heat flux</span>
+                <div className="flex justify-between text-[10px] text-ink-dim">
+                  <span>Rooftop evapotranspiration & latent flux</span>
                   <span>$75/m² · 450 L/m²/yr</span>
                 </div>
               </div>
 
               {/* Cool Roofs */}
-              <div className="space-y-2 p-3.5 rounded bg-surface-base border border-surface-border">
+              <div className="space-y-2 p-3 rounded-lg surface-inset">
                 <div className="flex justify-between items-baseline">
                   <span className="font-medium text-ink-primary">Cool Roofs High-Albedo Boost</span>
-                  <span className="font-mono text-ink-primary font-semibold">+{coolRoof.toFixed(2)} Δα</span>
+                  <span className="font-mono text-ink-primary font-medium">+{coolRoof.toFixed(2)} Δα</span>
                 </div>
                 <input
                   type="range" min="0" max="0.40" step="0.05" value={coolRoof}
                   onChange={(e) => setCoolRoof(Number(e.target.value))}
                   className="w-full"
                 />
-                <div className="flex justify-between text-[11px] text-ink-muted">
+                <div className="flex justify-between text-[10px] text-ink-dim">
                   <span>High solar reflectance coatings</span>
-                  <span>$18/m² · Zero water demand</span>
+                  <span>$18/m² · Zero water</span>
                 </div>
               </div>
 
               {/* Urban Tree Canopy */}
-              <div className="space-y-2 p-3.5 rounded bg-surface-base border border-surface-border">
+              <div className="space-y-2 p-3 rounded-lg surface-inset">
                 <div className="flex justify-between items-baseline">
                   <span className="font-medium text-ink-primary">Urban Tree Canopy Expansion</span>
-                  <span className="font-mono text-cobalt font-semibold">+{Math.round(treeCanopy * 100)}% ground area</span>
+                  <span className="font-mono text-cobalt font-medium">+{Math.round(treeCanopy * 100)}% ground</span>
                 </div>
                 <input
                   type="range" min="0" max="0.40" step="0.05" value={treeCanopy}
                   onChange={(e) => setTreeCanopy(Number(e.target.value))}
                   className="w-full"
                 />
-                <div className="flex justify-between text-[11px] text-ink-muted">
-                  <span>Pedestrian corridor shading & transpiration</span>
+                <div className="flex justify-between text-[10px] text-ink-dim">
+                  <span>Corridor shading & microclimate transpiration</span>
                   <span>$35/m² · 600 L/m²/yr</span>
                 </div>
               </div>
 
               {/* Reflective Pavements */}
-              <div className="space-y-2 p-3.5 rounded bg-surface-base border border-surface-border">
+              <div className="space-y-2 p-3 rounded-lg surface-inset">
                 <div className="flex justify-between items-baseline">
                   <span className="font-medium text-ink-primary">Reflective Street Pavements</span>
-                  <span className="font-mono text-ink-primary font-semibold">+{reflectPave.toFixed(2)} Δα</span>
+                  <span className="font-mono text-ink-primary font-medium">+{reflectPave.toFixed(2)} Δα</span>
                 </div>
                 <input
                   type="range" min="0" max="0.30" step="0.05" value={reflectPave}
                   onChange={(e) => setReflectPave(Number(e.target.value))}
                   className="w-full"
                 />
-                <div className="flex justify-between text-[11px] text-ink-muted">
-                  <span>Street-level sensible heat release</span>
+                <div className="flex justify-between text-[10px] text-ink-dim">
+                  <span>Street-level sensible heat mitigation</span>
                   <span>$22/m²</span>
                 </div>
               </div>
 
               {/* Water Features */}
-              <div className="space-y-2 p-3.5 rounded bg-surface-base border border-surface-border">
+              <div className="space-y-2 p-3 rounded-lg surface-inset">
                 <div className="flex justify-between items-baseline">
-                  <span className="font-medium text-ink-primary">Urban Water Bodies & Retention</span>
-                  <span className="font-mono text-ink-primary font-semibold">+{Math.round(waterFeat * 100)}% surface area</span>
+                  <span className="font-medium text-ink-primary">Urban Water Retention Bodies</span>
+                  <span className="font-mono text-ink-primary font-medium">+{Math.round(waterFeat * 100)}% surface</span>
                 </div>
                 <input
                   type="range" min="0" max="0.15" step="0.01" value={waterFeat}
                   onChange={(e) => setWaterFeat(Number(e.target.value))}
                   className="w-full"
                 />
-                <div className="flex justify-between text-[11px] text-ink-muted">
-                  <span>Evaporative microclimate heat sink</span>
+                <div className="flex justify-between text-[10px] text-ink-dim">
+                  <span>Evaporative heat sink</span>
                   <span>$120/m² · 1,200 L/m²/yr</span>
                 </div>
               </div>
@@ -379,50 +367,50 @@ export default function InterventionStudioPage() {
           </div>
 
           {/* Right Column: Live 2D Canvas + CapEx Ledger */}
-          <div className="lg:col-span-5 space-y-6">
-            <div className="graphite-card p-5 rounded-lg space-y-3">
-              <div className="flex justify-between items-baseline px-1 text-xs">
-                <span className="font-mono text-ink-muted uppercase">Live Thermal Response</span>
-                <span className="font-mono text-status-safe flex items-center gap-1">
+          <div className="lg:col-span-5 space-y-5">
+            <div className="graphite-card p-4 rounded-lg space-y-2.5">
+              <div className="flex justify-between items-baseline px-0.5 text-xs">
+                <span className="text-label text-ink-dim">Live Thermal Response</span>
+                <span className="font-mono text-status-safe flex items-center gap-1 text-[11px]">
                   <ShieldCheck className="w-3.5 h-3.5" /> Surrogate (1.8ms)
                 </span>
               </div>
-              <div className="aspect-square bg-surface-base border border-surface-border rounded overflow-hidden flex items-center justify-center">
+              <div className="aspect-square bg-surface-base border border-surface-border rounded-lg overflow-hidden flex items-center justify-center surface-inset">
                 <canvas ref={canvasRef} className="w-full h-full" />
               </div>
             </div>
 
             {/* Line Item Accounting */}
-            <div className="graphite-card p-6 rounded-lg space-y-3 text-xs tabular-nums">
+            <div className="graphite-card p-5 rounded-lg space-y-3 text-xs tabular-nums">
               <div className="border-b border-surface-border pb-2">
-                <h3 className="font-medium text-ink-primary">CapEx & Resource Ledger</h3>
+                <h3 className="text-xs font-semibold text-ink-primary">CapEx & Resource Ledger</h3>
               </div>
 
-              <div className="space-y-2 text-ink-secondary">
-                <div className="flex justify-between items-center py-1 border-b border-surface-border/40">
+              <div className="space-y-1.5 text-ink-secondary">
+                <div className="flex justify-between items-center py-1 border-b border-surface-border/30">
                   <span>Green Roofs ({Math.round(greenRoofArea).toLocaleString()} m²)</span>
                   <span className="font-mono text-ink-primary">${Math.round(costGreen).toLocaleString()}</span>
                 </div>
-                <div className="flex justify-between items-center py-1 border-b border-surface-border/40">
+                <div className="flex justify-between items-center py-1 border-b border-surface-border/30">
                   <span>Cool Roofs ({Math.round(coolRoofArea).toLocaleString()} m²)</span>
                   <span className="font-mono text-ink-primary">${Math.round(costCool).toLocaleString()}</span>
                 </div>
-                <div className="flex justify-between items-center py-1 border-b border-surface-border/40">
+                <div className="flex justify-between items-center py-1 border-b border-surface-border/30">
                   <span>Canopy Trees ({Math.round(treeArea).toLocaleString()} m²)</span>
                   <span className="font-mono text-ink-primary">${Math.round(costTree).toLocaleString()}</span>
                 </div>
-                <div className="flex justify-between items-center py-1 border-b border-surface-border/40">
+                <div className="flex justify-between items-center py-1 border-b border-surface-border/30">
                   <span>Reflective Pavements ({Math.round(paveArea).toLocaleString()} m²)</span>
                   <span className="font-mono text-ink-primary">${Math.round(costPave).toLocaleString()}</span>
                 </div>
-                <div className="flex justify-between items-center py-1 border-b border-surface-border/40">
+                <div className="flex justify-between items-center py-1 border-b border-surface-border/30">
                   <span>Water Features ({Math.round(waterArea).toLocaleString()} m²)</span>
                   <span className="font-mono text-ink-primary">${Math.round(costWater).toLocaleString()}</span>
                 </div>
 
                 <div className="flex justify-between items-center pt-2 font-medium text-xs">
                   <span className="text-ink-primary">Total Capital Budget</span>
-                  <span className="font-mono text-cobalt text-sm font-bold">${Math.round(totalCost).toLocaleString()} USD</span>
+                  <span className="font-mono text-cobalt font-semibold">${Math.round(totalCost).toLocaleString()} USD</span>
                 </div>
               </div>
             </div>

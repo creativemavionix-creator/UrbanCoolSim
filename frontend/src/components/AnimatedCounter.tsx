@@ -20,8 +20,8 @@ export function AnimatedCounter({
 }: AnimatedCounterProps) {
   const ref = useRef<HTMLSpanElement>(null);
   const motionVal = useMotionValue(value);
-  // Fast, responsive spring easing without bounce delay
-  const springVal = useSpring(motionVal, { stiffness: 200, damping: 24 });
+  // Critically-damped spring: snappy, smooth, zero overshoot/bounce
+  const springVal = useSpring(motionVal, { stiffness: 220, damping: 30 });
   const displayVal = useTransform(springVal, (latest) => {
     return `${prefix}${latest.toLocaleString(undefined, {
       minimumFractionDigits: decimals,

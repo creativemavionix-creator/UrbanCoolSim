@@ -5,14 +5,24 @@ import dynamic from "next/dynamic";
 import { Header } from "@/components/Header";
 import { AnimatedCounter } from "@/components/AnimatedCounter";
 import { api, DigitalTwinGrid, SimulationResult } from "@/lib/api";
+import { 
+  ArrowRight, 
+  Globe2,
+  ShieldCheck,
+  TrendingDown,
+  Users,
+  Zap,
+} from "lucide-react";
+import Link from "next/link";
+import { motion } from "framer-motion";
 
 const DigitalTwinMap = dynamic(
   () => import("@/components/DigitalTwinMap").then((mod) => mod.DigitalTwinMap),
   {
     ssr: false,
     loading: () => (
-      <div className="w-full h-full flex items-center justify-center bg-surface-base text-xs font-mono text-ink-muted">
-        Loading 10m Geospatial Digital Twin…
+      <div className="w-full h-[620px] flex items-center justify-center surface-inset rounded-lg text-xs font-mono text-ink-muted skeleton-pulse">
+        Initializing 10m Spatial Digital Twin…
       </div>
     ),
   }
@@ -23,25 +33,12 @@ const EnergyBalanceChart = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="w-full h-48 flex items-center justify-center bg-surface-base text-xs font-mono text-ink-muted">
-        Loading Flux Dynamics…
+      <div className="w-full h-48 flex items-center justify-center surface-inset rounded-lg text-xs font-mono text-ink-muted skeleton-pulse">
+        Loading Thermodynamic Flux Balance…
       </div>
     ),
   }
 );
-import { 
-  ArrowRight, 
-  Sparkles, 
-  DollarSign, 
-  Droplets, 
-  Globe2,
-  Thermometer,
-  Zap,
-  ShieldCheck,
-  AlertTriangle
-} from "lucide-react";
-import Link from "next/link";
-import { motion } from "framer-motion";
 
 const studyAreaPills = [
   { id: "delhi_cp", label: "Delhi · CP", flag: "🇮🇳", temp: "42.0°C" },
@@ -109,22 +106,22 @@ export default function DashboardPage() {
         }}
       />
 
-      <div className="p-6 sm:p-8 max-w-7xl mx-auto w-full space-y-8">
-        {/* Active Study Area Archetype Selector */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-surface-border pb-4">
+      <div className="p-5 sm:p-7 max-w-7xl mx-auto w-full space-y-6">
+        {/* District Archetype Navigation Bar */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-3 border-b border-surface-border/60">
           <div className="flex items-center gap-2 text-xs text-ink-muted">
             <Globe2 className="w-3.5 h-3.5 text-cobalt" />
-            <span className="font-mono uppercase tracking-widest text-[10px]">Active Digital Twin:</span>
+            <span className="text-label text-ink-dim">Active Archetype:</span>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-1.5">
             {studyAreaPills.map((pill) => {
               const isSelected = pill.id === studyArea;
               return (
                 <button
                   key={pill.id}
                   onClick={() => handlePillClick(pill.id)}
-                  className={`flex items-center gap-2 px-3 py-1 rounded text-xs font-mono transition-colors ${
+                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-mono transition-all ${
                     isSelected
                       ? "bg-cobalt text-white font-medium shadow-sm"
                       : "bg-surface-elevated text-ink-secondary hover:text-ink-primary hover:bg-surface-interactive border border-surface-border"
@@ -132,7 +129,7 @@ export default function DashboardPage() {
                 >
                   <span>{pill.flag}</span>
                   <span>{pill.label}</span>
-                  <span className={`text-[10px] ${isSelected ? "text-white/80" : "text-ink-muted"}`}>
+                  <span className={`text-[10px] ${isSelected ? "text-white/80" : "text-ink-dim"}`}>
                     {pill.temp}
                   </span>
                 </button>
@@ -141,28 +138,31 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Asymmetrical Metric Hierarchy: One Hero KPI + Receding Secondary Row */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
-          {/* THE ONE HERO KPI (5 Cols) */}
-          <div className="lg:col-span-5 graphite-card p-8 rounded-lg flex flex-col justify-between space-y-6 border-l-2 border-l-cobalt">
+        {/* Asymmetrical Metric Layout: Primary Metric + Metrics Bento */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
+          {/* Primary Decision Metric (5 Cols) */}
+          <div className="lg:col-span-5 graphite-card p-6 sm:p-7 rounded-lg flex flex-col justify-between space-y-5">
             <div className="space-y-1">
-              <span className="text-[10px] font-mono uppercase tracking-widest text-cobalt font-semibold block">
-                Primary Decision Metric
-              </span>
+              <div className="flex items-center gap-1.5">
+                <TrendingDown className="w-3.5 h-3.5 text-cobalt" />
+                <span className="text-label text-cobalt">
+                  Primary Decision Metric
+                </span>
+              </div>
               <h2 className="text-xs text-ink-secondary">
                 Achievable Mean District Cooling (ΔT)
               </h2>
             </div>
 
-            <div className="space-y-1">
+            <div className="space-y-1.5">
               <div className="flex items-baseline gap-1">
-                <span className="editorial-headline text-5xl sm:text-6xl text-cobalt font-normal tracking-tight">-</span>
+                <span className="editorial-headline text-5xl sm:text-6xl text-cobalt font-normal tracking-tight">−</span>
                 <AnimatedCounter 
                   value={coolingBenefit} 
                   decimals={2} 
                   className="editorial-headline text-5xl sm:text-6xl text-cobalt font-normal tracking-tight"
                 />
-                <span className="text-2xl text-ink-muted font-light font-serif">°C</span>
+                <span className="text-2xl text-ink-muted font-light font-serif ml-1">°C</span>
               </div>
               <p className="text-xs text-ink-secondary leading-relaxed">
                 Maximized across 2,500 cells via NSGA-II Pareto hybrid strategy (cool roofs + canopy shading).
@@ -170,81 +170,89 @@ export default function DashboardPage() {
             </div>
 
             <div className="pt-3 border-t border-surface-border flex items-center justify-between text-xs font-mono">
-              <span className="text-ink-muted">Physics Solver Status:</span>
-              <span className="text-status-safe font-medium flex items-center gap-1.5">
+              <span className="text-ink-dim">Solver Status:</span>
+              <span className="text-status-safe font-medium flex items-center gap-1.5 text-[11px]">
                 <ShieldCheck className="w-3.5 h-3.5" /> Deterministic Validated
               </span>
             </div>
           </div>
 
-          {/* Secondary Receding Metrics (7 Cols) */}
-          <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {/* Metric 1: Baseline LST */}
-            <div className="graphite-card p-6 rounded-lg space-y-2 flex flex-col justify-between">
-              <span className="text-[10px] font-mono uppercase tracking-wider text-ink-muted block">
-                Observed Baseline LST
-              </span>
-              <div className="flex items-baseline gap-1">
-                <AnimatedCounter 
-                  value={baselineTemp} 
-                  decimals={1} 
-                  className="text-3xl font-serif text-ink-primary tracking-tight"
-                />
-                <span className="text-sm text-ink-muted font-sans">°C</span>
+          {/* Secondary Metrics Breakdown (7 Cols) */}
+          <div className="lg:col-span-7 flex flex-col justify-between gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 flex-1">
+              {/* Metric 1: Baseline LST */}
+              <div className="graphite-card p-5 rounded-lg flex flex-col justify-between space-y-3">
+                <span className="text-label text-ink-dim">
+                  Observed Baseline LST
+                </span>
+                <div className="flex items-baseline gap-1">
+                  <AnimatedCounter 
+                    value={baselineTemp} 
+                    decimals={1} 
+                    className="text-2xl sm:text-3xl font-serif text-ink-primary tracking-tight"
+                  />
+                  <span className="text-xs text-ink-muted font-sans">°C</span>
+                </div>
+                <span className="text-[10px] text-ink-dim leading-snug">
+                  Peak thermal infrared
+                </span>
               </div>
-              <span className="text-[10px] text-ink-muted block leading-snug">
-                Thermal infrared peak
-              </span>
+
+              {/* Metric 2: Exposed Pop */}
+              <div className="graphite-card p-5 rounded-lg flex flex-col justify-between space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-label text-ink-dim">
+                    Exposed Pop.
+                  </span>
+                  <Users className="w-3 h-3 text-status-high" />
+                </div>
+                <div className="flex items-baseline gap-1">
+                  <AnimatedCounter 
+                    value={14800} 
+                    decimals={0} 
+                    className="text-2xl sm:text-3xl font-serif text-status-high tracking-tight"
+                  />
+                  <span className="text-[11px] text-ink-muted font-sans">res.</span>
+                </div>
+                <span className="text-[10px] text-ink-dim leading-snug">
+                  In zones &gt;41.5°C
+                </span>
+              </div>
+
+              {/* Metric 3: Chiller Savings */}
+              <div className="graphite-card p-5 rounded-lg flex flex-col justify-between space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-label text-ink-dim">
+                    HVAC Saved
+                  </span>
+                  <Zap className="w-3 h-3 text-status-safe" />
+                </div>
+                <div className="flex items-baseline gap-1">
+                  <AnimatedCounter 
+                    value={142000} 
+                    decimals={0} 
+                    className="text-2xl sm:text-3xl font-serif text-ink-primary tracking-tight"
+                  />
+                  <span className="text-[10px] text-ink-dim font-mono">kWh</span>
+                </div>
+                <span className="text-[10px] text-status-safe font-mono">
+                  +$17,040 / yr
+                </span>
+              </div>
             </div>
 
-            {/* Metric 2: Exposed Pop */}
-            <div className="graphite-card p-6 rounded-lg space-y-2 flex flex-col justify-between">
-              <span className="text-[10px] font-mono uppercase tracking-wider text-ink-muted block">
-                Exposed Population
-              </span>
-              <div className="flex items-baseline gap-1">
-                <AnimatedCounter 
-                  value={14800} 
-                  decimals={0} 
-                  className="text-3xl font-serif text-status-high tracking-tight"
-                />
-                <span className="text-xs text-ink-muted font-sans">residents</span>
-              </div>
-              <span className="text-[10px] text-ink-muted block leading-snug">
-                Corridors &gt;41.5°C
-              </span>
-            </div>
-
-            {/* Metric 3: Chiller Savings */}
-            <div className="graphite-card p-6 rounded-lg space-y-2 flex flex-col justify-between">
-              <span className="text-[10px] font-mono uppercase tracking-wider text-ink-muted block">
-                HVAC Electricity Saved
-              </span>
-              <div className="flex items-baseline gap-1">
-                <AnimatedCounter 
-                  value={142000} 
-                  decimals={0} 
-                  className="text-3xl font-serif text-ink-primary tracking-tight"
-                />
-                <span className="text-[10px] text-ink-muted font-mono">kWh</span>
-              </div>
-              <span className="text-[10px] text-status-safe block font-mono">
-                +$17,040 annual savings
-              </span>
-            </div>
-
-            {/* Strategy Summary Card spanning all 3 cols */}
-            <div className="sm:col-span-3 graphite-card p-5 rounded-lg flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div className="space-y-1">
+            {/* Recommendation Ribbon */}
+            <div className="graphite-card p-4 rounded-lg flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <div className="space-y-0.5">
                 <span className="text-xs font-semibold text-ink-primary">Recommended Mitigation Blueprint</span>
                 <p className="text-xs text-ink-secondary">
-                  35% Green Roofs ($75/m²) + 25% Cool Roofs ($18/m²) + 20% Tree Canopy Expansion.
+                  35% Green Roofs ($75/m²) + 25% Cool Roofs ($18/m²) + 20% Canopy Expansion.
                 </p>
               </div>
 
               <Link
                 href="/optimization"
-                className="btn-cobalt px-4 py-2 rounded text-xs flex items-center gap-1.5 shrink-0"
+                className="btn-cobalt px-3.5 py-1.5 rounded-md text-xs flex items-center gap-1.5 shrink-0"
               >
                 <span>Tune Optimizer</span>
                 <ArrowRight className="w-3 h-3" />
@@ -254,16 +262,16 @@ export default function DashboardPage() {
         </div>
 
         {/* 2-Column: Spatial Map + Thermodynamic Flux Balance */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          <div className="lg:col-span-7 space-y-3">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          <div className="lg:col-span-7 space-y-2.5">
             <div className="flex justify-between items-baseline px-1 text-xs">
-              <h3 className="font-semibold text-ink-primary">10m Spatial Digital Twin</h3>
-              <span className="font-mono text-ink-muted">2,500 Cells (10m x 10m)</span>
+              <h3 className="font-medium text-ink-primary">10m Spatial Digital Twin</h3>
+              <span className="font-mono text-ink-dim text-[11px]">2,500 Cells (10m × 10m)</span>
             </div>
             <DigitalTwinMap gridData={grid} />
           </div>
 
-          <div className="lg:col-span-5 space-y-6">
+          <div className="lg:col-span-5 space-y-4">
             <EnergyBalanceChart data={simResult?.energy_fluxes_json} />
           </div>
         </div>

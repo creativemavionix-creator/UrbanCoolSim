@@ -31,6 +31,8 @@ import {
   Loader2,
   Globe,
   Info,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { SatelliteBasemapProvider, MapProviderType } from "@/lib/mapProviders";
 import {
@@ -303,6 +305,7 @@ export function DigitalTwinMap({
   const [osmBuildings, setOsmBuildings] = useState<GeoJSON.FeatureCollection | null>(null);
   const [osmStatus, setOsmStatus] = useState<string>("");
   const [osmLoading, setOsmLoading] = useState(false);
+  const [isLegendCollapsed, setIsLegendCollapsed] = useState(false);
 
   useEffect(() => {
     if (activeLayer) setSelectedLayer(activeLayer);
@@ -1177,179 +1180,182 @@ export function DigitalTwinMap({
 
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
-    <div className="relative w-full h-[620px] select-none overflow-hidden rounded-lg border border-white/10 bg-[#0B0C10]">
+    <div className="relative w-full h-[620px] select-none overflow-hidden rounded-lg border border-surface-border bg-[#0B0C10]">
       {/* 1. Full-Width Absolute Map Canvas Mount */}
       <div ref={mapContainerRef} className="absolute inset-0 w-full h-full" />
 
-      {/* 2. Top-Left: Search & Study Area Control Bar */}
-      <div className="absolute top-3 left-3 z-30 flex items-center gap-2 flex-wrap max-w-[calc(100%-160px)]">
-        {/* Study Area Badge */}
-        <div className="flex items-center gap-2 bg-[#13151B]/90 backdrop-blur-md border border-white/10 px-3 py-1.5 rounded-md shadow-2xl text-xs">
-          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
-          <span className="font-medium text-white tracking-tight truncate max-w-[180px]">
-            {badgeTitle}
-          </span>
-          {badgeSubtitle && (
-            <span className="text-white/40 font-mono text-[11px] hidden sm:inline truncate">
-              ({badgeSubtitle})
+      {/* 2. Unified Top Control Toolbar */}
+      <div className="absolute top-2.5 left-2.5 right-2.5 z-30 flex items-center justify-between gap-2 flex-wrap pointer-events-none">
+        {/* Left: Study Area Badge & Global Search */}
+        <div className="flex items-center gap-2 pointer-events-auto flex-wrap">
+          {/* Study Area Badge */}
+          <div className="flex items-center gap-2 bg-surface-elevated/90 backdrop-blur-md border border-surface-border px-3 py-1.5 rounded-md shadow-floating text-xs">
+            <span className="w-2 h-2 rounded-full bg-status-safe animate-subtle-pulse shrink-0" />
+            <span className="font-medium text-ink-primary tracking-tight truncate max-w-[170px]">
+              {badgeTitle}
             </span>
-          )}
-        </div>
-
-        {/* Global Location Search Bar (Part 2) */}
-        <div ref={searchContainerRef} className="relative">
-          <div className="flex items-center bg-[#13151B]/90 backdrop-blur-md border border-white/10 rounded-md px-2.5 py-1.5 shadow-2xl text-xs text-white focus-within:border-cobalt/60 transition-colors w-40 sm:w-56">
-            <Search className="w-3.5 h-3.5 text-white/40 mr-2 shrink-0" />
-            <input
-              type="text"
-              placeholder="Search worldwide city..."
-              value={searchQuery}
-              onChange={(e) => handleSearchChange(e.target.value)}
-              onFocus={() => setIsSearchOpen(true)}
-              className="bg-transparent border-none outline-none text-xs text-white placeholder-white/40 w-full font-sans"
-            />
-            {isSearching ? (
-              <Loader2 className="w-3.5 h-3.5 text-cobalt animate-spin shrink-0" />
-            ) : searchQuery ? (
-              <button
-                onClick={() => {
-                  setSearchQuery("");
-                  setSearchResults([]);
-                }}
-                className="text-white/40 hover:text-white"
-              >
-                <X className="w-3 h-3" />
-              </button>
-            ) : null}
+            {badgeSubtitle && (
+              <span className="text-ink-dim font-mono text-[10px] hidden sm:inline truncate">
+                ({badgeSubtitle})
+              </span>
+            )}
           </div>
 
-          {/* Autocomplete Dropdown */}
-          {isSearchOpen && (
-            <div className="absolute left-0 mt-1.5 w-80 max-h-96 overflow-y-auto bg-[#13151B]/95 backdrop-blur-xl border border-white/10 rounded-lg p-2 shadow-2xl z-50 text-xs space-y-2">
-              {/* Section 1: Pinned 10m Physics Study Areas */}
-              <div>
-                <div className="px-2 py-1 text-[10px] font-mono uppercase tracking-wider text-cobalt/90 font-semibold flex items-center gap-1.5 border-b border-white/5 pb-1 mb-1">
-                  <MapPin className="w-3 h-3" />
-                  <span>10m Physics Study Areas (High-Res)</span>
-                </div>
-                {filteredPinned.length > 0 ? (
-                  filteredPinned.map((area) => (
-                    <button
-                      key={area.id}
-                      onClick={() => handleSelectStudyArea(area)}
-                      className="w-full flex items-center justify-between p-1.5 rounded hover:bg-white/5 text-left text-white/80 hover:text-white transition-colors"
-                    >
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm">{area.flag}</span>
-                        <div>
-                          <div className="font-medium text-xs text-white">
-                            {area.name}
-                          </div>
-                          <div className="text-[10px] text-white/40">
-                            {area.city}, {area.country}
-                          </div>
-                        </div>
-                      </div>
-                      <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                        10m Grid
-                      </span>
-                    </button>
-                  ))
-                ) : (
-                  <div className="px-2 py-1 text-[11px] text-white/30 italic">
-                    No matching study areas
-                  </div>
-                )}
-              </div>
+          {/* Global Location Search Bar */}
+          <div ref={searchContainerRef} className="relative">
+            <div className="flex items-center bg-surface-elevated/90 backdrop-blur-md border border-surface-border hover:border-surface-borderHover focus-within:border-cobalt/60 rounded-md px-2.5 py-1.5 shadow-floating text-xs text-ink-primary transition-all w-36 sm:w-52">
+              <Search className="w-3.5 h-3.5 text-ink-muted mr-2 shrink-0" />
+              <input
+                type="text"
+                placeholder="Search location..."
+                value={searchQuery}
+                onChange={(e) => handleSearchChange(e.target.value)}
+                onFocus={() => setIsSearchOpen(true)}
+                className="bg-transparent border-none outline-none text-xs text-ink-primary placeholder-ink-dim w-full font-sans"
+              />
+              {isSearching ? (
+                <Loader2 className="w-3.5 h-3.5 text-cobalt animate-spin shrink-0" />
+              ) : searchQuery ? (
+                <button
+                  onClick={() => {
+                    setSearchQuery("");
+                    setSearchResults([]);
+                  }}
+                  className="text-ink-muted hover:text-ink-primary"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              ) : null}
+            </div>
 
-              {/* Section 2: Worldwide Search Results (Nominatim) */}
-              {searchQuery.trim() && (
-                <div className="border-t border-white/10 pt-1.5">
-                  <div className="px-2 py-1 text-[10px] font-mono uppercase tracking-wider text-white/40 flex items-center gap-1.5 mb-1">
-                    <Globe className="w-3 h-3" />
-                    <span>Global Locations (OSM Reference)</span>
+            {/* Autocomplete Dropdown */}
+            {isSearchOpen && (
+              <div className="absolute left-0 mt-1.5 w-80 max-h-88 overflow-y-auto bg-surface-elevated/95 backdrop-blur-xl border border-surface-border rounded-lg p-1.5 shadow-floating z-50 text-xs space-y-1.5">
+                {/* Pinned 10m Physics Study Areas */}
+                <div>
+                  <div className="text-label px-2 py-1 text-cobalt border-b border-surface-border/50 flex items-center gap-1.5 mb-1">
+                    <MapPin className="w-3 h-3" />
+                    <span>10m Physics Study Areas</span>
                   </div>
-
-                  {isSearching ? (
-                    <div className="p-3 text-center text-white/40 flex items-center justify-center gap-2 text-xs">
-                      <Loader2 className="w-3.5 h-3.5 animate-spin text-cobalt" />
-                      <span>Searching global geocoder...</span>
-                    </div>
-                  ) : searchResults.length > 0 ? (
-                    searchResults.map((item, idx) => (
+                  {filteredPinned.length > 0 ? (
+                    filteredPinned.map((area) => (
                       <button
-                        key={idx}
-                        onClick={() => handleSelectNominatim(item)}
-                        className="w-full flex items-start gap-2 p-1.5 rounded hover:bg-white/5 text-left text-white/80 hover:text-white transition-colors"
+                        key={area.id}
+                        onClick={() => handleSelectStudyArea(area)}
+                        className="w-full flex items-center justify-between p-1.5 rounded-md hover:bg-surface-interactive text-left text-ink-secondary hover:text-ink-primary transition-colors"
                       >
-                        <MapPin className="w-3.5 h-3.5 text-white/40 shrink-0 mt-0.5" />
-                        <div className="truncate">
-                          <div className="font-medium text-xs text-white truncate">
-                            {item.display_name.split(",")[0]}
-                          </div>
-                          <div className="text-[10px] text-white/40 truncate">
-                            {item.display_name}
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm">{area.flag}</span>
+                          <div>
+                            <div className="font-medium text-xs text-ink-primary">
+                              {area.name}
+                            </div>
+                            <div className="text-[10px] text-ink-muted">
+                              {area.city}, {area.country}
+                            </div>
                           </div>
                         </div>
+                        <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-status-safe/10 text-status-safe border border-status-safe/20">
+                          10m Grid
+                        </span>
                       </button>
                     ))
                   ) : (
-                    <div className="p-2 text-center text-white/40 text-xs italic">
-                      No global locations found
+                    <div className="px-2 py-1 text-[11px] text-ink-dim italic">
+                      No matching study areas
                     </div>
                   )}
                 </div>
-              )}
-            </div>
-          )}
+
+                {/* Worldwide Nominatim Results */}
+                {searchQuery.trim() && (
+                  <div className="border-t border-surface-border/50 pt-1">
+                    <div className="text-label px-2 py-1 text-ink-muted flex items-center gap-1.5 mb-1">
+                      <Globe className="w-3 h-3" />
+                      <span>Global Locations (OSM Reference)</span>
+                    </div>
+
+                    {isSearching ? (
+                      <div className="p-3 text-center text-ink-muted flex items-center justify-center gap-2 text-xs">
+                        <Loader2 className="w-3.5 h-3.5 animate-spin text-cobalt" />
+                        <span>Searching geocoder…</span>
+                      </div>
+                    ) : searchResults.length > 0 ? (
+                      searchResults.map((item, idx) => (
+                        <button
+                          key={idx}
+                          onClick={() => handleSelectNominatim(item)}
+                          className="w-full flex items-start gap-2 p-1.5 rounded-md hover:bg-surface-interactive text-left text-ink-secondary hover:text-ink-primary transition-colors"
+                        >
+                          <MapPin className="w-3.5 h-3.5 text-ink-dim shrink-0 mt-0.5" />
+                          <div className="truncate">
+                            <div className="font-medium text-xs text-ink-primary truncate">
+                              {item.display_name.split(",")[0]}
+                            </div>
+                            <div className="text-[10px] text-ink-dim truncate">
+                              {item.display_name}
+                            </div>
+                          </div>
+                        </button>
+                      ))
+                    ) : (
+                      <div className="p-2 text-center text-ink-dim text-xs italic">
+                        No global locations found
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Right: Quick Camera Actions */}
+        <div className="flex items-center gap-1.5 bg-surface-elevated/90 backdrop-blur-md border border-surface-border p-1 rounded-md shadow-floating text-xs text-ink-primary pointer-events-auto">
+          {/* 2D / 3D Segmented Control */}
+          <div className="flex items-center bg-surface-base p-0.5 rounded border border-surface-border">
+            <button
+              onClick={() => setIs3DMode(false)}
+              className={`px-2 py-0.5 rounded text-[11px] font-mono transition-all ${
+                !is3DMode
+                  ? "bg-cobalt text-white font-medium shadow-sm"
+                  : "text-ink-muted hover:text-ink-primary"
+              }`}
+            >
+              2D
+            </button>
+            <button
+              onClick={() => setIs3DMode(true)}
+              className={`px-2 py-0.5 rounded text-[11px] font-mono transition-all ${
+                is3DMode
+                  ? "bg-cobalt text-white font-medium shadow-sm"
+                  : "text-ink-muted hover:text-ink-primary"
+              }`}
+            >
+              3D
+            </button>
+          </div>
+
+          {/* Reset View */}
+          <button
+            onClick={handleResetView}
+            className="p-1 rounded text-ink-muted hover:text-ink-primary hover:bg-surface-interactive transition-colors"
+            title="Reset Camera Orientation & Zoom"
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+          </button>
         </div>
       </div>
 
-      {/* 3. Top-Right: Quick Camera & Mode Actions */}
-      <div className="absolute top-3 right-3 z-30 flex items-center gap-1.5 bg-[#13151B]/90 backdrop-blur-md border border-white/10 p-1 rounded-lg shadow-2xl text-xs text-white">
-        {/* 2D / 3D Toggle */}
-        <div className="flex items-center bg-[#0B0C10] p-0.5 rounded border border-white/10">
-          <button
-            onClick={() => setIs3DMode(false)}
-            className={`px-2.5 py-0.5 rounded text-[11px] font-mono transition-colors ${
-              !is3DMode
-                ? "bg-cobalt text-white font-medium shadow-sm"
-                : "text-white/50 hover:text-white"
-            }`}
-          >
-            2D
-          </button>
-          <button
-            onClick={() => setIs3DMode(true)}
-            className={`px-2.5 py-0.5 rounded text-[11px] font-mono transition-colors ${
-              is3DMode
-                ? "bg-cobalt text-white font-medium shadow-sm"
-                : "text-white/50 hover:text-white"
-            }`}
-          >
-            3D
-          </button>
-        </div>
-
-        {/* Reset View */}
-        <button
-          onClick={handleResetView}
-          className="p-1 rounded text-white/50 hover:text-white hover:bg-white/5 transition-colors"
-          title="Reset Camera Orientation & Zoom"
-        >
-          <RotateCcw className="w-3.5 h-3.5" />
-        </button>
-      </div>
-
-      {/* 4. Second Floating Control Sub-Bar: Layer, Scenario, Opacity & Grid */}
-      <div className="absolute top-14 left-3 z-20 flex flex-wrap items-center gap-2 bg-[#13151B]/90 backdrop-blur-md border border-white/10 p-1.5 rounded-lg shadow-2xl text-xs text-white max-w-[calc(100%-24px)]">
+      {/* 3. Secondary Floating Control Bar: Layer, Scenario, Opacity & Grid */}
+      <div className="absolute top-12 left-2.5 z-20 flex flex-wrap items-center gap-2 bg-surface-elevated/90 backdrop-blur-md border border-surface-border p-1.5 rounded-md shadow-floating text-xs text-ink-primary max-w-[calc(100%-20px)]">
         {/* Layer Dropdown */}
-        <div className="flex items-center gap-1.5 pl-1">
+        <div className="flex items-center gap-1.5 pl-0.5">
           <Layers className="w-3.5 h-3.5 text-cobalt shrink-0" />
           <select
             value={selectedLayer}
             onChange={(e) => setSelectedLayer(e.target.value)}
-            className="bg-[#0B0C10] border border-white/10 text-white text-xs px-2 py-1 rounded outline-none focus:border-cobalt transition-colors font-sans"
+            className="bg-surface-base border border-surface-border text-ink-primary text-xs px-2 py-1 rounded outline-none focus:border-cobalt transition-colors font-sans cursor-pointer"
           >
             <option value="baseline_temperature_c">Surface Temperature (LST)</option>
             <option value="canopy_height">Tree Canopy Height (m)</option>
@@ -1362,11 +1368,11 @@ export function DigitalTwinMap({
 
         {/* Scenario Dropdown */}
         <div className="flex items-center gap-1.5">
-          <Zap className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+          <Zap className="w-3.5 h-3.5 text-status-high shrink-0" />
           <select
             value={activeScenario}
             onChange={(e) => setActiveScenario(e.target.value)}
-            className="bg-[#0B0C10] border border-white/10 text-white text-xs px-2 py-1 rounded outline-none focus:border-cobalt transition-colors font-sans"
+            className="bg-surface-base border border-surface-border text-ink-primary text-xs px-2 py-1 rounded outline-none focus:border-cobalt transition-colors font-sans cursor-pointer"
           >
             <option value="baseline">Baseline (Observed)</option>
             <option value="cool_roofs">Cool Roofs (α=0.85)</option>
@@ -1376,11 +1382,11 @@ export function DigitalTwinMap({
           </select>
         </div>
 
-        <div className="h-4 w-px bg-white/10 hidden sm:block" />
+        <div className="h-3.5 w-px bg-surface-border hidden sm:block" />
 
         {/* Overlay Opacity Slider */}
         <div className="flex items-center gap-1.5 px-1">
-          <span className="text-white/50 text-[11px] font-sans">Overlay:</span>
+          <span className="text-ink-dim text-[11px] font-sans">Alpha:</span>
           <input
             type="range"
             min="0"
@@ -1388,205 +1394,193 @@ export function DigitalTwinMap({
             step="0.05"
             value={thermalOpacity}
             onChange={(e) => setThermalOpacity(Number(e.target.value))}
-            className="w-16 accent-cobalt cursor-pointer"
-            title="Adjust satellite vs thermal overlay opacity"
+            className="w-14 accent-cobalt cursor-pointer"
+            title="Adjust raster opacity"
           />
-          <span className="text-white/80 font-mono text-[10px] w-6">
+          <span className="text-ink-secondary font-mono text-[10px] w-5">
             {Math.round(thermalOpacity * 100)}%
           </span>
         </div>
 
-        <div className="h-4 w-px bg-white/10 hidden sm:block" />
+        <div className="h-3.5 w-px bg-surface-border hidden sm:block" />
 
         {/* 10m Grid Toggle */}
         <button
           onClick={() => setShowAnalysisGrid(!showAnalysisGrid)}
-          className={`px-2 py-1 rounded text-[11px] font-sans transition-colors flex items-center gap-1 border ${
+          className={`px-2 py-0.5 rounded text-[11px] font-sans transition-colors flex items-center gap-1 border ${
             showAnalysisGrid
-              ? "bg-cobalt/20 text-cobalt border-cobalt/40 font-medium"
-              : "bg-transparent text-white/50 border-transparent hover:text-white"
+              ? "bg-cobalt/15 text-cobalt border-cobalt/30 font-medium"
+              : "bg-transparent text-ink-muted border-transparent hover:text-ink-primary"
           }`}
-          title="Toggle subtle 10m microclimate gridlines"
+          title="Toggle 10m cell grid lines"
         >
           <Grid className="w-3 h-3" />
           <span>Grid</span>
         </button>
       </div>
 
-      {/* 5. Notification Chip: Non-LST Layer Global Notice (Bug B) */}
+      {/* 4. Global Notice for Non-LST Layers outside Study Areas */}
       {dataMode === "not_available" && (
-        <div className="absolute top-28 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 bg-[#13151B]/95 backdrop-blur-md border border-amber-500/30 px-3.5 py-1.5 rounded-md shadow-2xl text-xs text-amber-300">
-          <Info className="w-4 h-4 text-amber-400 shrink-0" />
+        <div className="absolute top-24 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 bg-surface-elevated/95 backdrop-blur-md border border-status-high/30 px-3.5 py-1.5 rounded-md shadow-floating text-xs text-status-high">
+          <Info className="w-3.5 h-3.5 text-status-high shrink-0" />
           <span>
-            No global reference available for <strong>{layerMeta.label}</strong>.
-            Zoom into a 10m study area to view microclimate simulation.
+            Global reference unavailable for <strong>{layerMeta.label}</strong>. Zoom into a 10m study area.
           </span>
         </div>
       )}
 
-      {/* 6. OSM Status Badge (3D mode) */}
+      {/* 5. OSM Status Badge (3D mode) */}
       {is3DMode && osmStatus && (
-        <div className="absolute top-28 left-3 z-20 flex items-center gap-1.5 bg-[#13151B]/85 backdrop-blur-md border border-white/10 px-2.5 py-1 rounded-md text-[10px] font-mono text-white/60">
+        <div className="absolute top-24 left-2.5 z-20 flex items-center gap-1.5 bg-surface-elevated/90 backdrop-blur-md border border-surface-border px-2.5 py-1 rounded-md text-[10px] font-mono text-ink-secondary">
           {osmLoading ? (
-            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+            <span className="w-1.5 h-1.5 rounded-full bg-status-high animate-subtle-pulse" />
           ) : osmBuildings ? (
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+            <span className="w-1.5 h-1.5 rounded-full bg-status-safe" />
           ) : (
-            <AlertCircle className="w-3 h-3 text-amber-400" />
+            <AlertCircle className="w-3 h-3 text-status-high" />
           )}
           {osmStatus}
         </div>
       )}
 
-      {/* 7. Bottom-Left: Scientific Legend (Bug A & Bug B Honest Mode) */}
-      <div className="absolute bottom-6 left-6 z-20 bg-[#13151B]/90 backdrop-blur-md border border-white/10 p-3 rounded-lg shadow-2xl text-xs space-y-1.5 pointer-events-none min-w-56 max-w-72">
-        {/* Data mode indicator */}
-        <div
-          className={`flex items-center gap-1.5 pb-1.5 mb-0.5 border-b text-[9px] font-mono font-semibold ${
-            dataMode === "local"
-              ? "border-cobalt/30 text-cobalt"
-              : dataMode === "crossfade"
-              ? "border-amber-400/30 text-amber-400"
-              : dataMode === "gibs"
-              ? "border-emerald-400/30 text-emerald-400"
-              : "border-amber-400/30 text-amber-400"
-          }`}
-        >
-          <span
-            className={`w-1.5 h-1.5 rounded-full ${
-              dataMode === "local"
-                ? "bg-cobalt"
+      {/* 6. Bottom-Left: Collapsible Scientific Legend */}
+      <div className="absolute bottom-3 left-3 z-20 bg-surface-elevated/90 backdrop-blur-md border border-surface-border p-2.5 rounded-lg shadow-floating text-xs space-y-1.5 min-w-48 max-w-64">
+        <div className="flex items-center justify-between gap-2 border-b border-surface-border/50 pb-1">
+          <div className="flex items-center gap-1.5 text-[10px] font-mono font-medium text-ink-primary">
+            <span
+              className={`w-1.5 h-1.5 rounded-full ${
+                dataMode === "local"
+                  ? "bg-cobalt"
+                  : dataMode === "crossfade"
+                  ? "bg-status-high animate-subtle-pulse"
+                  : dataMode === "gibs"
+                  ? "bg-status-safe"
+                  : "bg-status-high"
+              }`}
+            />
+            <span className="truncate">
+              {dataMode === "local"
+                ? "10m Microgrid"
                 : dataMode === "crossfade"
-                ? "bg-amber-400 animate-pulse"
+                ? "MODIS ↔ 10m Grid"
                 : dataMode === "gibs"
-                ? "bg-emerald-400"
-                : "bg-amber-400"
-            }`}
-          />
-          {dataMode === "local"
-            ? "10m Physics-Simulated Grid"
-            : dataMode === "crossfade"
-            ? "Blending MODIS → 10m Grid"
-            : dataMode === "gibs"
-            ? "NASA MODIS/VIIRS · ~1km Reference Data"
-            : "10m Simulation Only (Study Areas)"}
+                ? "NASA MODIS ~1km"
+                : "10m Simulation"}
+            </span>
+          </div>
+
+          <button
+            onClick={() => setIsLegendCollapsed(!isLegendCollapsed)}
+            className="text-ink-muted hover:text-ink-primary transition-colors p-0.5"
+            title={isLegendCollapsed ? "Expand legend" : "Collapse legend"}
+          >
+            {isLegendCollapsed ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+          </button>
         </div>
 
-        {dataMode === "not_available" ? (
-          /* Honest Not-Available Legend for Non-LST Layers (Bug B) */
-          <div className="space-y-1 pt-0.5">
-            <div className="text-[11px] font-semibold text-white">
-              {layerMeta.label}
-            </div>
-            <div className="text-[10px] text-white/50 leading-relaxed font-sans">
-              No global reference is available for this layer. Global reference coverage is available for Surface Temperature (LST).
-            </div>
-            <div className="text-[9px] font-mono text-amber-300/80 pt-0.5">
-              Available in: Delhi CP, Mumbai BKC, Singapore, Phoenix, Tokyo
-            </div>
-          </div>
-        ) : dataMode === "gibs" ? (
-          /* Honest NASA Native Colormap Legend (Bug A) */
-          <div className="space-y-1.5">
-            <div className="flex justify-between items-center text-[10px] text-white/50 font-sans tracking-wide uppercase">
-              <span>{NASA_GIBS_LST_META.label}</span>
-              <span className="font-mono text-white/70">
-                {NASA_GIBS_LST_META.unit}
-              </span>
-            </div>
-            <div
-              className="w-full h-2 rounded-full"
-              style={{ background: NASA_GIBS_LST_META.gradientCss }}
-            />
-            <div className="flex justify-between text-[10px] text-white/60 font-sans">
-              <span>{NASA_GIBS_LST_META.minLabel}</span>
-              <span>{NASA_GIBS_LST_META.maxLabel}</span>
-            </div>
-            <div className="text-[9px] text-emerald-400/70 font-mono pt-0.5">
-              {NASA_GIBS_LST_META.source}
-            </div>
-          </div>
-        ) : (
-          /* Local 10m Physics Microgrid Colormap Legend */
-          <div className="space-y-1.5">
-            <div className="flex justify-between items-center text-[10px] text-white/50 font-sans tracking-wide uppercase">
-              <span>{layerMeta.label}</span>
-              <span className="font-mono text-white/70">{layerMeta.unit}</span>
-            </div>
-            <div
-              className="w-full h-2 rounded-full"
-              style={{ background: layerMeta.gradientCss }}
-            />
-            <div className="flex justify-between text-[10px] text-white/60 font-sans">
-              <span>{layerMeta.minLabel}</span>
-              <span>{layerMeta.maxLabel}</span>
-            </div>
-            <div className="text-[9px] text-white/30 font-mono pt-0.5">
-              {layerMeta.source}
-            </div>
-          </div>
+        {!isLegendCollapsed && (
+          <>
+            {dataMode === "not_available" ? (
+              <div className="space-y-1 pt-0.5">
+                <div className="text-[11px] font-medium text-ink-primary">
+                  {layerMeta.label}
+                </div>
+                <div className="text-[10px] text-ink-muted leading-snug">
+                  Global reference available for Surface Temperature (LST).
+                </div>
+              </div>
+            ) : dataMode === "gibs" ? (
+              <div className="space-y-1">
+                <div className="flex justify-between items-center text-[10px] text-ink-muted">
+                  <span>{NASA_GIBS_LST_META.label}</span>
+                  <span className="font-mono text-ink-secondary">{NASA_GIBS_LST_META.unit}</span>
+                </div>
+                <div
+                  className="w-full h-1.5 rounded-full"
+                  style={{ background: NASA_GIBS_LST_META.gradientCss }}
+                />
+                <div className="flex justify-between text-[9px] text-ink-muted font-mono">
+                  <span>{NASA_GIBS_LST_META.minLabel}</span>
+                  <span>{NASA_GIBS_LST_META.maxLabel}</span>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-1">
+                <div className="flex justify-between items-center text-[10px] text-ink-muted">
+                  <span>{layerMeta.label}</span>
+                  <span className="font-mono text-ink-secondary">{layerMeta.unit}</span>
+                </div>
+                <div
+                  className="w-full h-1.5 rounded-full"
+                  style={{ background: layerMeta.gradientCss }}
+                />
+                <div className="flex justify-between text-[9px] text-ink-muted font-mono">
+                  <span>{layerMeta.minLabel}</span>
+                  <span>{layerMeta.maxLabel}</span>
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
 
-      {/* 7. Bottom-Right: Floating Cell Inspector */}
+      {/* 7. Bottom-Right: Tactical Cell Inspector HUD */}
       {activeInspection && (
-        <div className="absolute bottom-6 right-6 z-20 bg-[#13151B]/95 backdrop-blur-md border border-white/10 p-4 rounded-lg shadow-2xl text-xs space-y-3 min-w-64">
-          <div className="flex items-center justify-between border-b border-white/10 pb-2">
+        <div className="absolute bottom-3 right-3 z-20 bg-surface-elevated/95 backdrop-blur-md border border-surface-border p-3 rounded-lg shadow-floating text-xs space-y-2.5 min-w-56 max-w-64 animate-fade-in">
+          <div className="flex items-center justify-between border-b border-surface-border pb-1.5">
             <div className="flex items-center gap-1.5">
               <MapPin className="w-3.5 h-3.5 text-cobalt" />
-              <span className="font-semibold text-white">
+              <span className="font-medium text-xs text-ink-primary font-mono">
                 {activeInspection.row !== undefined
                   ? `Cell [${activeInspection.row}, ${activeInspection.col}]`
-                  : "Building"}
+                  : "Feature"}
               </span>
             </div>
             {selectedCell && (
               <button
                 onClick={() => setSelectedCell(null)}
-                className="text-white/40 hover:text-white transition-colors"
+                className="text-ink-muted hover:text-ink-primary transition-colors"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
             )}
           </div>
 
-          <div className="space-y-1.5 text-[11px] text-white/80">
-            <div className="flex justify-between items-baseline">
-              <span className="text-white/50">Surface Temp (LST):</span>
-              <strong className="text-red-400 font-bold text-sm">
-                {activeInspection.temp}°C
-              </strong>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-white/50">Building Height:</span>
-              <span className="text-white font-medium">{activeInspection.height}m</span>
-            </div>
-            {activeInspection.density !== undefined && (
-              <div className="flex justify-between">
-                <span className="text-white/50">Building Density:</span>
-                <span className="text-white">
-                  {Math.round(activeInspection.density * 100)}%
+          <div className="space-y-1.5 text-[11px]">
+            {/* Prominent Temperature Display */}
+            <div className="flex items-baseline justify-between bg-surface-base/80 p-2 rounded border border-surface-border">
+              <span className="text-ink-muted text-[10px]">Surface Temp:</span>
+              <div className="flex items-baseline gap-0.5">
+                <span className="text-status-critical font-bold text-sm font-mono">
+                  {activeInspection.temp}
                 </span>
+                <span className="text-[10px] text-ink-muted">°C</span>
               </div>
-            )}
-            <div className="flex justify-between">
-              <span className="text-white/50">Tree Canopy (GEDI):</span>
-              <span className="text-emerald-400 font-medium">
-                {activeInspection.canopyHeight}m
-              </span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-white/50">Population Exposure:</span>
-              <span className="text-white">{activeInspection.popDensity} pop/ha</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-white/50">Surface Albedo (α):</span>
-              <span className="text-white">{activeInspection.albedo}</span>
+
+            {/* 2-Column Property Grid */}
+            <div className="grid grid-cols-2 gap-1.5 pt-0.5">
+              <div className="surface-inset p-1.5 rounded">
+                <span className="text-[9px] text-ink-dim block font-mono">HEIGHT</span>
+                <span className="text-[11px] font-mono text-ink-primary">{activeInspection.height}m</span>
+              </div>
+              <div className="surface-inset p-1.5 rounded">
+                <span className="text-[9px] text-ink-dim block font-mono">CANOPY</span>
+                <span className="text-[11px] font-mono text-status-safe">{activeInspection.canopyHeight}m</span>
+              </div>
+              <div className="surface-inset p-1.5 rounded">
+                <span className="text-[9px] text-ink-dim block font-mono">EXPOSURE</span>
+                <span className="text-[11px] font-mono text-ink-primary">{activeInspection.popDensity} /ha</span>
+              </div>
+              <div className="surface-inset p-1.5 rounded">
+                <span className="text-[9px] text-ink-dim block font-mono">ALBEDO</span>
+                <span className="text-[11px] font-mono text-ink-primary">{activeInspection.albedo}</span>
+              </div>
             </div>
 
             {activeScenario !== "baseline" && activeInspection.coolingPotential && (
-              <div className="mt-2 pt-2 border-t border-white/10 flex justify-between items-center text-emerald-400 font-semibold">
-                <span>Predicted Cooling (ΔT):</span>
+              <div className="mt-1 p-1.5 rounded bg-status-safe/10 border border-status-safe/20 flex justify-between items-center text-[11px] text-status-safe font-mono font-medium">
+                <span>Predicted ΔT:</span>
                 <span>{activeInspection.coolingPotential}°C</span>
               </div>
             )}
@@ -1594,9 +1588,9 @@ export function DigitalTwinMap({
         </div>
       )}
 
-      {/* 8. Attribution */}
-      <div className="absolute bottom-1 right-2 z-10 text-[9px] text-white/30 pointer-events-none font-sans">
-        © Esri World Imagery · © OSM contributors · NASA EOSDIS GIBS · UrbanCoolSim SEB Intelligence
+      {/* 8. Micro Attribution */}
+      <div className="absolute bottom-1 right-2 z-10 text-[9px] text-ink-dim pointer-events-none font-mono">
+        © Esri · NASA GIBS · 10m SEB
       </div>
     </div>
   );

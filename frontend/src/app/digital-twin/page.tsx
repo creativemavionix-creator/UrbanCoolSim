@@ -4,15 +4,14 @@ import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { Header } from "@/components/Header";
 import { api, DigitalTwinGrid } from "@/lib/api";
-import { Download, Compass } from "lucide-react";
 
 const DigitalTwinMap = dynamic(
   () => import("@/components/DigitalTwinMap").then((mod) => mod.DigitalTwinMap),
   {
     ssr: false,
     loading: () => (
-      <div className="w-full h-full flex items-center justify-center bg-surface-base text-xs font-mono text-ink-muted">
-        Loading 10m Geospatial Digital Twin Engine…
+      <div className="w-full h-full flex items-center justify-center surface-inset rounded-lg text-xs font-mono text-ink-muted skeleton-pulse">
+        Initializing 10m Geospatial Digital Twin Engine…
       </div>
     ),
   }
@@ -50,15 +49,8 @@ export default function DigitalTwinPage() {
     return () => window.removeEventListener("studyAreaChanged", handleAreaChange);
   }, []);
 
-  const handleExportCSV = () => {
-    if (grid) {
-      api.exportGridToCSV(grid, `${studyArea}_microclimate_grid.csv`);
-    }
-  };
-
   return (
-    <div className="flex flex-col h-screen w-full bg-[#0B0C10] text-[#F2F3F5] overflow-hidden select-none">
-      {/* Minimal Header */}
+    <div className="flex flex-col h-screen w-full bg-surface-base text-ink-primary overflow-hidden select-none">
       <Header 
         title="Spatial Digital Twin" 
         subtitle="10m Satellite Remote Sensing & Thermal Physics" 
@@ -68,14 +60,15 @@ export default function DigitalTwinPage() {
         }}
       />
 
-      {/* Hero Map Application Viewport (Occupies 92% of Screen) */}
-      <main className="flex-1 w-full h-[calc(100vh-64px)] p-3 relative">
+      <main className="flex-1 w-full h-[calc(100vh-48px)] p-2.5 relative">
         {grid ? (
-          <DigitalTwinMap 
-            gridData={grid}
-          />
+          <div className="w-full h-full [&>div]:h-full [&>div]:min-h-full">
+            <DigitalTwinMap 
+              gridData={grid}
+            />
+          </div>
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-xs text-white/40 font-mono">
+          <div className="w-full h-full flex items-center justify-center surface-inset rounded-lg text-xs text-ink-muted font-mono skeleton-pulse">
             Loading satellite digital twin...
           </div>
         )}

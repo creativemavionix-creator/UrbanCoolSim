@@ -16,8 +16,6 @@
     background-color: #0B0C10;
     color: #F2F3F5;
     font-family: var(--font-sans);
-    font-variant-ligatures: none;
-    font-feature-settings: "liga" 0, "clig" 0, "calt" 0, "cv02", "cv03", "cv04", "cv11", "tnum" 1;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
@@ -27,70 +25,102 @@
     font-weight: 500;
     color: #F2F3F5;
   }
+
+  /* Accessible focus ring — only on keyboard navigation */
+  :focus-visible {
+    outline: 2px solid rgba(74, 108, 255, 0.7);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  ::selection {
+    background: rgba(74, 108, 255, 0.3);
+    color: #F2F3F5;
+  }
 }
 
-/* Tabular figures helper */
+/* ─── Tabular Figures ─────────────────────────────────────────────────────── */
 .tabular-nums {
   font-variant-numeric: tabular-nums;
   font-feature-settings: "tnum" 1;
 }
 
-/* Precision Subtle Scrollbars */
-::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
-}
-::-webkit-scrollbar-track {
-  background: #0B0C10;
-}
-::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.12);
-  border-radius: 9999px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.22);
+/* ─── Standardized Label Utility ──────────────────────────────────────────── */
+/* Replaces scattered text-[10px] font-mono uppercase tracking-widest */
+.text-label {
+  font-size: 10px;
+  line-height: 1;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 500;
 }
 
-/* Graphite Surface Cards with Edge Separation */
+/* ─── Minimal Scrollbars — fade-in on hover ───────────────────────────────── */
+::-webkit-scrollbar {
+  width: 3px;
+  height: 3px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 9999px;
+  transition: background 0.2s ease;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+/* ─── Surface Cards ───────────────────────────────────────────────────────── */
 .graphite-card {
   background-color: #13151B;
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.45), inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 0 2px 12px -2px rgba(0, 0, 0, 0.35);
 }
 
 .graphite-card-interactive {
   background-color: #13151B;
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.45), inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
-  transition: border-color 0.15s ease, background-color 0.15s ease;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 0 2px 12px -2px rgba(0, 0, 0, 0.35);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 .graphite-card-interactive:hover {
-  background-color: #181B22;
-  border-color: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 4px 20px -4px rgba(0, 0, 0, 0.5);
 }
 
-/* Signature Cobalt CTA Button */
+/* Recessed inset surface — for nested panels */
+.surface-inset {
+  background-color: #0D0E13;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+/* ─── Primary Action Button ───────────────────────────────────────────────── */
 .btn-cobalt {
   background-color: #4A6CFF;
   color: #FFFFFF;
   font-weight: 500;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.25), 0 2px 8px -2px rgba(74, 108, 255, 0.4);
-  transition: background-color 0.15s ease, transform 0.1s ease;
+  border: none;
+  box-shadow: 0 1px 6px -1px rgba(74, 108, 255, 0.35);
+  transition: background-color 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
 }
 .btn-cobalt:hover {
   background-color: #5B7FFF;
+  box-shadow: 0 2px 10px -2px rgba(74, 108, 255, 0.45);
 }
 .btn-cobalt:active {
   transform: scale(0.98);
 }
 
-/* Custom Minimal Range Sliders */
+/* ─── Minimal Range Sliders ───────────────────────────────────────────────── */
 input[type="range"] {
   -webkit-appearance: none;
   appearance: none;
   background: rgba(255, 255, 255, 0.1);
-  height: 4px;
+  height: 3px;
   border-radius: 9999px;
   outline: none;
   cursor: pointer;
@@ -104,8 +134,8 @@ input[type="range"]:hover {
 input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 14px;
-  height: 14px;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
   background: #F2F3F5;
   cursor: pointer;
@@ -114,7 +144,7 @@ input[type="range"]::-webkit-slider-thumb {
 }
 
 input[type="range"]::-webkit-slider-thumb:hover {
-  transform: scale(1.2);
+  transform: scale(1.15);
 }
 
 input[type="range"]::-webkit-slider-thumb:active {
@@ -122,9 +152,26 @@ input[type="range"]::-webkit-slider-thumb:active {
   background: #4A6CFF;
 }
 
-/* Editorial Headline Typography */
+/* ─── Editorial Typography (use sparingly) ────────────────────────────────── */
 .editorial-headline {
   font-family: var(--font-serif);
   letter-spacing: -0.025em;
   line-height: 1.05;
+}
+
+/* ─── Skeleton Pulse for Loading States ───────────────────────────────────── */
+.skeleton-pulse {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.04) 25%,
+    rgba(255, 255, 255, 0.08) 50%,
+    rgba(255, 255, 255, 0.04) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeletonShimmer 1.8s ease-in-out infinite;
+}
+
+@keyframes skeletonShimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }
