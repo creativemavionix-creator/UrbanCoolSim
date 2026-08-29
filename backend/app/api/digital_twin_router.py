@@ -19,9 +19,9 @@ STUDY_AREAS_METADATA = [
         "crs": "EPSG:32643",
         "resolution_m": 10.0,
         "typology": "commercial_radial",
-        "description": "Dense concentric commercial ring around a central park, high thermal inertia asphalt roadways.",
-        "center_lat": 28.6315,
-        "center_lon": 77.2167,
+        "description": "Dense concentric commercial ring around Central Park, high thermal inertia asphalt roadways.",
+        "center_lat": 28.6328,
+        "center_lon": 77.2197,
         "base_climate": {
             "air_temp_c": 42.0,
             "solar_rad_wm2": 920.0,
@@ -132,54 +132,80 @@ def generate_study_area_grid(study_area_id: str = "delhi_cp", rows: int = 50, co
     base_t = np.full((rows, cols), 36.0, dtype=float)
 
     if study_area_id == "delhi_cp":
-        # Radial concentric circle structure (Connaught Place)
-        # Center: Central Park (radius ~ 6.5 cells in 10m res = ~65m radius circle)
-        central_park_mask = dist_from_center < 6.5
-        central_fountain = dist_from_center < 2.0
+        # Connaught Place (Rajiv Chowk), New Delhi
+        # True Central Park is a circular park of radius ~115m (11.5 cells)
+        central_park_mask = dist_from_center <= 11.5
+        central_fountain = dist_from_center <= 2.5
         
-        # Radial Roads (Janpath, Barakhamba, Parliament St, KG Marg, Radial Roads 1-8)
-        angles = np.arctan2(y_coords - center_y, x_coords - center_x) % (2 * np.pi)
+        # 8 Real Radial Avenues in CP (only outside Central Park dist >= 11.5):
+        # Janpath, Barakhamba, KG Marg, Sansad Marg, Baba Kharak Singh, Panchkuian, Chelmsford, Minto
+        # Measured in math angle from center (y downward)
+        angles = np.arctan2(y_coords - center_y, x_coords - center_x)
+        cp_spoke_angles = [
+            0.0,    # Barakhamba Rd (Due East)
+            0.55,   # KG Marg (East-South-East)
+            1.57,   # Janpath (Due South)
+            2.20,   # Sansad Marg / Parliament St (South-South-West)
+            2.85,   # Baba Kharak Singh Marg (West-South-West)
+            -2.65,  # Panchkuian Marg (West-North-West)
+            -1.85,  # Chelmsford Rd / State Entry Rd (North-North-West)
+            -0.75,  # Minto Rd (East-North-East)
+        ]
+        
         radial_spokes = np.zeros((rows, cols), dtype=bool)
-        for spoke_angle in np.linspace(0, 2 * np.pi, 8, endpoint=False):
-            angle_diff = np.abs((angles - spoke_angle + np.pi) % (2 * np.pi) - np.pi)
-            radial_spokes |= (angle_diff < 0.12) & (dist_from_center >= 6.5)
+        for sa in cp_spoke_angles:
+            angle_diff = np.abs((angles - sa + np.pi) % (2 * np.pi) - np.pi)
+            radial_spokes |= (angle_diff < 0.10) & (dist_from_center >= 11.5)
 
-        # Concentric Rings: Inner Circle (7-11), Middle Ring (11-14), Outer Circle (14-19)
-        inner_circle_bldgs = (dist_from_center >= 6.8) & (dist_from_center < 11.2) & ~radial_spokes
-        middle_ring_road = (dist_from_center >= 11.2) & (dist_from_center < 13.5)
-        outer_circle_bldgs = (dist_from_center >= 13.5) & (dist_from_center < 18.5) & ~radial_spokes
-        radial_avenues_mask = radial_spokes | middle_ring_road
-        surrounding_blocks = (dist_from_center >= 18.5) & (dist_from_center < 23.5) & ~radial_spokes
+        # Concentric Rings:
+        # 1. Inner Circle Road (11.5 to 14.5)
+        inner_circle_road = (dist_from_center > 11.5) & (dist_from_center < 14.5)
+        # 2. Inner Circle Colonnade Blocks A-F (14.5 to 19.5)
+        inner_circle_bldgs = (dist_from_center >= 14.5) & (dist_from_center < 19.5) & ~radial_spokes
+        # 3. Middle Circle Road (19.5 to 21.5)
+        middle_circle_road = (dist_from_center >= 19.5) & (dist_from_center < 21.5)
+        # 4. Outer Circle Colonnade Blocks G-P (21.5 to 26.5)
+        outer_circle_bldgs = (dist_from_center >= 21.5) & (dist_from_center < 26.5) & ~radial_spokes
+        # 5. Connaught Circus Outer Road (26.5 to 28.5)
+        outer_circus_road = (dist_from_center >= 26.5) & (dist_from_center < 28.5)
+        # 6. Surrounding High-Rises & Commercial Blocks (28.5+)
+        surrounding_blocks = (dist_from_center >= 28.5) & ~radial_spokes
 
-        # Buildings
-        bldg_density[inner_circle_bldgs] = 0.78
+        all_roads = inner_circle_road | middle_circle_road | outer_circus_road | radial_spokes
+
+        # 1. Buildings (Strictly masonry colonnade & high-rise blocks, 0 canopy on roofs)
+        bldg_density[inner_circle_bldgs] = 0.82
         bldg_height[inner_circle_bldgs] = 22.0
-        bldg_density[outer_circle_bldgs] = 0.74
+        bldg_density[outer_circle_bldgs] = 0.80
         bldg_height[outer_circle_bldgs] = 26.0
-        bldg_density[surrounding_blocks] = 0.65
-        bldg_height[surrounding_blocks] = 32.0
+        bldg_density[surrounding_blocks] = 0.68
+        bldg_height[surrounding_blocks] = 42.0
 
-        # Central Park & Green Canopy
-        veg_frac[central_park_mask] = 0.88
-        canopy_height[central_park_mask] = np.clip(16.0 + np.random.normal(0, 2.5, np.sum(central_park_mask)), 8.0, 23.0)
-        water_frac[central_fountain] = 0.75
-        veg_frac[central_fountain] = 0.15
+        # 2. Central Park (Full 115m radius lush park with mature tree canopy)
+        veg_frac[central_park_mask] = 0.92
+        canopy_height[central_park_mask] = np.clip(16.0 + np.random.normal(0, 2.2, np.sum(central_park_mask)), 9.0, 24.0)
+        
+        # Central fountain / pool
+        water_frac[central_fountain] = 0.88
+        veg_frac[central_fountain] = 0.05
         canopy_height[central_fountain] = 0.0
+        bldg_density[central_park_mask] = 0.0
+        bldg_height[central_park_mask] = 0.0
 
-        # Roadside Avenue Trees (along radial avenues & outer circle verges)
-        avenue_verges = ((dist_from_center >= 8.0) & (dist_from_center < 22.0) & radial_spokes) | \
-                        ((dist_from_center >= 13.0) & (dist_from_center < 14.0))
-        veg_frac[avenue_verges] = 0.45
-        canopy_height[avenue_verges] = np.clip(12.0 + np.random.normal(0, 2.0, np.sum(avenue_verges)), 6.0, 18.0)
+        # 3. Roadside Avenue Tree Verges (along inner circle verge & radial avenues)
+        avenue_verges = ((dist_from_center >= 12.0) & (dist_from_center < 13.0)) | \
+                        ((dist_from_center >= 14.0) & (dist_from_center < 28.0) & radial_spokes & (np.abs(angles % 0.25) < 0.04))
+        veg_frac[avenue_verges] = 0.48
+        canopy_height[avenue_verges] = np.clip(12.0 + np.random.normal(0, 1.8, np.sum(avenue_verges)), 6.0, 17.0)
 
-        # Non-vegetated roads and plazas have 0 canopy
-        road_lanes = radial_avenues_mask & ~avenue_verges
-        albedo[road_lanes] = 0.11
-        albedo[central_park_mask] = 0.22
-        albedo[inner_circle_bldgs | outer_circle_bldgs] = 0.20
+        # 4. Road lanes (strictly 0 canopy, low albedo asphalt)
+        road_lanes = all_roads & ~avenue_verges
+        albedo[road_lanes] = 0.10
+        albedo[central_park_mask] = 0.24
+        albedo[inner_circle_bldgs | outer_circle_bldgs] = 0.22
 
-        # Baseline Temperature
-        base_t = 38.0 + (bldg_density * 8.5) + np.where(road_lanes, 3.5, 0.0) - (veg_frac * 6.5) - (water_frac * 8.0)
+        # 5. Baseline Temperature: Cool oasis in Central Park, warm heat on asphalt & built rings
+        base_t = 37.5 + (bldg_density * 8.2) + np.where(road_lanes, 3.8, 0.0) - (veg_frac * 6.8) - (water_frac * 7.5)
 
     elif study_area_id == "mumbai_bkc":
         # Bandra Kurla Complex (BKC), Mumbai

@@ -42,18 +42,9 @@ function createRadialPolygon(
 }
 
 // ─── Connaught Place, New Delhi ───────────────────────────────────────────────
-// Circular colonial circus with 8 radial gate spokes (~1km x 1km)
-// Centre at 28.6315°N, 77.2167°E
-const DELHI_CP_COORDS: [number, number][] = [
-  [77.2118, 28.6315], [77.2125, 28.6342], [77.2144, 28.6360], [77.2167, 28.6366],
-  [77.2190, 28.6360], [77.2209, 28.6342], [77.2216, 28.6315], [77.2209, 28.6288],
-  [77.2190, 28.6270], [77.2167, 28.6264], [77.2144, 28.6270], [77.2125, 28.6288],
-  [77.2118, 28.6315]
-];
-const DELHI_CP_BOUNDARY: GeoJSON.Polygon = {
-  type: "Polygon",
-  coordinates: [DELHI_CP_COORDS],
-};
+// Circular colonial circus enclosing Central Park & Outer Circle (~1km diameter)
+// True Central Park Centre at 28.6328°N, 77.2197°E
+const DELHI_CP_BOUNDARY = createRadialPolygon(77.2197, 28.6328, 0.00348, 0.00305, 32);
 
 // ─── Bandra Kurla Complex (BKC), Mumbai ───────────────────────────────────────
 // Commercial core bounded along Mithi River estuary curve on the East & South-East
@@ -110,13 +101,13 @@ const BOUNDARIES: Record<string, StudyAreaBoundary> = {
     studyAreaId: "delhi_cp",
     name: "Connaught Place",
     boundary: DELHI_CP_BOUNDARY,
-    center: [77.2167, 28.6315],
-    zoom: 15.5,
+    center: [77.2197, 28.6328],
+    zoom: 15.8,
     bbox: {
-      west: 77.2118 - 0.0012,
-      east: 77.2216 + 0.0012,
-      south: 28.6264 - 0.0012,
-      north: 28.6366 + 0.0012,
+      west: 77.2197 - 0.00348 - 0.0010,
+      east: 77.2197 + 0.00348 + 0.0010,
+      south: 28.6328 - 0.00305 - 0.0010,
+      north: 28.6328 + 0.00305 + 0.0010,
     },
   },
   mumbai_bkc: {

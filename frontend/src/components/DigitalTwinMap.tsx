@@ -159,8 +159,8 @@ const PINNED_STUDY_AREAS = [
     city: "New Delhi",
     country: "India",
     flag: "🇮🇳",
-    center: [77.2167, 28.6315] as [number, number],
-    zoom: 15.5,
+    center: [77.2197, 28.6328] as [number, number],
+    zoom: 15.8,
   },
   {
     id: "mumbai_bkc",
