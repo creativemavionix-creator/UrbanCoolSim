@@ -48,35 +48,20 @@ const DELHI_CP_BOUNDARY = createRadialPolygon(77.2197, 28.6328, 0.00348, 0.00305
 
 // ─── Bandra Kurla Complex (BKC), Mumbai ───────────────────────────────────────
 // Commercial core bounded along Mithi River estuary curve on the East & South-East
-// Centre at 19.0657°N, 72.8683°E
-const MUMBAI_BKC_COORDS: [number, number][] = [
-  [72.8605, 19.0685], [72.8640, 19.0710], [72.8710, 19.0712], [72.8765, 19.0688],
-  [72.8780, 19.0645], [72.8760, 19.0605], [72.8715, 19.0585], [72.8645, 19.0592],
-  [72.8610, 19.0630], [72.8605, 19.0685]
-];
-const MUMBAI_BKC_BOUNDARY: GeoJSON.Polygon = {
-  type: "Polygon",
-  coordinates: [MUMBAI_BKC_COORDS],
-};
+// Centre at 19.0657°N, 72.8683°E (~1.2km x 0.9km)
+const MUMBAI_BKC_BOUNDARY = createRadialPolygon(72.8683, 19.0657, 0.00485, 0.00410, 32);
 
 // ─── Marina Bay Financial District, Singapore ─────────────────────────────────
 // Marina Bay Waterfront & Gardens by the Bay (~1.2km x 1.2km)
 // Centre at 1.2847°N, 103.8565°E
-const SINGAPORE_MARINA_COORDS: [number, number][] = [
-  [103.8505, 1.2885], [103.8550, 1.2915], [103.8615, 1.2895], [103.8655, 1.2840],
-  [103.8645, 1.2780], [103.8580, 1.2770], [103.8520, 1.2810], [103.8505, 1.2885]
-];
-const SINGAPORE_MARINA_BOUNDARY: GeoJSON.Polygon = {
-  type: "Polygon",
-  coordinates: [SINGAPORE_MARINA_COORDS],
-};
+const SINGAPORE_MARINA_BOUNDARY = createRadialPolygon(103.8565, 1.2847, 0.00480, 0.00440, 32);
 
 // ─── Downtown Urban Core, Phoenix ─────────────────────────────────────────────
 // Orthogonal desert grid core (~1.4km x 1.2km)
 // Centre at 33.4484°N, -112.0740°W
 const PHOENIX_DOWNTOWN_COORDS: [number, number][] = [
-  [-112.0820, 33.4545], [-112.0660, 33.4545], [-112.0660, 33.4420],
-  [-112.0820, 33.4420], [-112.0820, 33.4545]
+  [-112.0805, 33.4538], [-112.0675, 33.4538], [-112.0675, 33.4430],
+  [-112.0805, 33.4430], [-112.0805, 33.4538]
 ];
 const PHOENIX_DOWNTOWN_BOUNDARY: GeoJSON.Polygon = {
   type: "Polygon",
@@ -85,15 +70,8 @@ const PHOENIX_DOWNTOWN_BOUNDARY: GeoJSON.Polygon = {
 
 // ─── Shinjuku Skyscraper Center, Tokyo ────────────────────────────────────────
 // Skyscraper high-rise district & Shinjuku Central Park (~1.3km x 1.2km)
-// Centre at 35.6938°N, 139.7034°E
-const TOKYO_SHINJUKU_COORDS: [number, number][] = [
-  [139.6965, 35.6985], [139.7085, 35.6985], [139.7110, 35.6920],
-  [139.7080, 35.6880], [139.6970, 35.6880], [139.6965, 35.6985]
-];
-const TOKYO_SHINJUKU_BOUNDARY: GeoJSON.Polygon = {
-  type: "Polygon",
-  coordinates: [TOKYO_SHINJUKU_COORDS],
-};
+// Centre at 35.6905°N, 139.6965°E
+const TOKYO_SHINJUKU_BOUNDARY = createRadialPolygon(139.6965, 35.6905, 0.00520, 0.00460, 32);
 
 // ─── Registry ─────────────────────────────────────────────────────────────────
 const BOUNDARIES: Record<string, StudyAreaBoundary> = {
@@ -115,12 +93,12 @@ const BOUNDARIES: Record<string, StudyAreaBoundary> = {
     name: "Bandra Kurla Complex",
     boundary: MUMBAI_BKC_BOUNDARY,
     center: [72.8683, 19.0657],
-    zoom: 15.0,
+    zoom: 15.2,
     bbox: {
-      west: 72.8605 - 0.0012,
-      east: 72.8780 + 0.0012,
-      south: 19.0585 - 0.0012,
-      north: 19.0712 + 0.0012,
+      west: 72.8683 - 0.00485 - 0.0010,
+      east: 72.8683 + 0.00485 + 0.0010,
+      south: 19.0657 - 0.00410 - 0.0010,
+      north: 19.0657 + 0.00410 + 0.0010,
     },
   },
   singapore_marina: {
@@ -130,10 +108,10 @@ const BOUNDARIES: Record<string, StudyAreaBoundary> = {
     center: [103.8565, 1.2847],
     zoom: 15.2,
     bbox: {
-      west: 103.8505 - 0.0012,
-      east: 103.8655 + 0.0012,
-      south: 1.2770 - 0.0012,
-      north: 1.2915 + 0.0012,
+      west: 103.8565 - 0.00480 - 0.0010,
+      east: 103.8565 + 0.00480 + 0.0010,
+      south: 1.2847 - 0.00440 - 0.0010,
+      north: 1.2847 + 0.00440 + 0.0010,
     },
   },
   phoenix_downtown: {
@@ -143,23 +121,23 @@ const BOUNDARIES: Record<string, StudyAreaBoundary> = {
     center: [-112.0740, 33.4484],
     zoom: 15.0,
     bbox: {
-      west: -112.0820 - 0.0012,
-      east: -112.0660 + 0.0012,
-      south: 33.4420 - 0.0012,
-      north: 33.4545 + 0.0012,
+      west: -112.0805 - 0.0010,
+      east: -112.0675 + 0.0010,
+      south: 33.4430 - 0.0010,
+      north: 33.4538 + 0.0010,
     },
   },
   tokyo_shinjuku: {
     studyAreaId: "tokyo_shinjuku",
     name: "Shinjuku Center",
     boundary: TOKYO_SHINJUKU_BOUNDARY,
-    center: [139.7034, 35.6938],
-    zoom: 15.0,
+    center: [139.6965, 35.6905],
+    zoom: 15.2,
     bbox: {
-      west: 139.6965 - 0.0012,
-      east: 139.7110 + 0.0012,
-      south: 35.6880 - 0.0012,
-      north: 35.6985 + 0.0012,
+      west: 139.6965 - 0.00520 - 0.0010,
+      east: 139.6965 + 0.00520 + 0.0010,
+      south: 35.6905 - 0.00460 - 0.0010,
+      north: 35.6905 + 0.00460 + 0.0010,
     },
   },
 };

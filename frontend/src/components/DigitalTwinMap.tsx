@@ -169,7 +169,7 @@ const PINNED_STUDY_AREAS = [
     country: "India",
     flag: "🇮🇳",
     center: [72.8683, 19.0657] as [number, number],
-    zoom: 15.0,
+    zoom: 15.2,
   },
   {
     id: "singapore_marina",
@@ -195,8 +195,8 @@ const PINNED_STUDY_AREAS = [
     city: "Tokyo",
     country: "Japan",
     flag: "🇯🇵",
-    center: [139.7034, 35.6938] as [number, number],
-    zoom: 15.0,
+    center: [139.6965, 35.6905] as [number, number],
+    zoom: 15.2,
   },
 ];
 

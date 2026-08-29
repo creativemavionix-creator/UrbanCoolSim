@@ -96,8 +96,8 @@ STUDY_AREAS_METADATA = [
         "resolution_m": 10.0,
         "typology": "hyperdense_canyon",
         "description": "Extreme building heights, complex 3D urban canyons, high anthropogenic HVAC heat release.",
-        "center_lat": 35.6938,
-        "center_lon": 139.7034,
+        "center_lat": 35.6905,
+        "center_lon": 139.6965,
         "base_climate": {
             "air_temp_c": 35.5,
             "solar_rad_wm2": 860.0,
@@ -118,7 +118,7 @@ def generate_study_area_grid(study_area_id: str = "delhi_cp", rows: int = 50, co
     np.random.seed(abs(hash(study_area_id)) % 100000 + 42)
     meta = next((s for s in STUDY_AREAS_METADATA if s["id"] == study_area_id), STUDY_AREAS_METADATA[0])
     
-    y_coords, x_coords = np.ogrid[:rows, :cols]
+    y_coords, x_coords = np.meshgrid(np.arange(rows), np.arange(cols), indexing="ij")
     center_y, center_x = rows / 2.0, cols / 2.0
     dist_from_center = np.sqrt((x_coords - center_x)**2 + (y_coords - center_y)**2)
     
