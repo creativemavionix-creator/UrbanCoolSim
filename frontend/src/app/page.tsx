@@ -34,6 +34,7 @@ import {
 } from "lucide-react";
 import dynamic from "next/dynamic";
 import { AnimatedCounter } from "@/components/AnimatedCounter";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 const Hero3DCanvas = dynamic(
   () => import("@/components/Hero3DCanvas").then((mod) => mod.Hero3DCanvas),
@@ -250,8 +251,61 @@ export default function LandingPage() {
   return (
     <div className="flex flex-col min-h-screen bg-surface-base text-ink-primary select-none overflow-x-hidden">
       
+      {/* ── Top Header Navigation Bar ────────────────────────────────────────────── */}
+      <header className="w-full border-b border-surface-border bg-surface-base/90 backdrop-blur-md sticky top-0 z-40 px-6 sm:px-12 py-3 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <ThemeToggle />
+          <Link href="/" className="flex items-center gap-2.5 group">
+            <div className="w-7 h-7 rounded-md bg-cobalt/10 border border-cobalt/20 flex items-center justify-center shrink-0 group-hover:bg-cobalt/15 transition-colors">
+              <span className="font-semibold text-[11px] text-cobalt tracking-tight">uc</span>
+            </div>
+            <span className="font-medium text-ink-primary text-[14px] tracking-tight">
+              UrbanCoolSim
+            </span>
+          </Link>
+          <span className="hidden sm:inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-surface-elevated border border-surface-border text-[10px] font-mono text-ink-muted">
+            <span className="w-1.5 h-1.5 rounded-full bg-status-safe animate-subtle-pulse" />
+            <span>SEB v2.4</span>
+          </span>
+        </div>
+
+        <div className="flex items-center gap-3 sm:gap-5">
+          <Link 
+            href="/dashboard" 
+            className="text-[12px] font-medium text-ink-secondary hover:text-ink-primary transition-colors hidden md:inline"
+          >
+            Dashboard
+          </Link>
+          <Link 
+            href="/digital-twin" 
+            className="text-[12px] font-medium text-ink-secondary hover:text-ink-primary transition-colors hidden md:inline"
+          >
+            Digital Twin
+          </Link>
+          <Link 
+            href="/optimization" 
+            className="text-[12px] font-medium text-ink-secondary hover:text-ink-primary transition-colors hidden sm:inline"
+          >
+            Optimization
+          </Link>
+          <Link 
+            href="/methodology" 
+            className="text-[12px] font-medium text-ink-secondary hover:text-ink-primary transition-colors hidden sm:inline"
+          >
+            Methodology
+          </Link>
+          <Link
+            href="/dashboard"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md btn-cobalt text-[12px] font-medium shadow-sm"
+          >
+            <span>Launch Platform</span>
+            <ArrowRight className="w-3 h-3" />
+          </Link>
+        </div>
+      </header>
+
       {/* ── 1. Hero Section ────────────────────────────────────────────────────────── */}
-      <section className="relative pt-16 pb-20 px-6 sm:px-12 max-w-7xl mx-auto w-full flex flex-col lg:flex-row items-center justify-between gap-12 lg:gap-16">
+      <section className="relative pt-12 pb-20 px-6 sm:px-12 max-w-7xl mx-auto w-full flex flex-col lg:flex-row items-center justify-between gap-12 lg:gap-16">
         <div className="w-full lg:w-1/2 space-y-7">
           <motion.div
             initial="hidden"
@@ -283,8 +337,7 @@ export default function LandingPage() {
             className="text-sm text-ink-secondary leading-relaxed max-w-lg"
           >
             UrbanCoolSim unifies multi-satellite remote sensing, first-principles thermodynamics, 
-            and NSGA-II Pareto optimization to quantify microclimate cooling impacts, capital budgets, 
-            and water constraints before construction.
+            and ultra-fast AI surrogates into an interactive decision twin for municipal cooling and climate ROI.
           </motion.p>
 
           <motion.div
@@ -315,30 +368,28 @@ export default function LandingPage() {
             </button>
           </motion.div>
 
-          {/* Quick Metrics Ticker */}
           <motion.div
             initial="hidden"
             animate="visible"
             variants={fadeUp}
             custom={4}
-            className="grid grid-cols-3 gap-4 pt-4 border-t border-surface-border/60 text-xs"
+            className="grid grid-cols-3 gap-3 pt-4 border-t border-surface-border/60 text-xs"
           >
-            <div>
-              <span className="text-label text-ink-dim block mb-1">Spatial Grid</span>
+            <div className="p-2.5 rounded-lg surface-inset space-y-0.5">
+              <span className="text-label text-ink-dim block">Spatial Grid</span>
               <span className="font-mono text-sm text-ink-primary font-medium">10m × 10m</span>
             </div>
-            <div>
-              <span className="text-label text-cobalt block mb-1">AI Surrogate</span>
+            <div className="p-2.5 rounded-lg surface-inset space-y-0.5">
+              <span className="text-label text-cobalt block">AI Surrogate</span>
               <span className="font-mono text-sm text-cobalt font-medium">&lt; 1.8 ms</span>
             </div>
-            <div>
-              <span className="text-label text-status-safe block mb-1">Validation R²</span>
-              <span className="font-mono text-sm text-status-safe font-medium">0.973 Ground-Truth</span>
+            <div className="p-2.5 rounded-lg surface-inset space-y-0.5">
+              <span className="text-label text-status-safe block">Validation R²</span>
+              <span className="font-mono text-sm text-status-safe font-medium">0.973 Truth</span>
             </div>
           </motion.div>
         </div>
 
-        {/* 3D Canvas */}
         <motion.div
           initial={{ opacity: 0, scale: 0.96 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -347,7 +398,7 @@ export default function LandingPage() {
         >
           <Hero3DCanvas isCooled={isCooled} />
           
-          <div className="absolute bottom-3 left-3 py-2 px-3 rounded-md bg-surface-base/85 backdrop-blur-md border border-surface-border text-[11px] space-y-0.5 pointer-events-none">
+          <div className="absolute bottom-3 left-3 py-2 px-3 rounded-md bg-surface-base/90 backdrop-blur-md border border-surface-border text-[11px] space-y-0.5 pointer-events-none">
             <div className="text-label text-ink-dim">Interactive Thermal Field</div>
             <div className="flex items-center gap-2 text-ink-primary">
               <span className="font-medium">{isCooled ? "Pareto Optimized Hybrid" : "Landsat 8 Observed Baseline"}</span>
@@ -361,7 +412,7 @@ export default function LandingPage() {
         </motion.div>
       </section>
 
-      {/* ── 2. Interactive Live Thermal Sandbox Preview (NEW) ────────────────────── */}
+      {/* ── 2. Interactive Live Thermal Sandbox Preview ─────────────────────────── */}
       <section className="py-16 px-6 sm:px-12 border-t border-surface-border bg-surface-elevated/40">
         <div className="max-w-7xl mx-auto space-y-8">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
@@ -375,26 +426,26 @@ export default function LandingPage() {
               </p>
             </div>
 
-            <div className="flex items-center gap-6 bg-surface-base border border-surface-border px-4 py-2.5 rounded-lg tabular-nums shadow-sm">
+            <div className="flex items-center gap-4 sm:gap-6 bg-surface-base border border-surface-border px-4 py-2.5 rounded-lg tabular-nums shadow-sm">
               <div>
-                <span className="text-label text-ink-dim block">Mean District Cooling</span>
+                <span className="text-label text-ink-dim block">Mean Cooling</span>
                 <div className="flex items-baseline gap-0.5">
-                  <span className="editorial-headline text-3xl text-cobalt font-normal tracking-tight">−</span>
-                  <AnimatedCounter value={liveDeltaT} decimals={2} className="editorial-headline text-3xl text-cobalt font-normal tracking-tight" />
+                  <span className="editorial-headline text-2xl sm:text-3xl text-cobalt font-normal tracking-tight">−</span>
+                  <AnimatedCounter value={liveDeltaT} decimals={2} className="editorial-headline text-2xl sm:text-3xl text-cobalt font-normal tracking-tight" />
                   <span className="text-xs text-ink-muted font-serif ml-0.5">°C</span>
                 </div>
               </div>
               <div className="h-8 w-px bg-surface-border" />
               <div>
                 <span className="text-label text-ink-dim block">CapEx Budget</span>
-                <span className="editorial-headline text-2xl text-ink-primary tracking-tight">
+                <span className="editorial-headline text-xl sm:text-2xl text-ink-primary tracking-tight">
                   ${Math.round(liveCapEx / 1000)}k
                 </span>
               </div>
               <div className="h-8 w-px bg-surface-border" />
               <div>
                 <span className="text-label text-ink-dim block">Utility Saved</span>
-                <span className="editorial-headline text-2xl text-status-safe tracking-tight">
+                <span className="editorial-headline text-xl sm:text-2xl text-status-safe tracking-tight">
                   +${liveAnnualSavingsUsd.toLocaleString()}/yr
                 </span>
               </div>
@@ -402,7 +453,7 @@ export default function LandingPage() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="graphite-card p-4 rounded-lg surface-inset space-y-2">
+            <div className="graphite-card p-4 rounded-lg surface-inset space-y-2.5">
               <div className="flex justify-between items-baseline text-xs">
                 <span className="font-medium text-ink-primary">Cool Roofs (Albedo)</span>
                 <span className="font-mono text-cobalt text-xs font-semibold">+{Math.round(simCoolRoof * 100)}%</span>
@@ -410,12 +461,15 @@ export default function LandingPage() {
               <input
                 type="range" min="0" max="0.8" step="0.05" value={simCoolRoof}
                 onChange={(e) => setSimCoolRoof(Number(e.target.value))}
+                style={{
+                  background: `linear-gradient(to right, #4A6CFF 0%, #4A6CFF ${(simCoolRoof / 0.8) * 100}%, var(--surface-hover) ${(simCoolRoof / 0.8) * 100}%, var(--surface-hover) 100%)`
+                }}
                 className="w-full"
               />
-              <span className="text-[10px] text-ink-dim block">$18/m² · Zero water requirement</span>
+              <span className="text-[11px] text-ink-muted block">$18/m² · Zero water requirement</span>
             </div>
 
-            <div className="graphite-card p-4 rounded-lg surface-inset space-y-2">
+            <div className="graphite-card p-4 rounded-lg surface-inset space-y-2.5">
               <div className="flex justify-between items-baseline text-xs">
                 <span className="font-medium text-ink-primary">Green Roofs (ET)</span>
                 <span className="font-mono text-cobalt text-xs font-semibold">+{Math.round(simGreenRoof * 100)}%</span>
@@ -423,12 +477,15 @@ export default function LandingPage() {
               <input
                 type="range" min="0" max="0.7" step="0.05" value={simGreenRoof}
                 onChange={(e) => setSimGreenRoof(Number(e.target.value))}
+                style={{
+                  background: `linear-gradient(to right, #4A6CFF 0%, #4A6CFF ${(simGreenRoof / 0.7) * 100}%, var(--surface-hover) ${(simGreenRoof / 0.7) * 100}%, var(--surface-hover) 100%)`
+                }}
                 className="w-full"
               />
-              <span className="text-[10px] text-ink-dim block">$75/m² · 450 L/m²/yr irrigation</span>
+              <span className="text-[11px] text-ink-muted block">$75/m² · 450 L/m²/yr irrigation</span>
             </div>
 
-            <div className="graphite-card p-4 rounded-lg surface-inset space-y-2">
+            <div className="graphite-card p-4 rounded-lg surface-inset space-y-2.5">
               <div className="flex justify-between items-baseline text-xs">
                 <span className="font-medium text-ink-primary">Urban Tree Canopy</span>
                 <span className="font-mono text-cobalt text-xs font-semibold">+{Math.round(simTreeCanopy * 100)}%</span>
@@ -436,12 +493,15 @@ export default function LandingPage() {
               <input
                 type="range" min="0" max="0.5" step="0.05" value={simTreeCanopy}
                 onChange={(e) => setSimTreeCanopy(Number(e.target.value))}
+                style={{
+                  background: `linear-gradient(to right, #4A6CFF 0%, #4A6CFF ${(simTreeCanopy / 0.5) * 100}%, var(--surface-hover) ${(simTreeCanopy / 0.5) * 100}%, var(--surface-hover) 100%)`
+                }}
                 className="w-full"
               />
-              <span className="text-[10px] text-ink-dim block">$35/m² · Microclimate shading</span>
+              <span className="text-[11px] text-ink-muted block">$35/m² · Microclimate shading</span>
             </div>
 
-            <div className="graphite-card p-4 rounded-lg surface-inset space-y-2">
+            <div className="graphite-card p-4 rounded-lg surface-inset space-y-2.5">
               <div className="flex justify-between items-baseline text-xs">
                 <span className="font-medium text-ink-primary">Water Retention Bodies</span>
                 <span className="font-mono text-cobalt text-xs font-semibold">+{Math.round(simWater * 100)}%</span>
@@ -449,9 +509,12 @@ export default function LandingPage() {
               <input
                 type="range" min="0" max="0.15" step="0.01" value={simWater}
                 onChange={(e) => setSimWater(Number(e.target.value))}
+                style={{
+                  background: `linear-gradient(to right, #4A6CFF 0%, #4A6CFF ${(simWater / 0.15) * 100}%, var(--surface-hover) ${(simWater / 0.15) * 100}%, var(--surface-hover) 100%)`
+                }}
                 className="w-full"
               />
-              <span className="text-[10px] text-ink-dim block">$120/m² · Direct evaporative heat sink</span>
+              <span className="text-[11px] text-ink-muted block">$120/m² · Direct evaporative heat sink</span>
             </div>
           </div>
         </div>
@@ -460,39 +523,61 @@ export default function LandingPage() {
       {/* ── 3. The Core Challenge & CFD vs Surrogate Comparison ──────────────────── */}
       <section className="py-20 px-6 sm:px-12 border-t border-surface-border">
         <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-start">
             {/* Left: The Insight */}
             <motion.div 
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true, margin: "-40px" }}
               variants={fadeUp}
-              className="lg:col-span-7 space-y-5"
+              className="lg:col-span-7 space-y-6"
             >
-              <span className="text-label text-status-critical">The Problem With Heat Maps</span>
-              <h2 className="text-2xl sm:text-3xl font-medium tracking-tight text-ink-primary leading-snug">
-                Satellite rasters show where it is hot today — but fail to explain why or how to fix it.
-              </h2>
-              <p className="text-xs sm:text-sm text-ink-secondary leading-relaxed max-w-xl">
-                Without enforcing first-principles Surface Energy Balance conservation (
-                <span className="text-ink-primary font-mono font-medium">
-                  Q* + Qf = Qh + Qe + ΔQs
-                </span>
-                ), municipal planners cannot predict the microclimate return on investment (ROI), 
-                or whether urban greenery will exceed finite municipal water reserves.
-              </p>
+              <div className="space-y-2">
+                <span className="text-label text-status-critical">The Problem With Heat Maps</span>
+                <h2 className="text-2xl sm:text-3xl font-medium tracking-tight text-ink-primary leading-snug">
+                  Satellite rasters show where it is hot today — but fail to explain why or how to fix it.
+                </h2>
+                <p className="text-xs sm:text-sm text-ink-secondary leading-relaxed max-w-xl">
+                  Without enforcing first-principles Surface Energy Balance conservation (
+                  <span className="text-ink-primary font-mono font-medium">
+                    <i>Q</i>* + <i>Q</i><sub>f</sub> = <i>Q</i><sub>h</sub> + <i>Q</i><sub>e</sub> + Δ<i>Q</i><sub>s</sub>
+                  </span>
+                  ), municipal planners cannot predict the microclimate return on investment (ROI), 
+                  or whether urban greenery will exceed finite municipal water reserves.
+                </p>
+              </div>
 
-              <div className="grid grid-cols-2 gap-4 pt-3 max-w-md">
-                <div className="graphite-card p-4 rounded-lg space-y-1 surface-inset">
-                  <div className="text-label text-status-critical">3D CFD Simulation</div>
-                  <div className="editorial-headline text-2xl text-ink-primary">~14.5 hours</div>
-                  <p className="text-[10px] text-ink-dim">Too slow for iterative scenario optimization</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-lg">
+                {/* 3D CFD Card */}
+                <div className="graphite-card p-4 sm:p-5 rounded-lg space-y-2 surface-inset border-l-2 border-l-status-critical/60">
+                  <div className="flex items-center justify-between">
+                    <span className="text-label text-status-critical">3D CFD Simulation</span>
+                    <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-status-critical/10 text-status-critical border border-status-critical/20 font-medium">
+                      Legacy Bottleneck
+                    </span>
+                  </div>
+                  <div className="editorial-headline text-3xl text-ink-primary font-normal tracking-tight">
+                    ~14.5 hours
+                  </div>
+                  <p className="text-[11px] text-ink-muted leading-relaxed">
+                    Too slow for iterative municipal scenario optimization
+                  </p>
                 </div>
 
-                <div className="graphite-card p-4 rounded-lg space-y-1 surface-inset">
-                  <div className="text-label text-cobalt">UrbanCoolSim AI Surrogate</div>
-                  <div className="editorial-headline text-2xl text-cobalt">&lt; 1.8 ms</div>
-                  <p className="text-[10px] text-ink-dim">Physics-validated instant inference</p>
+                {/* UrbanCoolSim AI Surrogate Card */}
+                <div className="graphite-card p-4 sm:p-5 rounded-lg space-y-2 surface-inset border-l-2 border-l-cobalt">
+                  <div className="flex items-center justify-between">
+                    <span className="text-label text-cobalt">AI Surrogate Engine</span>
+                    <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-cobalt/10 text-cobalt border border-cobalt/20 font-medium">
+                      7,200x Faster
+                    </span>
+                  </div>
+                  <div className="editorial-headline text-3xl text-cobalt font-normal tracking-tight">
+                    &lt; 1.8 ms
+                  </div>
+                  <p className="text-[11px] text-ink-muted leading-relaxed">
+                    Physics-validated instant inference with TreeSHAP
+                  </p>
                 </div>
               </div>
             </motion.div>
@@ -503,24 +588,39 @@ export default function LandingPage() {
               whileInView="visible"
               viewport={{ once: true, margin: "-40px" }}
               variants={fadeUp}
-              className="lg:col-span-5 space-y-4 lg:pt-4"
+              className="lg:col-span-5 space-y-3.5"
             >
-              <div className="border-l-2 border-surface-border hover:border-cobalt/60 pl-4 py-1 space-y-1 transition-colors">
-                <h4 className="text-xs font-semibold text-ink-primary">CapEx & Water Blind Spots</h4>
+              <div className="graphite-card p-4 rounded-lg surface-inset space-y-1.5 hover:border-surface-borderHover transition-all">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-semibold text-ink-primary">CapEx & Water Blind Spots</h4>
+                  <span className="text-[9px] font-mono text-ink-muted px-1.5 py-0.5 rounded bg-surface-base border border-surface-border font-medium">
+                    01
+                  </span>
+                </div>
                 <p className="text-xs text-ink-secondary leading-relaxed">
                   Conventional greenery blueprints ignore finite municipal irrigation reserves and ongoing maintenance expenditures.
                 </p>
               </div>
 
-              <div className="border-l-2 border-surface-border hover:border-cobalt/60 pl-4 py-1 space-y-1 transition-colors">
-                <h4 className="text-xs font-semibold text-ink-primary">Surrogate Hallucination Safeguard</h4>
+              <div className="graphite-card p-4 rounded-lg surface-inset space-y-1.5 hover:border-surface-borderHover transition-all">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-semibold text-ink-primary">Surrogate Hallucination Safeguard</h4>
+                  <span className="text-[9px] font-mono text-ink-muted px-1.5 py-0.5 rounded bg-surface-base border border-surface-border font-medium">
+                    02
+                  </span>
+                </div>
                 <p className="text-xs text-ink-secondary leading-relaxed">
                   Top Pareto recommendations are re-simulated through the deterministic physics solver, rejecting any candidate with residual error &gt;0.15°C.
                 </p>
               </div>
 
-              <div className="border-l-2 border-surface-border hover:border-cobalt/60 pl-4 py-1 space-y-1 transition-colors">
-                <h4 className="text-xs font-semibold text-ink-primary">Demographic Equity Exposure</h4>
+              <div className="graphite-card p-4 rounded-lg surface-inset space-y-1.5 hover:border-surface-borderHover transition-all">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-semibold text-ink-primary">Demographic Equity Exposure</h4>
+                  <span className="text-[9px] font-mono text-ink-muted px-1.5 py-0.5 rounded bg-surface-base border border-surface-border font-medium">
+                    03
+                  </span>
+                </div>
                 <p className="text-xs text-ink-secondary leading-relaxed">
                   Couples 100m WorldPop demographic matrices with microclimate heat indices to protect vulnerable outdoor worker populations.
                 </p>
@@ -552,20 +652,21 @@ export default function LandingPage() {
                 viewport={{ once: true, margin: "-30px" }}
                 variants={fadeUp}
                 custom={idx}
-                className="graphite-card p-4 rounded-lg flex flex-col justify-between space-y-3 hover:border-surface-borderHover transition-all"
+                className="graphite-card p-4 rounded-lg flex flex-col justify-between space-y-3.5 hover:border-surface-borderHover transition-all surface-inset"
               >
-                <div className="space-y-1.5">
+                <div className="space-y-2">
                   <div className="flex justify-between items-center">
-                    <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-surface-base text-ink-dim border border-surface-border">
+                    <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-surface-base text-ink-muted border border-surface-border font-medium">
                       {ds.resolution}
                     </span>
-                    <span className="text-[10px] font-mono text-cobalt">{ds.tag}</span>
+                    <span className="text-[10px] font-mono text-cobalt font-semibold">{ds.tag}</span>
                   </div>
                   <h3 className="text-xs font-semibold text-ink-primary leading-snug">{ds.name}</h3>
                   <p className="text-[11px] text-ink-secondary leading-relaxed">{ds.role}</p>
                 </div>
-                <div className="text-[10px] font-mono text-ink-dim border-t border-surface-border/40 pt-2">
-                  Provider: {ds.source}
+                <div className="text-[10px] font-mono text-ink-dim border-t border-surface-border/50 pt-2 flex items-center justify-between">
+                  <span>Provider:</span>
+                  <span className="text-ink-muted font-medium">{ds.source}</span>
                 </div>
               </motion.div>
             ))}
@@ -576,24 +677,44 @@ export default function LandingPage() {
       {/* ── 5. First-Principles Surface Energy Balance Physics ────────────────────── */}
       <section className="py-20 px-6 sm:px-12 border-t border-surface-border">
         <div className="max-w-7xl mx-auto space-y-10">
-          <div className="text-center max-w-2xl mx-auto space-y-2">
-            <span className="text-label text-cobalt">Thermodynamic Mechanics</span>
-            <h2 className="text-2xl sm:text-3xl font-medium tracking-tight text-ink-primary">
-              First-Principles Surface Energy Balance
-            </h2>
-            <p className="text-xs text-ink-secondary leading-relaxed">
-              Energy cannot be created or destroyed. UrbanCoolSim enforces strict thermodynamic flux equilibrium cell-by-cell using Newton-Raphson numerical root-finding.
-            </p>
-          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+            {/* Left: Section Header & Narrative */}
+            <div className="lg:col-span-5 space-y-4">
+              <span className="text-label text-cobalt">Thermodynamic Mechanics</span>
+              <h2 className="text-2xl sm:text-3xl font-medium tracking-tight text-ink-primary leading-tight">
+                First-Principles Surface Energy Balance
+              </h2>
+              <p className="text-xs sm:text-sm text-ink-secondary leading-relaxed">
+                Energy cannot be created or destroyed. UrbanCoolSim enforces strict thermodynamic flux equilibrium cell-by-cell using Newton-Raphson numerical root-finding.
+              </p>
+              <div className="pt-1 flex flex-wrap gap-2 text-[11px] font-mono text-ink-muted">
+                <span className="px-2.5 py-1 rounded bg-surface-elevated border border-surface-border flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-status-safe" />
+                  <span>Newton-Raphson Solver</span>
+                </span>
+                <span className="px-2.5 py-1 rounded bg-surface-elevated border border-surface-border flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-cobalt" />
+                  <span>Zero Hallucination</span>
+                </span>
+              </div>
+            </div>
 
-          {/* Master Equation Card */}
-          <div className="graphite-card p-6 sm:p-8 rounded-lg text-center space-y-3 max-w-3xl mx-auto shadow-floating">
-            <span className="font-serif italic text-3xl sm:text-4xl text-ink-primary tracking-wide block">
-              Q* + Qf = Qh + Qe + ΔQs
-            </span>
-            <span className="text-[11px] font-mono text-ink-dim block">
-              Units: Watts per square meter [W/m²] · Convergence: |ΔTs| &lt; 10⁻⁴ K in 4–7 iterations
-            </span>
+            {/* Right: Master Equation Card */}
+            <div className="lg:col-span-7 graphite-card p-6 sm:p-7 rounded-lg text-center space-y-3 shadow-floating border border-surface-borderHover surface-inset">
+              <div className="flex items-center justify-between">
+                <span className="text-label text-cobalt">Master Flux Conservation</span>
+                <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-cobalt/10 text-cobalt border border-cobalt/20 font-medium">
+                  Deterministic Physics
+                </span>
+              </div>
+              <div className="font-serif italic text-3xl sm:text-4xl text-ink-primary tracking-wide py-2">
+                <i>Q</i>* + <i>Q</i><sub>f</sub> = <i>Q</i><sub>h</sub> + <i>Q</i><sub>e</sub> + Δ<i>Q</i><sub>s</sub>
+              </div>
+              <div className="text-[11px] font-mono text-ink-muted pt-2 border-t border-surface-border/50 flex flex-col sm:flex-row items-center justify-between gap-1">
+                <span>Units: Watts per square meter [W/m²]</span>
+                <span className="text-status-safe font-medium">Convergence: |Δ<i>T</i><sub>s</sub>| &lt; 10⁻⁴ K</span>
+              </div>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -607,18 +728,18 @@ export default function LandingPage() {
                 custom={idx}
                 className="graphite-card p-5 rounded-lg space-y-3 surface-inset flex flex-col justify-between"
               >
-                <div className="space-y-1.5">
+                <div className="space-y-2">
                   <div className="flex justify-between items-center">
-                    <span className={`text-base font-serif font-bold ${p.color}`}>{p.symbol}</span>
+                    <span className={`text-lg font-serif font-bold italic ${p.color}`}>{p.symbol}</span>
                     <span className="text-[10px] font-mono text-ink-dim uppercase">Term 0{idx + 1}</span>
                   </div>
                   <h3 className="text-xs font-semibold text-ink-primary">{p.name}</h3>
-                  <div className="font-mono text-[10px] text-ink-muted bg-surface-base p-1.5 rounded border border-surface-border/60">
+                  <div className="font-mono text-[10px] text-ink-primary bg-surface-base p-2 rounded border border-surface-border">
                     {p.formula}
                   </div>
                   <p className="text-[11px] text-ink-secondary leading-relaxed">{p.desc}</p>
                 </div>
-                <div className="text-[10px] font-mono text-status-safe border-t border-surface-border/40 pt-2">
+                <div className="text-[10px] font-mono text-status-safe border-t border-surface-border/50 pt-2 font-medium">
                   {p.impact}
                 </div>
               </motion.div>
@@ -661,16 +782,16 @@ export default function LandingPage() {
           </div>
 
           {/* Active City Detail Card */}
-          <div className="graphite-card p-6 sm:p-8 rounded-lg shadow-floating">
+          <div className="graphite-card p-6 sm:p-8 rounded-lg shadow-floating border border-surface-borderHover">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
               <div className="lg:col-span-7 space-y-4">
-                <div className="flex items-center gap-2">
-                  <span className="text-2xl">{ARCHETYPES[activeArchetype].flag}</span>
+                <div className="flex items-center gap-3">
+                  <span className="text-3xl">{ARCHETYPES[activeArchetype].flag}</span>
                   <div>
                     <h3 className="text-lg font-medium text-ink-primary">
                       {ARCHETYPES[activeArchetype].name} · {ARCHETYPES[activeArchetype].city}
                     </h3>
-                    <span className="text-xs font-mono text-cobalt">{ARCHETYPES[activeArchetype].typology}</span>
+                    <span className="text-xs font-mono text-cobalt font-medium">{ARCHETYPES[activeArchetype].typology}</span>
                   </div>
                 </div>
                 <p className="text-xs text-ink-secondary leading-relaxed max-w-xl">
@@ -694,15 +815,15 @@ export default function LandingPage() {
               </div>
 
               <div className="lg:col-span-5 flex flex-col justify-between gap-4 p-5 surface-inset rounded-lg">
-                <div className="space-y-2 text-xs">
+                <div className="space-y-2.5 text-xs">
                   <div className="text-label text-ink-dim">Simulated Annual Benefit</div>
-                  <div className="flex justify-between items-center py-1 border-b border-surface-border/40 font-mono">
+                  <div className="flex justify-between items-center py-1.5 border-b border-surface-border/50 font-mono">
                     <span className="text-ink-secondary">HVAC Electricity Saved:</span>
-                    <strong className="text-ink-primary">{ARCHETYPES[activeArchetype].hvacSaved}</strong>
+                    <strong className="text-ink-primary font-semibold">{ARCHETYPES[activeArchetype].hvacSaved}</strong>
                   </div>
-                  <div className="flex justify-between items-center py-1 border-b border-surface-border/40 font-mono">
+                  <div className="flex justify-between items-center py-1.5 border-b border-surface-border/50 font-mono">
                     <span className="text-ink-secondary">Validation Accuracy:</span>
-                    <strong className="text-status-safe">R² = 0.973 Ground-Truth</strong>
+                    <strong className="text-status-safe font-semibold">R² = 0.973 Ground-Truth</strong>
                   </div>
                 </div>
 
@@ -733,40 +854,52 @@ export default function LandingPage() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="graphite-card p-5 rounded-lg space-y-2 surface-inset">
+            <div className="graphite-card p-5 rounded-lg space-y-3 surface-inset">
               <div className="flex justify-between items-center">
                 <span className="text-xs font-semibold text-ink-primary">Cool Roofs (Albedo)</span>
                 <span className="font-mono text-sm font-bold text-cobalt">42%</span>
+              </div>
+              <div className="w-full bg-surface-base rounded-full h-1.5 overflow-hidden">
+                <div className="bg-cobalt h-full rounded-full" style={{ width: "42%" }} />
               </div>
               <p className="text-[11px] text-ink-secondary leading-relaxed">
                 Shortwave solar reflection prevents surface heat absorption at $18/m² with zero ongoing water requirement.
               </p>
             </div>
 
-            <div className="graphite-card p-5 rounded-lg space-y-2 surface-inset">
+            <div className="graphite-card p-5 rounded-lg space-y-3 surface-inset">
               <div className="flex justify-between items-center">
                 <span className="text-xs font-semibold text-ink-primary">Tree Canopy (Shading)</span>
                 <span className="font-mono text-sm font-bold text-status-safe">31%</span>
+              </div>
+              <div className="w-full bg-surface-base rounded-full h-1.5 overflow-hidden">
+                <div className="bg-status-safe h-full rounded-full" style={{ width: "31%" }} />
               </div>
               <p className="text-[11px] text-ink-secondary leading-relaxed">
                 Beer-Lambert canopy radiation attenuation shields pedestrian street corridors and cools ambient air.
               </p>
             </div>
 
-            <div className="graphite-card p-5 rounded-lg space-y-2 surface-inset">
+            <div className="graphite-card p-5 rounded-lg space-y-3 surface-inset">
               <div className="flex justify-between items-center">
                 <span className="text-xs font-semibold text-ink-primary">Green Roofs (ET Flux)</span>
                 <span className="font-mono text-sm font-bold text-ink-primary">19%</span>
+              </div>
+              <div className="w-full bg-surface-base rounded-full h-1.5 overflow-hidden">
+                <div className="bg-ink-muted h-full rounded-full" style={{ width: "19%" }} />
               </div>
               <p className="text-[11px] text-ink-secondary leading-relaxed">
                 Vegetative evapotranspiration converts sensible heat into latent moisture flux, lowering building cooling loads.
               </p>
             </div>
 
-            <div className="graphite-card p-5 rounded-lg space-y-2 surface-inset">
+            <div className="graphite-card p-5 rounded-lg space-y-3 surface-inset">
               <div className="flex justify-between items-center">
                 <span className="text-xs font-semibold text-ink-primary">Water Bodies (Sink)</span>
                 <span className="font-mono text-sm font-bold text-cyan-400">8%</span>
+              </div>
+              <div className="w-full bg-surface-base rounded-full h-1.5 overflow-hidden">
+                <div className="bg-cyan-400 h-full rounded-full" style={{ width: "8%" }} />
               </div>
               <p className="text-[11px] text-ink-secondary leading-relaxed">
                 Direct open-water evaporation provides localized microclimate cooling buffers along urban retention corridors.
@@ -787,9 +920,9 @@ export default function LandingPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="graphite-card p-6 rounded-lg space-y-4 flex flex-col justify-between">
+            <div className="graphite-card p-6 rounded-lg space-y-4 flex flex-col justify-between hover:border-surface-borderHover transition-all surface-inset">
               <div className="space-y-3">
-                <div className="w-9 h-9 rounded-lg bg-status-critical/10 flex items-center justify-center text-status-critical">
+                <div className="w-9 h-9 rounded-lg bg-status-critical/10 flex items-center justify-center text-status-critical border border-status-critical/20">
                   <Landmark className="w-4 h-4" />
                 </div>
                 <h3 className="text-sm font-semibold text-ink-primary">Municipal Decision-Makers</h3>
@@ -797,16 +930,25 @@ export default function LandingPage() {
                   Design Heat-Health Action Plans, target high-vulnerability demographic wards, optimize municipal CapEx budgets, and verify water conservation quotas.
                 </p>
               </div>
-              <ul className="text-[11px] text-ink-dim space-y-1 border-t border-surface-border/40 pt-3">
-                <li>• Demographic exposure counting (&gt;41.5°C)</li>
-                <li>• Heat Alert Tier notifications (Yellow/Orange/Red)</li>
-                <li>• Ready-to-publish PDF executive dossiers</li>
+              <ul className="text-[11px] text-ink-muted space-y-1.5 border-t border-surface-border/50 pt-3">
+                <li className="flex items-center gap-1.5">
+                  <CheckCircle2 className="w-3 h-3 text-status-critical shrink-0" />
+                  <span>Demographic exposure counting (&gt;41.5°C)</span>
+                </li>
+                <li className="flex items-center gap-1.5">
+                  <CheckCircle2 className="w-3 h-3 text-status-critical shrink-0" />
+                  <span>Heat Alert Tier notifications (Yellow/Orange/Red)</span>
+                </li>
+                <li className="flex items-center gap-1.5">
+                  <CheckCircle2 className="w-3 h-3 text-status-critical shrink-0" />
+                  <span>Ready-to-publish PDF executive dossiers</span>
+                </li>
               </ul>
             </div>
 
-            <div className="graphite-card p-6 rounded-lg space-y-4 flex flex-col justify-between">
+            <div className="graphite-card p-6 rounded-lg space-y-4 flex flex-col justify-between hover:border-surface-borderHover transition-all surface-inset">
               <div className="space-y-3">
-                <div className="w-9 h-9 rounded-lg bg-cobalt/10 flex items-center justify-center text-cobalt">
+                <div className="w-9 h-9 rounded-lg bg-cobalt/10 flex items-center justify-center text-cobalt border border-cobalt/20">
                   <Building2 className="w-4 h-4" />
                 </div>
                 <h3 className="text-sm font-semibold text-ink-primary">Real Estate ESG & Infrastructure</h3>
@@ -814,16 +956,25 @@ export default function LandingPage() {
                   Quantify annual HVAC chiller energy savings (kWh), model financial payback periods, claim LEED / BREEAM thermal comfort credits, and export GIS blueprints.
                 </p>
               </div>
-              <ul className="text-[11px] text-ink-dim space-y-1 border-t border-surface-border/40 pt-3">
-                <li>• Financial tariff ROI modeling ($/kWh)</li>
-                <li>• Scope 2 avoided carbon accounting (tCO₂e)</li>
-                <li>• Vector GeoJSON layers for CAD and QGIS</li>
+              <ul className="text-[11px] text-ink-muted space-y-1.5 border-t border-surface-border/50 pt-3">
+                <li className="flex items-center gap-1.5">
+                  <CheckCircle2 className="w-3 h-3 text-cobalt shrink-0" />
+                  <span>Financial tariff ROI modeling ($/kWh)</span>
+                </li>
+                <li className="flex items-center gap-1.5">
+                  <CheckCircle2 className="w-3 h-3 text-cobalt shrink-0" />
+                  <span>Scope 2 avoided carbon accounting (tCO₂e)</span>
+                </li>
+                <li className="flex items-center gap-1.5">
+                  <CheckCircle2 className="w-3 h-3 text-cobalt shrink-0" />
+                  <span>Vector GeoJSON layers for CAD and QGIS</span>
+                </li>
               </ul>
             </div>
 
-            <div className="graphite-card p-6 rounded-lg space-y-4 flex flex-col justify-between">
+            <div className="graphite-card p-6 rounded-lg space-y-4 flex flex-col justify-between hover:border-surface-borderHover transition-all surface-inset">
               <div className="space-y-3">
-                <div className="w-9 h-9 rounded-lg bg-status-safe/10 flex items-center justify-center text-status-safe">
+                <div className="w-9 h-9 rounded-lg bg-status-safe/10 flex items-center justify-center text-status-safe border border-status-safe/20">
                   <Microscope className="w-4 h-4" />
                 </div>
                 <h3 className="text-sm font-semibold text-ink-primary">Climate Resilience Researchers</h3>
@@ -831,10 +982,19 @@ export default function LandingPage() {
                   Inspect raw 2,500-cell thermodynamic flux matrices, audit aerodynamic resistance formulations, and validate against satellite ground-truth observations.
                 </p>
               </div>
-              <ul className="text-[11px] text-ink-dim space-y-1 border-t border-surface-border/40 pt-3">
-                <li>• Deterministic SEB conservation audits</li>
-                <li>• Landsat 8 & ECOSTRESS empirical scatter fit</li>
-                <li>• 2,500-cell raw CSV matrix downloads</li>
+              <ul className="text-[11px] text-ink-muted space-y-1.5 border-t border-surface-border/50 pt-3">
+                <li className="flex items-center gap-1.5">
+                  <CheckCircle2 className="w-3 h-3 text-status-safe shrink-0" />
+                  <span>Deterministic SEB conservation audits</span>
+                </li>
+                <li className="flex items-center gap-1.5">
+                  <CheckCircle2 className="w-3 h-3 text-status-safe shrink-0" />
+                  <span>Landsat 8 & ECOSTRESS empirical scatter fit</span>
+                </li>
+                <li className="flex items-center gap-1.5">
+                  <CheckCircle2 className="w-3 h-3 text-status-safe shrink-0" />
+                  <span>2,500-cell raw CSV matrix downloads</span>
+                </li>
               </ul>
             </div>
           </div>
@@ -873,14 +1033,14 @@ export default function LandingPage() {
                 <Link
                   key={module.path}
                   href={module.path}
-                  className="group graphite-card p-4 rounded-lg flex flex-col justify-between space-y-3 hover:border-cobalt/40 transition-all"
+                  className="group graphite-card p-4 rounded-lg flex flex-col justify-between space-y-3 hover:border-cobalt/40 transition-all surface-inset"
                 >
-                  <div className="space-y-1.5">
+                  <div className="space-y-2">
                     <div className="flex justify-between items-center">
                       <div className="w-7 h-7 rounded bg-surface-base border border-surface-border flex items-center justify-center text-cobalt group-hover:border-cobalt/40 transition-colors">
                         <MIcon className="w-3.5 h-3.5" />
                       </div>
-                      <span className="text-[10px] font-mono text-ink-dim">Screen 0{idx + 1}</span>
+                      <span className="text-[10px] font-mono text-ink-muted">Screen 0{idx + 1}</span>
                     </div>
                     <h3 className="text-xs font-semibold text-ink-primary group-hover:text-cobalt transition-colors flex items-center gap-1">
                       <span>{module.title}</span>
@@ -921,7 +1081,7 @@ export default function LandingPage() {
               className="px-5 py-3 rounded-md bg-surface-elevated hover:bg-surface-interactive border border-surface-border text-xs text-ink-primary font-medium transition-colors flex items-center gap-2"
             >
               <Download className="w-4 h-4 text-cobalt" />
-              <span>Download Sample Technical Dossier</span>
+              <span>Download Technical Dossier</span>
             </Link>
           </div>
         </div>
@@ -932,7 +1092,7 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4 text-[11px] text-ink-dim">
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-status-safe" />
-            <span>UrbanCoolSim · Surface Energy Balance Intelligence Platform</span>
+            <span className="text-ink-secondary">UrbanCoolSim · Surface Energy Balance Intelligence Platform</span>
           </div>
 
           <div className="flex flex-wrap items-center gap-6">
@@ -944,7 +1104,7 @@ export default function LandingPage() {
             <Link href="/methodology" className="hover:text-ink-secondary transition-colors">Methodology</Link>
           </div>
 
-          <div className="font-mono text-[10px]">
+          <div className="font-mono text-[10px] text-ink-dim">
             © 2026 UrbanCoolSim SEB Physics Engine
           </div>
         </div>

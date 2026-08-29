@@ -514,7 +514,10 @@ export function DigitalTwin3DMap({
               step="0.05"
               value={dataMaskOpacity}
               onChange={(e) => setDataMaskOpacity(Number(e.target.value))}
-              className="w-20 accent-cobalt cursor-pointer"
+              style={{
+                background: `linear-gradient(to right, #4A6CFF 0%, #4A6CFF ${dataMaskOpacity * 100}%, var(--surface-hover) ${dataMaskOpacity * 100}%, var(--surface-hover) 100%)`
+              }}
+              className="w-20 cursor-pointer"
               title="Blend between realistic architectural materials and satellite data mask"
             />
             <span className="text-ink-primary font-bold">{Math.round(dataMaskOpacity * 100)}%</span>
@@ -533,7 +536,10 @@ export function DigitalTwin3DMap({
               step="1"
               value={timeOfDay}
               onChange={(e) => setTimeOfDay(Number(e.target.value))}
-              className="w-14 ml-1 accent-amber-500 cursor-pointer"
+              style={{
+                background: `linear-gradient(to right, #f59e0b 0%, #f59e0b ${((timeOfDay - 8) / (18 - 8)) * 100}%, var(--surface-hover) ${((timeOfDay - 8) / (18 - 8)) * 100}%, var(--surface-hover) 100%)`
+              }}
+              className="w-16 ml-1 cursor-pointer"
               title="Rotate sun and observe building canyon shadows"
             />
           </div>

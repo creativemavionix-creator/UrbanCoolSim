@@ -21,6 +21,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen
 } from "lucide-react";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 interface NavGroup {
   group: string;
@@ -160,27 +161,35 @@ export function Sidebar() {
         </nav>
       </div>
 
-      {/* Footer: Collapse Toggle + Status */}
-      <div className="px-2 py-2 border-t border-surface-border">
-        <button 
-          onClick={() => setIsCollapsed(!isCollapsed)}
-          className="w-full flex items-center justify-center gap-2 py-1.5 px-2 rounded-md text-ink-muted hover:text-ink-secondary hover:bg-surface-interactive/40 transition-colors text-[11px]"
-          title={isCollapsed ? "Expand (⌘ \\)" : "Collapse (⌘ \\)"}
-        >
-          {isCollapsed ? (
-            <PanelLeftOpen className="w-3.5 h-3.5" />
-          ) : (
-            <>
+      {/* Footer: Theme Toggle + Collapse Toggle + Status */}
+      <div className="px-2 py-2 border-t border-surface-border flex flex-col gap-1">
+        <div className={`flex items-center ${isCollapsed ? "justify-center" : "justify-between"} px-1`}>
+          <ThemeToggle showLabel={!isCollapsed} />
+          {!isCollapsed && (
+            <button 
+              onClick={() => setIsCollapsed(true)}
+              className="flex items-center justify-center p-1.5 rounded-md text-ink-muted hover:text-ink-secondary hover:bg-surface-interactive/40 transition-colors text-[11px]"
+              title="Collapse (⌘ \)"
+            >
               <PanelLeftClose className="w-3.5 h-3.5" />
-              <span className="font-mono text-ink-dim">⌘ \</span>
-            </>
+            </button>
           )}
-        </button>
+        </div>
+
+        {isCollapsed && (
+          <button 
+            onClick={() => setIsCollapsed(false)}
+            className="w-full flex items-center justify-center p-1.5 rounded-md text-ink-muted hover:text-ink-secondary hover:bg-surface-interactive/40 transition-colors text-[11px]"
+            title="Expand (⌘ \)"
+          >
+            <PanelLeftOpen className="w-3.5 h-3.5" />
+          </button>
+        )}
 
         {!isCollapsed && (
-          <div className="mt-1.5 px-2 py-1.5 text-[10px] font-mono text-ink-dim flex items-center gap-1.5">
+          <div className="mt-1 px-1.5 py-1 text-[9px] font-mono text-ink-dim flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-status-safe shrink-0" />
-            <span>SEB Physics · Deterministic</span>
+            <span className="truncate">SEB Physics · Deterministic</span>
           </div>
         )}
       </div>

@@ -1439,7 +1439,10 @@ export function DigitalTwinMap({
             step="0.05"
             value={thermalOpacity}
             onChange={(e) => setThermalOpacity(Number(e.target.value))}
-            className="w-14 accent-cobalt cursor-pointer"
+            style={{
+              background: `linear-gradient(to right, #4A6CFF 0%, #4A6CFF ${thermalOpacity * 100}%, var(--surface-hover) ${thermalOpacity * 100}%, var(--surface-hover) 100%)`
+            }}
+            className="w-16 cursor-pointer"
             title="Adjust raster opacity"
           />
           <span className="text-ink-secondary font-mono text-[10px] w-5">
