@@ -133,18 +133,18 @@ export function DigitalTwin3DMap({
         const t = (norm - 0.75) / 0.25;
         col.setRGB(0.98, 0.30 - t * 0.20, 0.05);
       }
-    } else if (mask.includes("canopy")) {
-      // Tree Canopy: If no canopy (val < 2m), render neutral building color; if trees, render gradient emerald
-      if (val < 2.0) {
+    } else if (mask.includes("canopy") || mask.includes("veg")) {
+      // Tree Canopy: If no canopy (val < 0.8m), render neutral building/ground color; if trees, render gradient emerald
+      if (val < 0.8) {
         col.setRGB(0.22, 0.24, 0.28); // Neutral urban building/ground
       } else {
-        const norm = Math.max(0, Math.min(1, val / 22.0));
-        col.setRGB(0.15 - norm * 0.1, 0.45 + norm * 0.5, 0.20 + norm * 0.2); // Emerald canopy
+        const norm = Math.max(0, Math.min(1, (val - 0.8) / 24.2));
+        col.setRGB(0.12 - norm * 0.08, 0.52 + norm * 0.38, 0.20 + norm * 0.15); // Vibrant emerald canopy
       }
     } else if (mask.includes("population")) {
       // Demographic Density: Indigo -> Magenta -> Yellow
       const norm = Math.max(0, Math.min(1, val / 450.0));
-      if (norm < 0.1) {
+      if (norm < 0.1 || val < 10) {
         col.setRGB(0.20, 0.22, 0.26);
       } else {
         col.setRGB(0.35 + norm * 0.6, 0.12 + norm * 0.2, 0.65 - norm * 0.4);
@@ -152,7 +152,7 @@ export function DigitalTwin3DMap({
     } else if (mask.includes("qf") || mask.includes("anthropogenic")) {
       // Anthropogenic Heat: Neutral -> Flame Orange -> Yellow
       const norm = Math.max(0, Math.min(1, val / 85.0));
-      if (norm < 0.15) {
+      if (norm < 0.12 || val < 5) {
         col.setRGB(0.20, 0.22, 0.26);
       } else {
         col.setRGB(0.95, 0.30 + norm * 0.6, 0.08);
@@ -335,8 +335,8 @@ export function DigitalTwin3DMap({
           wMesh.receiveShadow = true;
           cityGroup.add(wMesh);
         }
-        // 3. Parks & 3D Tree Clusters
-        else if (showTrees && veg > 0.35) {
+        // 3. Parks & 3D Tree Clusters (strictly placed outside water and building volumes)
+        else if (showTrees && veg > 0.35 && water < 0.20 && rawH < 4.0) {
           // Tree model: trunk + canopy sphere
           const treeGroupUnit = new THREE.Group();
           

@@ -200,7 +200,7 @@ const PINNED_STUDY_AREAS = [
   },
 ];
 
-// ─── Scientific Colormap ──────────────────────────────────────────────────────
+// ─── Scientific Colormap with Organic Foliage & Feature Tuning ────────────────
 function getColormapRGBA(
   val: number,
   minVal: number,
@@ -225,18 +225,35 @@ function getColormapRGBA(
       return [Math.round(250 - t * 15), Math.round(90 - t * 65), Math.round(10 + t * 15), alpha];
     }
   } else if (layer.includes("canopy") || layer.includes("veg")) {
-    if (val < 1.5) return [0, 0, 0, 0];
-    return [Math.round(16 + (1 - norm) * 20), Math.round(140 + norm * 110), Math.round(45 + norm * 50), alpha];
+    // Tree Canopy: Strictly transparent where no canopy (< 0.8m)
+    if (val < 0.8) return [0, 0, 0, 0];
+    
+    // Natural density-scaled alpha: sparse canopy (2m) is lighter; dense park canopy (18m+) is richly saturated
+    const scaledAlpha = Math.min(235, Math.round(120 + norm * 115));
+    
+    if (norm < 0.35) {
+      // Light / young canopy & street verge (0.8m - 8m): Sunlit lime-emerald
+      const t = norm / 0.35;
+      return [Math.round(74 - t * 38), Math.round(180 + t * 35), Math.round(45 + t * 20), scaledAlpha];
+    } else if (norm < 0.70) {
+      // Medium mature canopy (8m - 17m): Rich vibrant emerald
+      const t = (norm - 0.35) / 0.35;
+      return [Math.round(36 - t * 22), Math.round(215 - t * 40), Math.round(65 - t * 15), scaledAlpha];
+    } else {
+      // Dense tall canopy & urban forest (17m - 25m): Deep forest canopy green
+      const t = (norm - 0.70) / 0.30;
+      return [Math.round(14 - t * 6), Math.round(175 - t * 45), Math.round(50 - t * 15), scaledAlpha];
+    }
   } else if (layer.includes("population")) {
-    if (norm < 0.05) return [0, 0, 0, 0];
-    return [Math.round(80 + norm * 165), Math.round(25 + norm * 180), Math.round(180 - norm * 120), alpha];
+    if (norm < 0.05 || val < 10) return [0, 0, 0, 0];
+    return [Math.round(80 + norm * 165), Math.round(25 + norm * 180), Math.round(180 - norm * 120), Math.min(220, Math.round(120 + norm * 100))];
   } else if (layer.includes("qf") || layer.includes("anthropogenic")) {
-    if (norm < 0.1) return [0, 0, 0, 0];
-    return [Math.round(180 + norm * 70), Math.round(60 + norm * 150), 15, alpha];
+    if (norm < 0.08 || val < 5) return [0, 0, 0, 0];
+    return [Math.round(180 + norm * 70), Math.round(60 + norm * 150), 15, Math.min(230, Math.round(130 + norm * 100))];
   } else if (layer.includes("height")) {
     if (val < 2.0) return [0, 0, 0, 0];
     const v = Math.round(70 + norm * 180);
-    return [Math.round(v * 0.9), Math.round(v * 0.95), Math.min(255, Math.round(v * 1.15)), alpha];
+    return [Math.round(v * 0.9), Math.round(v * 0.95), Math.min(255, Math.round(v * 1.15)), Math.min(220, Math.round(140 + norm * 80))];
   } else {
     const v = Math.round(40 + norm * 215);
     return [v, v, v, alpha - 20];
@@ -398,11 +415,11 @@ export function DigitalTwinMap({
 
       const meta = LAYER_METAS[layerKey] || LAYER_METAS.baseline_temperature_c;
       const bldgH = gridData.layers["building_height"];
+      const bldgD = gridData.layers["building_density"];
       const vegF = gridData.layers["veg_fraction"];
+      const waterF = gridData.layers["water_fraction"];
 
       // Build feather alpha function from boundary.
-      // featherWidthDeg = 0.0012° ≈ 130m — wide enough to be clearly visible
-      // as a lush soft gradient at zoom 14–16 without hard box cuts.
       const featherFn =
         studyBoundary
           ? makeFeatherAlpha(studyBoundary.boundary, 0.0012)
@@ -440,28 +457,56 @@ export function DigitalTwinMap({
             v10 * wr * (1 - wc) +
             v11 * wr * wc;
 
-          // Scenario physics modifiers (same as original DigitalTwinMap)
-          if (layerKey.includes("temperature") || layerKey === "lst") {
-            const h =
-              (bldgH?.[r0]?.[c0] ?? 0) * (1 - wr) * (1 - wc) +
-              (bldgH?.[r0]?.[c1] ?? 0) * (1 - wr) * wc +
-              (bldgH?.[r1]?.[c0] ?? 0) * wr * (1 - wc) +
-              (bldgH?.[r1]?.[c1] ?? 0) * wr * wc;
-            const v =
-              (vegF?.[r0]?.[c0] ?? 0) * (1 - wr) * (1 - wc) +
-              (vegF?.[r0]?.[c1] ?? 0) * (1 - wr) * wc +
-              (vegF?.[r1]?.[c0] ?? 0) * wr * (1 - wc) +
-              (vegF?.[r1]?.[c1] ?? 0) * wr * wc;
+          // Interpolate physical feature context
+          const h =
+            (bldgH?.[r0]?.[c0] ?? 0) * (1 - wr) * (1 - wc) +
+            (bldgH?.[r0]?.[c1] ?? 0) * (1 - wr) * wc +
+            (bldgH?.[r1]?.[c0] ?? 0) * wr * (1 - wc) +
+            (bldgH?.[r1]?.[c1] ?? 0) * wr * wc;
+          const v =
+            (vegF?.[r0]?.[c0] ?? 0) * (1 - wr) * (1 - wc) +
+            (vegF?.[r0]?.[c1] ?? 0) * (1 - wr) * wc +
+            (vegF?.[r1]?.[c0] ?? 0) * wr * (1 - wc) +
+            (vegF?.[r1]?.[c1] ?? 0) * wr * wc;
+          const w =
+            (waterF?.[r0]?.[c0] ?? 0) * (1 - wr) * (1 - wc) +
+            (waterF?.[r0]?.[c1] ?? 0) * (1 - wr) * wc +
+            (waterF?.[r1]?.[c0] ?? 0) * wr * (1 - wc) +
+            (waterF?.[r1]?.[c1] ?? 0) * wr * wc;
+          const d =
+            (bldgD?.[r0]?.[c0] ?? 0) * (1 - wr) * (1 - wc) +
+            (bldgD?.[r0]?.[c1] ?? 0) * (1 - wr) * wc +
+            (bldgD?.[r1]?.[c0] ?? 0) * wr * (1 - wc) +
+            (bldgD?.[r1]?.[c1] ?? 0) * wr * wc;
 
+          // Tree Canopy Feature-Aware Masking:
+          if (layerKey.includes("canopy") || layerKey.includes("veg")) {
+            // Strictly 0 canopy over open water bodies
+            if (w > 0.30) {
+              val = 0.0;
+            }
+            // Mask out rooftop canopy on high-rise commercial buildings (unless green roof scenario)
+            else if (h > 12.0 && d > 0.45 && scenario !== "green_roofs") {
+              val = Math.min(val, 0.0);
+            }
+
+            // Scenario modifications for tree canopy
+            if (scenario === "tree_canopy" && h < 6.0 && w < 0.2) {
+              val = Math.min(24.0, val + 6.5);
+            }
+          }
+
+          // Scenario physics modifiers for Surface Temperature
+          if (layerKey.includes("temperature") || layerKey === "lst") {
             if (scenario === "cool_roofs" && h > 10.0)
               val = Math.max(30.0, val - 3.2);
             else if (scenario === "green_roofs" && h > 10.0)
               val = Math.max(30.0, val - 3.8);
-            else if (scenario === "tree_canopy" && h < 5.0)
+            else if (scenario === "tree_canopy" && h < 5.0 && w < 0.2)
               val = Math.max(30.0, val - 4.5);
             else if (scenario === "optimized") {
               if (h > 15.0) val = Math.max(30.0, val - 3.5);
-              else if (h < 5.0 && v < 0.2) val = Math.max(30.0, val - 4.2);
+              else if (h < 5.0 && v < 0.2 && w < 0.2) val = Math.max(30.0, val - 4.2);
             }
           }
 
