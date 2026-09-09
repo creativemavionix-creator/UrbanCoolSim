@@ -238,9 +238,28 @@ export function assignThermalToBuildings(
   layerKey = "baseline_temperature_c",
   scenario = "baseline"
 ): GeoJSON.FeatureCollection {
+  if (!buildings?.features) {
+    return { type: "FeatureCollection", features: [] };
+  }
+
+  // If gridData or layers are not loaded yet, return buildings safely with baseline default values
+  if (!gridData?.layers) {
+    return {
+      ...buildings,
+      features: buildings.features.map((feature) => ({
+        ...feature,
+        properties: {
+          ...feature.properties,
+          thermalValue: 40.0,
+          layerKey,
+        },
+      })),
+    };
+  }
+
   const { north, south, east, west } = studyBounds;
-  const rows: number = gridData.metadata.rows || 50;
-  const cols: number = gridData.metadata.cols || 50;
+  const rows: number = gridData?.metadata?.rows || 50;
+  const cols: number = gridData?.metadata?.cols || 50;
   const dLat = (north - south) / rows;
   const dLon = (east - west) / cols;
 

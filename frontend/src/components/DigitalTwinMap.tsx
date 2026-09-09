@@ -396,8 +396,8 @@ export function DigitalTwinMap({
         return textureCacheRef.current.get(cacheKey) || null;
       }
 
-      const srcRows = gridData.metadata.rows ?? 50;
-      const srcCols = gridData.metadata.cols ?? 50;
+      const srcRows = gridData?.metadata?.rows ?? 50;
+      const srcCols = gridData?.metadata?.cols ?? 50;
       // 4× upsample for GPU bilinear smoothing
       const SCALE = 4;
       const dstW = srcCols * SCALE;
@@ -541,8 +541,8 @@ export function DigitalTwinMap({
   const analysisGridGeoJSON = useMemo(() => {
     if (!gridData?.layers) return null;
 
-    const rows = gridData.metadata.rows ?? 50;
-    const cols = gridData.metadata.cols ?? 50;
+    const rows = gridData?.metadata?.rows ?? 50;
+    const cols = gridData?.metadata?.cols ?? 50;
     const { north, south, east, west } = studyAreaBounds;
     const dLat = (north - south) / rows;
     const dLon = (east - west) / cols;
@@ -627,8 +627,8 @@ export function DigitalTwinMap({
   const gridExtrusionGeoJSON = useMemo(() => {
     if (!gridData?.layers) return null;
 
-    const rows = gridData.metadata.rows ?? 50;
-    const cols = gridData.metadata.cols ?? 50;
+    const rows = gridData?.metadata?.rows ?? 50;
+    const cols = gridData?.metadata?.cols ?? 50;
     const { north, south, east, west } = studyAreaBounds;
     const dLat = (north - south) / rows;
     const dLon = (east - west) / cols;
@@ -1332,7 +1332,7 @@ export function DigitalTwinMap({
   const badgeSubtitle = pinnedArea
     ? `${pinnedArea.city}, ${pinnedArea.country}`
     : gridData?.metadata?.city && gridData?.metadata?.country
-    ? `${gridData.metadata.city}, ${gridData.metadata.country}`
+    ? `${gridData?.metadata?.city}, ${gridData?.metadata?.country}`
     : gridData?.metadata?.location || "";
 
   // ── Render ─────────────────────────────────────────────────────────────────

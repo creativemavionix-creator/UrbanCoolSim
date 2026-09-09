@@ -23,7 +23,7 @@ export function AnimatedCounter({
   // Critically-damped spring: snappy, smooth, zero overshoot/bounce
   const springVal = useSpring(motionVal, { stiffness: 220, damping: 30 });
   const displayVal = useTransform(springVal, (latest) => {
-    return `${prefix}${latest.toLocaleString(undefined, {
+    return `${prefix}${latest.toLocaleString("en-US", {
       minimumFractionDigits: decimals,
       maximumFractionDigits: decimals,
     })}${suffix}`;
@@ -34,7 +34,7 @@ export function AnimatedCounter({
   }, [value, motionVal]);
 
   return (
-    <motion.span ref={ref} className={`tabular-nums ${className}`}>
+    <motion.span ref={ref} suppressHydrationWarning className={`tabular-nums ${className}`}>
       {displayVal}
     </motion.span>
   );

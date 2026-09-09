@@ -42,7 +42,7 @@ export function Hero3DCanvas({ isCooled = false }: Hero3DCanvasProps) {
       renderer.setSize(width, height);
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
       renderer.shadowMap.enabled = true;
-      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      renderer.shadowMap.type = THREE.PCFShadowMap;
       renderer.toneMapping = THREE.ACESFilmicToneMapping;
       renderer.toneMappingExposure = 1.25;
       rendererRef.current = renderer;
@@ -216,11 +216,11 @@ export function Hero3DCanvas({ isCooled = false }: Hero3DCanvasProps) {
       window.addEventListener("mousemove", handleMouseMove);
 
       let animId: number;
-      const clock = new THREE.Clock();
+      const startTime = performance.now();
 
       const animate = () => {
         animId = requestAnimationFrame(animate);
-        const elapsed = clock.getElapsedTime();
+        const elapsed = (performance.now() - startTime) / 1000;
 
         if (!prefersReducedMotion) {
           // Gentle camera orbit from mouse

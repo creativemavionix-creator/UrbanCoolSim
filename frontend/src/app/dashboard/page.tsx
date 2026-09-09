@@ -57,14 +57,18 @@ export default function DashboardPage() {
   const loadDashboard = async (areaId = studyArea) => {
     setLoading(true);
     try {
-      const [gridData, simRes] = await Promise.all([
+      const [gridRes, simRes] = await Promise.allSettled([
         api.getDigitalTwinGrid(areaId, 50, 50),
         api.runPhysicsSimulation("scen_hybrid_cp", undefined, areaId)
       ]);
-      setGrid(gridData);
-      setSimResult(simRes);
+      if (gridRes.status === "fulfilled") {
+        setGrid(gridRes.value);
+      }
+      if (simRes.status === "fulfilled") {
+        setSimResult(simRes.value);
+      }
     } catch (err) {
-      console.error(err);
+      console.error("[Dashboard] Error loading data:", err);
     } finally {
       setLoading(false);
     }
@@ -268,7 +272,14 @@ export default function DashboardPage() {
               <h3 className="font-medium text-ink-primary">10m Spatial Digital Twin</h3>
               <span className="font-mono text-ink-dim text-[11px]">2,500 Cells (10m × 10m)</span>
             </div>
-            <DigitalTwinMap gridData={grid} />
+            {grid ? (
+              <DigitalTwinMap gridData={grid} />
+            ) : (
+              <div className="w-full h-[620px] flex flex-col items-center justify-center surface-inset rounded-lg border border-surface-border text-xs font-mono text-ink-muted skeleton-pulse gap-2.5">
+                <div className="w-5 h-5 border-2 border-cobalt border-t-transparent rounded-full animate-spin" />
+                <span>Synchronizing 10m Spatial Digital Twin…</span>
+              </div>
+            )}
           </div>
 
           <div className="lg:col-span-5 space-y-4">
