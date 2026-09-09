@@ -10,6 +10,7 @@ import {
   Microscope,
 } from "lucide-react";
 import { OnboardingModal } from "@/components/OnboardingModal";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface HeaderProps {
@@ -149,8 +150,9 @@ export function Header({ title, subtitle, onStudyAreaChange }: HeaderProps) {
   return (
     <>
       <header className="h-12 border-b border-surface-border bg-surface-base/95 backdrop-blur-sm px-5 flex items-center justify-between sticky top-0 z-30 select-none">
-        {/* Left: Title + Subtitle */}
-        <div className="flex items-center gap-3 min-w-0">
+        {/* Left: Theme Toggle + Title + Subtitle */}
+        <div className="flex items-center gap-2.5 min-w-0">
+          <ThemeToggle />
           <h1 className="text-[13px] font-medium text-ink-primary tracking-tight truncate">{title}</h1>
           {subtitle && (
             <span className="text-[12px] text-ink-dim border-l border-surface-border pl-3 hidden lg:inline truncate">

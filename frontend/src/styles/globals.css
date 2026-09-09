@@ -9,21 +9,54 @@
   --font-serif: 'Instrument Serif', Georgia, serif;
   --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
+
+  /* Light Theme Palette (Clean Architectural Slate) */
+  --surface-base: #F8FAFC;
+  --surface-elevated: #FFFFFF;
+  --surface-card: #FFFFFF;
+  --surface-interactive: #F1F5F9;
+  --surface-hover: #E2E8F0;
+  --surface-border: rgba(0, 0, 0, 0.08);
+  --surface-borderHover: rgba(0, 0, 0, 0.16);
+  --surface-borderActive: rgba(74, 108, 255, 0.4);
+
+  --ink-primary: #0F172A;
+  --ink-secondary: #475569;
+  --ink-muted: #64748B;
+  --ink-dim: #94A3B8;
+}
+
+html.dark {
+  /* Dark Theme Palette (Obsidian Graphite) */
+  --surface-base: #0B0C10;
+  --surface-elevated: #13151B;
+  --surface-card: #13151B;
+  --surface-interactive: #1B1E26;
+  --surface-hover: #222631;
+  --surface-border: rgba(255, 255, 255, 0.07);
+  --surface-borderHover: rgba(255, 255, 255, 0.14);
+  --surface-borderActive: rgba(255, 255, 255, 0.28);
+
+  --ink-primary: #F2F3F5;
+  --ink-secondary: #8E95A5;
+  --ink-muted: #5E6678;
+  --ink-dim: #3A404F;
 }
 
 @layer base {
   body {
-    background-color: #0B0C10;
-    color: #F2F3F5;
+    background-color: var(--surface-base);
+    color: var(--ink-primary);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    transition: background-color 0.2s ease, color 0.2s ease;
   }
 
   h1, h2, h3, h4 {
     letter-spacing: -0.02em;
     font-weight: 500;
-    color: #F2F3F5;
+    color: var(--ink-primary);
   }
 
   /* Accessible focus ring — only on keyboard navigation */
@@ -35,7 +68,7 @@
 
   ::selection {
     background: rgba(74, 108, 255, 0.3);
-    color: #F2F3F5;
+    color: var(--ink-primary);
   }
 }
 
@@ -65,37 +98,38 @@
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--surface-border);
   border-radius: 9999px;
   transition: background 0.2s ease;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.18);
+  background: var(--surface-borderHover);
 }
 
 /* ─── Surface Cards ───────────────────────────────────────────────────────── */
 .graphite-card {
-  background-color: #13151B;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  box-shadow: 0 2px 12px -2px rgba(0, 0, 0, 0.35);
+  background-color: var(--surface-card);
+  border: 1px solid var(--surface-border);
+  box-shadow: 0 2px 12px -2px rgba(0, 0, 0, 0.12);
+  transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .graphite-card-interactive {
-  background-color: #13151B;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  box-shadow: 0 2px 12px -2px rgba(0, 0, 0, 0.35);
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  background-color: var(--surface-card);
+  border: 1px solid var(--surface-border);
+  box-shadow: 0 2px 12px -2px rgba(0, 0, 0, 0.12);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
 }
 .graphite-card-interactive:hover {
-  border-color: rgba(255, 255, 255, 0.12);
-  box-shadow: 0 4px 20px -4px rgba(0, 0, 0, 0.5);
+  border-color: var(--surface-borderHover);
+  box-shadow: 0 4px 20px -4px rgba(0, 0, 0, 0.2);
 }
 
 /* Recessed inset surface — for nested panels */
 .surface-inset {
-  background-color: #0D0E13;
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.04);
+  background-color: var(--surface-interactive);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--surface-border);
 }
 
 /* ─── Primary Action Button ───────────────────────────────────────────────── */
@@ -115,41 +149,61 @@
   transform: scale(0.98);
 }
 
-/* ─── Minimal Range Sliders ───────────────────────────────────────────────── */
+/* ─── Premium Range Sliders with Dynamic Progress Track ───────────────────── */
 input[type="range"] {
   -webkit-appearance: none;
   appearance: none;
-  background: rgba(255, 255, 255, 0.1);
-  height: 3px;
+  background-color: var(--surface-hover);
+  height: 5px;
   border-radius: 9999px;
   outline: none;
   cursor: pointer;
-  transition: background 0.15s ease;
-}
-
-input[type="range"]:hover {
-  background: rgba(255, 255, 255, 0.18);
+  transition: background 0.15s ease, box-shadow 0.15s ease;
 }
 
 input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 12px;
-  height: 12px;
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
-  background: #F2F3F5;
+  background: #FFFFFF;
+  border: 2.5px solid #4A6CFF;
   cursor: pointer;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
-  transition: transform 0.1s ease;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+  transition: transform 0.1s ease, box-shadow 0.15s ease;
 }
 
 input[type="range"]::-webkit-slider-thumb:hover {
   transform: scale(1.15);
+  box-shadow: 0 0 10px rgba(74, 108, 255, 0.5);
 }
 
 input[type="range"]::-webkit-slider-thumb:active {
   transform: scale(0.95);
   background: #4A6CFF;
+  border-color: #FFFFFF;
+}
+
+/* Firefox */
+input[type="range"]::-moz-range-progress {
+  background-color: #4A6CFF;
+  height: 5px;
+  border-radius: 9999px;
+}
+input[type="range"]::-moz-range-track {
+  background-color: var(--surface-hover);
+  height: 5px;
+  border-radius: 9999px;
+}
+input[type="range"]::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #FFFFFF;
+  border: 2.5px solid #4A6CFF;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
 }
 
 /* ─── Editorial Typography (use sparingly) ────────────────────────────────── */

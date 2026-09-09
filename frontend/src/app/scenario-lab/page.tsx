@@ -535,6 +535,9 @@ export default function ScenarioLabPage() {
                 <input
                   type="range" min="0" max="100" value={swipePos}
                   onChange={(e) => setSwipePos(Number(e.target.value))}
+                  style={{
+                    background: `linear-gradient(to right, #4A6CFF 0%, #4A6CFF ${swipePos}%, var(--surface-hover) ${swipePos}%, var(--surface-hover) 100%)`
+                  }}
                   className="w-full"
                 />
               </div>

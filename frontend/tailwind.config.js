@@ -9,16 +9,16 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // 1. Base Surface (Graphite, not pure black)
+        // 1. Base Surface (Dynamic via CSS variables)
         surface: {
-          base: "#0B0C10",
-          elevated: "#13151B",
-          card: "#13151B",
-          interactive: "#1B1E26",
-          hover: "#222631",
-          border: "rgba(255, 255, 255, 0.07)",
-          borderHover: "rgba(255, 255, 255, 0.14)",
-          borderActive: "rgba(255, 255, 255, 0.28)",
+          base: "var(--surface-base, #0B0C10)",
+          elevated: "var(--surface-elevated, #13151B)",
+          card: "var(--surface-card, #13151B)",
+          interactive: "var(--surface-interactive, #1B1E26)",
+          hover: "var(--surface-hover, #222631)",
+          border: "var(--surface-border, rgba(255, 255, 255, 0.07))",
+          borderHover: "var(--surface-borderHover, rgba(255, 255, 255, 0.14))",
+          borderActive: "var(--surface-borderActive, rgba(255, 255, 255, 0.28))",
         },
         // 2. Signature Brand Accent (Electric Cobalt — used sparingly)
         cobalt: {
@@ -29,10 +29,10 @@ module.exports = {
         },
         // 3. Neutrals (Gray-on-graphite hierarchy)
         ink: {
-          primary: "#F2F3F5",
-          secondary: "#8E95A5",
-          muted: "#5E6678",
-          dim: "#3A404F",
+          primary: "var(--ink-primary, #F2F3F5)",
+          secondary: "var(--ink-secondary, #8E95A5)",
+          muted: "var(--ink-muted, #5E6678)",
+          dim: "var(--ink-dim, #3A404F)",
         },
         // 4. Semantic / Status Colors
         status: {
@@ -49,24 +49,24 @@ module.exports = {
           extreme: "#dc2626",
         },
         // Legacy compatibility aliases
-        background: "#0B0C10",
-        card: "#13151B",
-        cardHover: "#1B1E26",
-        border: "rgba(255, 255, 255, 0.07)",
+        background: "var(--surface-base, #0B0C10)",
+        card: "var(--surface-card, #13151B)",
+        cardHover: "var(--surface-interactive, #1B1E26)",
+        border: "var(--surface-border, rgba(255, 255, 255, 0.07))",
         botanical: {
           DEFAULT: "#4A6CFF",
           light: "#5B7FFF",
           dark: "#3B55CC",
         },
         obsidian: {
-          base: "#0B0C10",
-          subtle: "#13151B",
-          surface: "#1B1E26",
-          hover: "#222631",
-          textPrimary: "#F2F3F5",
-          textSecondary: "#8E95A5",
-          textMuted: "#5E6678",
-          border: "rgba(255, 255, 255, 0.07)",
+          base: "var(--surface-base, #0B0C10)",
+          subtle: "var(--surface-elevated, #13151B)",
+          surface: "var(--surface-interactive, #1B1E26)",
+          hover: "var(--surface-hover, #222631)",
+          textPrimary: "var(--ink-primary, #F2F3F5)",
+          textSecondary: "var(--ink-secondary, #8E95A5)",
+          textMuted: "var(--ink-muted, #5E6678)",
+          border: "var(--surface-border, rgba(255, 255, 255, 0.07))",
         }
       },
       fontFamily: {
