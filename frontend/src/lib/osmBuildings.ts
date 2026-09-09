@@ -126,9 +126,42 @@ export async function fetchOSMBuildings(
     return cached;
   }
 
-  onProgress?.("OSM buildings: fetching from Overpass API…");
+  // 2. High-Priority: Curated Real-World Vector Footprints from Backend Engine
+  try {
+    onProgress?.("Loading high-precision real building footprints…");
+    const res = await fetch(`/api/v1/digital-twin/buildings?study_area_id=${encodeURIComponent(studyAreaId)}`);
+    if (res.ok) {
+      const geojson = await res.json();
+      if (geojson?.features && geojson.features.length > 0) {
+        saveToCache(studyAreaId, geojson);
+        onProgress?.(`Real-world digital twin: ${geojson.features.length} building complexes loaded`);
+        return geojson;
+      }
+    }
+  } catch (e) {
+    console.warn("Backend building fetch notice, trying local static asset:", e);
+  }
 
-  // 2. Expand bbox slightly (10%) so edge buildings aren't clipped
+  // 3. Fallback: Local static geo dataset
+  try {
+    const res = await fetch(`/data/geo/${studyAreaId}_geo.json`);
+    if (res.ok) {
+      const allGeo = await res.json();
+      const bldgs = (allGeo?.features || []).filter((f: any) => f.properties?.type === "building");
+      if (bldgs.length > 0) {
+        const geojson: GeoJSON.FeatureCollection = { type: "FeatureCollection", features: bldgs };
+        saveToCache(studyAreaId, geojson);
+        onProgress?.(`Real-world digital twin: ${bldgs.length} building complexes loaded`);
+        return geojson;
+      }
+    }
+  } catch (e) {
+    console.warn("Static geo fetch notice:", e);
+  }
+
+  onProgress?.("Fetching OSM footprints from Overpass API…");
+
+  // 4. Fallback for custom worldwide coordinates: Query Overpass API
   const latPad = (bounds.north - bounds.south) * 0.1;
   const lonPad = (bounds.east - bounds.west) * 0.1;
   const { south, west, north, east } = {

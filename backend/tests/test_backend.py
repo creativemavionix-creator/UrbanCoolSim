@@ -122,3 +122,52 @@ def test_auth_user_flow():
     me_resp = client.get("/api/v1/auth/me", headers={"Authorization": f"Bearer {token}"})
     assert me_resp.status_code == 200
     assert me_resp.json()["email"] == email
+
+
+def test_geo_digital_twin_engine_rasterization():
+    from app.spatial.geo_digital_twin import geo_twin_engine
+    
+    # Verify microgrid for Mumbai BKC
+    grid = geo_twin_engine.generate_microgrid("mumbai_bkc", 50, 50)
+    assert grid["metadata"]["is_synthetic"] is False
+    assert grid["metadata"]["tag"] == "GEOREFERENCED SATELLITE DIGITAL TWIN"
+    assert "layers" in grid
+    layers = grid["layers"]
+    
+    t = np.array(layers["baseline_temperature_c"])
+    w = np.array(layers["water_fraction"])
+    b = np.array(layers["building_density"])
+    v = np.array(layers["veg_fraction"])
+    
+    assert 28.0 <= t.min() and t.max() <= 55.0, "Temperatures must fall in valid physical bounds"
+    assert np.sum(w > 0.5) > 0, "Mithi river cells must be rasterized"
+    assert np.sum(b > 0.5) > 0, "Commercial building complexes must be rasterized"
+    assert np.sum(v > 0.5) > 0, "Jio Garden / Parks must be rasterized"
+    # Mithi River water must be cooler than commercial towers
+    assert t[w > 0.5].mean() < t[b > 0.5].mean(), "Water must provide cool thermal sink compared to buildings"
+
+
+def test_digital_twin_buildings_endpoint():
+    response = client.get("/api/v1/digital-twin/buildings?study_area_id=mumbai_bkc")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["type"] == "FeatureCollection"
+    assert len(data["features"]) >= 10
+    names = [f["properties"]["name"] for f in data["features"]]
+    assert any("Bharat Diamond Bourse" in n for n in names)
+    assert any("Jio World Convention" in n for n in names)
+    for feat in data["features"]:
+        assert feat["geometry"]["type"] == "Polygon"
+        assert feat["properties"]["height"] > 0
+
+
+def test_digital_twin_inspect_cell():
+    # Test cell inspection with landmark detection
+    response = client.get("/api/v1/digital-twin/inspect-cell?study_area_id=mumbai_bkc&row=25&col=25")
+    assert response.status_code == 200
+    data = response.json()
+    assert "baseline_temperature_c" in data
+    assert "landmark_name" in data
+    assert data["landmark_name"] is not None
+    assert "recommended_intervention" in data
+    assert len(data["recommended_intervention"]) > 10

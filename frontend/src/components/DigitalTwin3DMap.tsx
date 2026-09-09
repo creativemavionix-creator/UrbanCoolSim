@@ -275,6 +275,7 @@ export function DigitalTwin3DMap({
         const cellInfo = {
           row: r,
           col: c,
+          landmarkName: gridData.landmarks?.[r]?.[c] || null,
           temp: temp.toFixed(1),
           height: typeof rawH === "number" ? rawH.toFixed(1) : rawH,
           canopyHeight: typeof canopyVal === "number" ? canopyVal.toFixed(1) : canopyVal,
@@ -567,12 +568,14 @@ export function DigitalTwin3DMap({
         {/* 3D Cell Telemetry Inspector HUD */}
         {hoveredInfo && (
           <div className="absolute bottom-4 right-4 z-10 p-4 rounded bg-surface-elevated/95 border border-surface-border text-xs font-mono shadow-floating space-y-2 min-w-64 tabular-nums">
-            <div className="flex items-center justify-between border-b border-surface-border pb-1.5">
-              <span className="font-semibold text-ink-primary flex items-center gap-1.5">
-                <Building className="w-3.5 h-3.5 text-cobalt" />
-                Parcel [{hoveredInfo.row}, {hoveredInfo.col}]
+            <div className="flex items-center justify-between border-b border-surface-border pb-1.5 gap-2">
+              <span className="font-semibold text-ink-primary flex items-center gap-1.5 truncate">
+                <Building className="w-3.5 h-3.5 text-cobalt shrink-0" />
+                <span className="truncate max-w-[190px]">
+                  {hoveredInfo.landmarkName || `Parcel [${hoveredInfo.row}, ${hoveredInfo.col}]`}
+                </span>
               </span>
-              <span className="text-[10px] text-status-safe font-mono font-semibold">10m Microgrid</span>
+              <span className="text-[10px] text-status-safe font-mono font-semibold shrink-0">10m Microgrid</span>
             </div>
 
             <div className="space-y-1.5 text-[11px]">

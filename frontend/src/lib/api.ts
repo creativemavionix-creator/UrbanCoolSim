@@ -54,6 +54,7 @@ export interface DigitalTwinGrid {
     sky_view_factor?: number[][];
     lai?: number[][];
   };
+  landmarks?: string[][];
 }
 
 export interface SimulationResult {
@@ -206,6 +207,12 @@ export const api = {
   async getDigitalTwinGrid(studyAreaId = "delhi_cp", rows = 50, cols = 50): Promise<DigitalTwinGrid> {
     const res = await fetch(`${API_BASE}/digital-twin/grid?study_area_id=${studyAreaId}&rows=${rows}&cols=${cols}`);
     if (!res.ok) throw new Error("Failed to fetch digital twin grid");
+    return res.json();
+  },
+
+  async getStudyAreaBuildings(studyAreaId = "delhi_cp"): Promise<any> {
+    const res = await fetch(`${API_BASE}/digital-twin/buildings?study_area_id=${studyAreaId}`);
+    if (!res.ok) throw new Error("Failed to fetch study area buildings");
     return res.json();
   },
 

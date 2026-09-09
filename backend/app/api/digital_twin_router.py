@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, Query
 from app.auth.security import get_current_user_optional
 from app.models.db_models import User
 from app.spatial.raster_pipeline import RasterDataPipeline
+from app.spatial.geo_digital_twin import geo_twin_engine
 
 router = APIRouter(prefix="/digital-twin", tags=["Digital Twin"])
 
@@ -115,6 +116,13 @@ def generate_study_area_grid(study_area_id: str = "delhi_cp", rows: int = 50, co
     accurately aligned with real-world satellite features, water bodies, road corridors,
     building clusters, and tree canopy foliage.
     """
+    # Primary: Real-world vector-to-microgrid georeferenced simulation engine
+    try:
+        if geo_twin_engine.get_study_area_geojson(study_area_id):
+            return geo_twin_engine.generate_microgrid(study_area_id=study_area_id, rows=rows, cols=cols)
+    except Exception as exc:
+        print(f"[digital_twin_router] geo_twin_engine fallback for {study_area_id}: {exc}")
+
     np.random.seed(abs(hash(study_area_id)) % 100000 + 42)
     meta = next((s for s in STUDY_AREAS_METADATA if s["id"] == study_area_id), STUDY_AREAS_METADATA[0])
     
@@ -449,6 +457,18 @@ def get_available_study_areas():
     return STUDY_AREAS_METADATA
 
 
+@router.get("/buildings")
+def get_study_area_buildings(
+    study_area_id: str = Query(default="delhi_cp"),
+    current_user: Optional[User] = Depends(get_current_user_optional)
+):
+    """
+    Returns real-world building footprint vector polygons with heights and names
+    for high-precision deck.gl 3D extrusion.
+    """
+    return geo_twin_engine.get_building_features(study_area_id=study_area_id)
+
+
 @router.get("/grid")
 def get_digital_twin_grid(
     study_area_id: str = Query(default="delhi_cp"),
@@ -456,10 +476,7 @@ def get_digital_twin_grid(
     cols: int = Query(default=50, ge=10, le=100),
     current_user: Optional[User] = Depends(get_current_user_optional)
 ):
-    if study_area_id == "delhi_cp" and raster_pipeline.has_raw_rasters():
-        grid = raster_pipeline.process_satellite_layers(rows=rows, cols=cols)
-    else:
-        grid = generate_study_area_grid(study_area_id=study_area_id, rows=rows, cols=cols)
+    grid = generate_study_area_grid(study_area_id=study_area_id, rows=rows, cols=cols)
     return grid
 
 
@@ -470,23 +487,42 @@ def inspect_cell(
     col: int = Query(..., ge=0),
     current_user: Optional[User] = Depends(get_current_user_optional)
 ):
-    if study_area_id == "delhi_cp" and raster_pipeline.has_raw_rasters():
-        grid = raster_pipeline.process_satellite_layers(rows=50, cols=50)
-    else:
-        grid = generate_study_area_grid(study_area_id=study_area_id, rows=50, cols=50)
+    grid = generate_study_area_grid(study_area_id=study_area_id, rows=50, cols=50)
         
     layers = grid["layers"]
+    landmarks = grid.get("landmarks", [])
     r, c = min(row, 49), min(col, 49)
     temp = layers["baseline_temperature_c"][r][c]
+    b_dens = layers["building_density"][r][c]
+    b_height = layers["building_height"][r][c]
+    v_frac = layers["veg_fraction"][r][c]
+    w_frac = layers["water_fraction"][r][c]
+    
+    landmark_name = ""
+    if r < len(landmarks) and c < len(landmarks[r]):
+        landmark_name = landmarks[r][c]
+
+    # Specific intervention recommendation based on surface physics
+    if b_height > 12.0 and b_dens > 0.4:
+        intervention = "Rooftop Cool Coating (α ≥ 0.82) / Green Roof Retrofit: Projected -3.6°C"
+    elif v_frac > 0.4:
+        intervention = "Lush Urban Foliage: Existing canopy provides -5.2°C active cooling"
+    elif w_frac > 0.4:
+        intervention = "Water Corridor: Evaporative cooling buffer provides -6.5°C thermal sink"
+    elif b_dens < 0.2 and v_frac < 0.2:
+        intervention = "Street Canyon Trees & Reflective Permeable Pavers: Projected -4.4°C"
+    else:
+        intervention = "Integrated Shaded Transit Shelter & Cool Pavement: Projected -2.8°C"
     
     return {
         "study_area_id": study_area_id,
         "cell_coordinates": {"row": r, "col": c},
-        "building_density": layers["building_density"][r][c],
-        "building_height_m": layers["building_height"][r][c],
-        "veg_fraction": layers["veg_fraction"][r][c],
+        "landmark_name": landmark_name or None,
+        "building_density": b_dens,
+        "building_height_m": b_height,
+        "veg_fraction": v_frac,
         "canopy_height_m": layers.get("canopy_height", [[0]*50]*50)[r][c],
-        "water_fraction": layers["water_fraction"][r][c],
+        "water_fraction": w_frac,
         "albedo": layers["albedo"][r][c],
         "surface_emissivity": layers.get("surface_emissivity", [[0.92]*50]*50)[r][c],
         "sky_view_factor": layers.get("sky_view_factor", [[0.7]*50]*50)[r][c],
@@ -494,7 +530,8 @@ def inspect_cell(
         "anthropogenic_heat_wm2": layers.get("anthropogenic_heat_qf", [[45]*50]*50)[r][c],
         "baseline_temperature_c": temp,
         "surface_temperature_c": temp,
-        "hvi_score": round(min(10.0, max(1.0, (temp - 32.0) * 0.5 + (layers["building_density"][r][c] * 3.0))), 1),
-        "heat_risk_level": "CRITICAL" if temp > 44.0 else ("HIGH" if temp > 40.0 else ("MODERATE" if temp > 36.0 else "LOW"))
+        "hvi_score": round(min(10.0, max(1.0, (temp - 32.0) * 0.5 + (b_dens * 3.0))), 1),
+        "heat_risk_level": "CRITICAL" if temp > 44.0 else ("HIGH" if temp > 40.0 else ("MODERATE" if temp > 36.0 else "LOW")),
+        "recommended_intervention": intervention
     }
 

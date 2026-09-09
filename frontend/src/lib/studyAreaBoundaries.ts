@@ -42,26 +42,27 @@ function createRadialPolygon(
 }
 
 // ─── Connaught Place, New Delhi ───────────────────────────────────────────────
-// Circular colonial circus enclosing Central Park & Outer Circle (~1km diameter)
+// ─── Connaught Place, New Delhi ───────────────────────────────────────────────
+// Colonial circular district enclosing Central Park & Outer Circle (~1.3km diameter)
 // True Central Park Centre at 28.6328°N, 77.2197°E
-const DELHI_CP_BOUNDARY = createRadialPolygon(77.2197, 28.6328, 0.00348, 0.00305, 32);
+const DELHI_CP_BOUNDARY = createRadialPolygon(77.2197, 28.6328, 0.00620, 0.00540, 36);
 
 // ─── Bandra Kurla Complex (BKC), Mumbai ───────────────────────────────────────
 // Commercial core bounded along Mithi River estuary curve on the East & South-East
-// Centre at 19.0657°N, 72.8683°E (~1.2km x 0.9km)
-const MUMBAI_BKC_BOUNDARY = createRadialPolygon(72.8683, 19.0657, 0.00485, 0.00410, 32);
+// Centre at 19.0657°N, 72.8683°E (~1.5km x 1.4km)
+const MUMBAI_BKC_BOUNDARY = createRadialPolygon(72.8683, 19.0657, 0.00680, 0.00620, 36);
 
 // ─── Marina Bay Financial District, Singapore ─────────────────────────────────
-// Marina Bay Waterfront & Gardens by the Bay (~1.2km x 1.2km)
+// Marina Bay Waterfront & Gardens by the Bay (~1.5km x 1.4km)
 // Centre at 1.2847°N, 103.8565°E
-const SINGAPORE_MARINA_BOUNDARY = createRadialPolygon(103.8565, 1.2847, 0.00480, 0.00440, 32);
+const SINGAPORE_MARINA_BOUNDARY = createRadialPolygon(103.8565, 1.2847, 0.00650, 0.00620, 36);
 
 // ─── Downtown Urban Core, Phoenix ─────────────────────────────────────────────
-// Orthogonal desert grid core (~1.4km x 1.2km)
+// Orthogonal desert grid core (~1.4km x 1.3km)
 // Centre at 33.4484°N, -112.0740°W
 const PHOENIX_DOWNTOWN_COORDS: [number, number][] = [
-  [-112.0805, 33.4538], [-112.0675, 33.4538], [-112.0675, 33.4430],
-  [-112.0805, 33.4430], [-112.0805, 33.4538]
+  [-112.0810, 33.4548], [-112.0670, 33.4548], [-112.0670, 33.4420],
+  [-112.0810, 33.4420], [-112.0810, 33.4548]
 ];
 const PHOENIX_DOWNTOWN_BOUNDARY: GeoJSON.Polygon = {
   type: "Polygon",
@@ -69,9 +70,9 @@ const PHOENIX_DOWNTOWN_BOUNDARY: GeoJSON.Polygon = {
 };
 
 // ─── Shinjuku Skyscraper Center, Tokyo ────────────────────────────────────────
-// Skyscraper high-rise district & Shinjuku Central Park (~1.3km x 1.2km)
+// Skyscraper high-rise district & Shinjuku Central Park (~1.5km x 1.4km)
 // Centre at 35.6905°N, 139.6965°E
-const TOKYO_SHINJUKU_BOUNDARY = createRadialPolygon(139.6965, 35.6905, 0.00520, 0.00460, 32);
+const TOKYO_SHINJUKU_BOUNDARY = createRadialPolygon(139.6965, 35.6905, 0.00660, 0.00610, 36);
 
 // ─── Registry ─────────────────────────────────────────────────────────────────
 const BOUNDARIES: Record<string, StudyAreaBoundary> = {
@@ -80,12 +81,12 @@ const BOUNDARIES: Record<string, StudyAreaBoundary> = {
     name: "Connaught Place",
     boundary: DELHI_CP_BOUNDARY,
     center: [77.2197, 28.6328],
-    zoom: 15.8,
+    zoom: 15.5,
     bbox: {
-      west: 77.2197 - 0.00348 - 0.0010,
-      east: 77.2197 + 0.00348 + 0.0010,
-      south: 28.6328 - 0.00305 - 0.0010,
-      north: 28.6328 + 0.00305 + 0.0010,
+      west: 77.2130,
+      east: 77.2264,
+      south: 28.6270,
+      north: 28.6386,
     },
   },
   mumbai_bkc: {
@@ -95,10 +96,10 @@ const BOUNDARIES: Record<string, StudyAreaBoundary> = {
     center: [72.8683, 19.0657],
     zoom: 15.2,
     bbox: {
-      west: 72.8683 - 0.00485 - 0.0010,
-      east: 72.8683 + 0.00485 + 0.0010,
-      south: 19.0657 - 0.00410 - 0.0010,
-      north: 19.0657 + 0.00410 + 0.0010,
+      west: 72.8610,
+      east: 72.8756,
+      south: 19.0590,
+      north: 19.0724,
     },
   },
   singapore_marina: {
@@ -108,10 +109,10 @@ const BOUNDARIES: Record<string, StudyAreaBoundary> = {
     center: [103.8565, 1.2847],
     zoom: 15.2,
     bbox: {
-      west: 103.8565 - 0.00480 - 0.0010,
-      east: 103.8565 + 0.00480 + 0.0010,
-      south: 1.2847 - 0.00440 - 0.0010,
-      north: 1.2847 + 0.00440 + 0.0010,
+      west: 103.8495,
+      east: 103.8635,
+      south: 1.2780,
+      north: 1.2914,
     },
   },
   phoenix_downtown: {
@@ -121,10 +122,10 @@ const BOUNDARIES: Record<string, StudyAreaBoundary> = {
     center: [-112.0740, 33.4484],
     zoom: 15.0,
     bbox: {
-      west: -112.0805 - 0.0010,
-      east: -112.0675 + 0.0010,
-      south: 33.4430 - 0.0010,
-      north: 33.4538 + 0.0010,
+      west: -112.0810,
+      east: -112.0670,
+      south: 33.4420,
+      north: 33.4548,
     },
   },
   tokyo_shinjuku: {
@@ -134,10 +135,10 @@ const BOUNDARIES: Record<string, StudyAreaBoundary> = {
     center: [139.6965, 35.6905],
     zoom: 15.2,
     bbox: {
-      west: 139.6965 - 0.00520 - 0.0010,
-      east: 139.6965 + 0.00520 + 0.0010,
-      south: 35.6905 - 0.00460 - 0.0010,
-      north: 35.6905 + 0.00460 + 0.0010,
+      west: 139.6895,
+      east: 139.7035,
+      south: 35.6840,
+      north: 35.6970,
     },
   },
 };
