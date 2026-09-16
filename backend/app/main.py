@@ -121,15 +121,40 @@ def seed_default_data():
     finally:
         db.close()
 
+def run_auto_migrations(db_engine):
+    """
+    Idempotently ensures all columns declared in SQLAlchemy models exist in the target database.
+    This guarantees zero-downtime deployment when new model columns (like owner_id) are added
+    to an existing production database (e.g. on Render, AWS RDS, Heroku, Docker).
+    """
+    try:
+        from sqlalchemy import inspect, text
+        inspector = inspect(db_engine)
+        existing_tables = set(inspector.get_table_names())
+        
+        with db_engine.begin() as conn:
+            for table_name, table in Base.metadata.tables.items():
+                if table_name in existing_tables:
+                    existing_cols = {col["name"] for col in inspector.get_columns(table_name)}
+                    for column in table.columns:
+                        if column.name not in existing_cols:
+                            col_type = column.type.compile(db_engine.dialect)
+                            print(f"[UrbanCoolSim] Auto-migration: Adding missing column '{column.name}' to table '{table_name}'...")
+                            conn.execute(text(f'ALTER TABLE "{table_name}" ADD COLUMN "{column.name}" {col_type}'))
+        print("[UrbanCoolSim] Auto-migrations verified successfully.")
+    except Exception as e:
+        print(f"[UrbanCoolSim] Notice during auto-migration: {e}")
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup: Initialize tables and seed data
+    # Startup: Initialize tables, migrate missing columns, and seed default data
     max_retries = 10
     for attempt in range(max_retries):
         try:
             Base.metadata.create_all(bind=engine)
+            run_auto_migrations(engine)
             seed_default_data()
-            print("[UrbanCoolSim] Database tables initialized and seeded successfully.")
+            print("[UrbanCoolSim] Database tables initialized, migrated, and seeded successfully.")
             break
         except Exception as e:
             print(f"[UrbanCoolSim] Database connection attempt {attempt+1}/{max_retries} waiting: {e}")

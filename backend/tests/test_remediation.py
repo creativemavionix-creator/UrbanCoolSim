@@ -322,3 +322,29 @@ def test_energy_balance_residual_and_fallback():
     assert not np.isnan(res_extreme["T_surface_c"])
     assert not np.isinf(res_extreme["T_surface_c"])
     assert -50.0 < res_extreme["T_surface_c"] < 100.0
+
+
+# ---------------------------------------------------------------------------
+# Schema Migration Integrity: Automatic column additions for existing tables
+# ---------------------------------------------------------------------------
+def test_auto_migration_adds_missing_columns():
+    from sqlalchemy import create_engine, text, inspect
+    from app.main import run_auto_migrations
+    
+    test_engine = create_engine("sqlite:///:memory:")
+    # Create existing table with outdated schema missing owner_id
+    with test_engine.begin() as conn:
+        conn.execute(text("CREATE TABLE scenarios (id VARCHAR PRIMARY KEY, name VARCHAR)"))
+    
+    insp_before = inspect(test_engine)
+    assert "owner_id" not in [c["name"] for c in insp_before.get_columns("scenarios")]
+    
+    # Run auto migration
+    run_auto_migrations(test_engine)
+    
+    insp_after = inspect(test_engine)
+    columns_after = [c["name"] for c in insp_after.get_columns("scenarios")]
+    assert "owner_id" in columns_after
+    assert "description" in columns_after
+    assert "parameters" in columns_after
+
