@@ -1,5 +1,5 @@
 from typing import Optional, List, Dict, Any
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, ConfigDict
 from datetime import datetime
 
 # --- Auth Schemas ---
@@ -7,7 +7,7 @@ class UserCreate(BaseModel):
     email: EmailStr
     password: str = Field(..., min_length=6)
     full_name: Optional[str] = None
-    role: Optional[str] = "planner"
+    role: Optional[str] = "user"
 
 class UserResponse(BaseModel):
     id: str
@@ -33,7 +33,7 @@ class LoginRequest(BaseModel):
 class StudyAreaCreate(BaseModel):
     name: str
     description: Optional[str] = None
-    location_name: str = "Connaught Place, New Delhi"
+    location_name: Optional[str] = None
     crs: str = "EPSG:32643"
     resolution_m: float = 10.0
     grid_rows: int = 50
@@ -43,7 +43,7 @@ class StudyAreaResponse(BaseModel):
     id: str
     name: str
     description: Optional[str]
-    location_name: str
+    location_name: Optional[str]
     crs: str
     resolution_m: float
     grid_rows: int
@@ -88,6 +88,8 @@ class ScenarioResponse(BaseModel):
 class PhysicsSimulationRequest(BaseModel):
     scenario_id: str
     grid_resolution_m: float = Field(default=10.0, ge=1.0, le=100.0)
+    rows: int = Field(default=50, ge=10, le=1000)
+    cols: int = Field(default=50, ge=10, le=1000)
     air_temperature_c: float = Field(default=38.5, ge=-20.0, le=65.0)       # Ambient air temp (°C)
     relative_humidity: float = Field(default=0.45, ge=0.01, le=1.0)          # Relative humidity (0.01 - 1.0)
     wind_speed_ms: float = Field(default=2.5, ge=0.1, le=50.0)               # Wind speed m/s (min 0.1 to avoid zero division)
@@ -105,6 +107,7 @@ class SimulationResultResponse(BaseModel):
     heat_risk_reduction: float
     energy_fluxes_json: Dict[str, Any]
     spatial_summary: Dict[str, Any]
+    energy_balance_residual: Optional[float] = None
     provenance: Dict[str, Any]
     created_at: datetime
 
@@ -125,8 +128,8 @@ class OptimizationRequest(BaseModel):
     weight_energy: float = Field(default=0.10, ge=0.0, le=1.0)
     min_cool_roof_reflectance: float = Field(default=0.70, ge=0.10, le=0.95)
     max_tree_area_pct: float = Field(default=0.35, ge=0.0, le=0.90)
-    population_size: int = Field(default=40, ge=10, le=200)                  # Capped to prevent CPU exhaustion
-    n_gen: int = Field(default=30, ge=5, le=100)                             # Capped to prevent CPU exhaustion
+    population_size: int = Field(default=40, ge=10, le=100)                  # Aligned with MAX_POPULATION_SIZE=100
+    n_gen: int = Field(default=30, ge=5, le=200)                             # Aligned with MAX_OPTIMIZATION_ITERATIONS=200
 
 class ParetoSolution(BaseModel):
     solution_id: int
@@ -144,7 +147,7 @@ class ParetoSolution(BaseModel):
     co2_avoided_tons: Optional[float] = None
     payback_period_years: Optional[float] = None
     composite_score: Optional[float] = None
-    physics_validated: bool = True
+    physics_validated: bool = False
     validated_delta_t: Optional[float] = None
     validation_error: Optional[float] = None
 
@@ -158,6 +161,26 @@ class OptimizationResponse(BaseModel):
     recommended_solution: ParetoSolution
     physics_validated: bool
     created_at: datetime
+
+# --- Surrogate Inference Request (M-9) ---
+class SurrogateInferenceRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    
+    baseline_albedo: float = Field(default=0.18, ge=0.01, le=1.0)
+    baseline_veg_frac: float = Field(default=0.12, ge=0.0, le=1.0)
+    baseline_water_frac: float = Field(default=0.02, ge=0.0, le=1.0)
+    building_height: float = Field(default=22.0, ge=1.0, le=200.0)
+    building_density: float = Field(default=0.45, ge=0.0, le=1.0)
+    q_f: float = Field(default=40.0, ge=0.0, le=500.0)
+    air_temp_c: float = Field(default=38.5, ge=10.0, le=60.0)
+    solar_rad: float = Field(default=850.0, ge=0.0, le=1500.0)
+    wind_speed: float = Field(default=2.5, ge=0.1, le=50.0)
+    green_roof_coverage: float = Field(default=0.0, ge=0.0, le=1.0)
+    cool_roof_albedo_boost: float = Field(default=0.0, ge=0.0, le=1.0)
+    tree_canopy_addition: float = Field(default=0.0, ge=0.0, le=1.0)
+    reflective_pavement_albedo: float = Field(default=0.0, ge=0.0, le=1.0)
+    water_feature_fraction: float = Field(default=0.0, ge=0.0, le=1.0)
+    wetness_factor: float = Field(default=0.5, ge=0.0, le=1.0)
 
 # --- Validation Schemas ---
 class ValidationResponse(BaseModel):
@@ -174,7 +197,7 @@ class ValidationResponse(BaseModel):
 
 # --- Report Schemas ---
 class ReportCreate(BaseModel):
-    title: str
+    title: Optional[str] = None
     study_area_id: str
     scenario_id: Optional[str] = None
     optimization_run_id: Optional[str] = None

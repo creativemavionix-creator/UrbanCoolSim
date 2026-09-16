@@ -1,9 +1,10 @@
-from typing import Dict, Any, Optional
-from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from typing import Optional
+from fastapi import APIRouter, Depends, Query, Request
 
-from app.auth.security import get_current_user_optional, rate_limiter
+from app.auth.security import require_role, get_current_user_optional, rate_limiter
 from app.models.db_models import User
 from app.ml.surrogate import SurrogateModelPipeline
+from app.schemas.schemas import SurrogateInferenceRequest
 
 router = APIRouter(prefix="/ml", tags=["AI Surrogate Model"])
 pipeline = SurrogateModelPipeline()
@@ -12,22 +13,35 @@ pipeline = SurrogateModelPipeline()
 def train_surrogate(
     request: Request,
     n_samples: int = Query(default=1200, ge=200, le=5000),
-    current_user: Optional[User] = Depends(get_current_user_optional)
+    current_user: User = Depends(require_role(["admin"]))
 ):
+    """
+    Trains and validates production LightGBM surrogate and Ridge baseline models.
+    Strictly restricted to admin users (C-7) to prevent unauthorized model alteration.
+    Artifacts are written atomically with timestamped versioning.
+    """
     if request.client:
         rate_limiter.check(request.client.host)
+        
     metrics = pipeline.train_and_evaluate(n_samples=n_samples)
     return {
         "status": "SUCCESS",
-        "message": "AI Surrogate model trained and evaluated successfully",
-        "metrics": metrics
+        "message": "AI Surrogate model trained, versioned, and evaluated successfully",
+        "metrics": metrics,
+        "initiated_by": current_user.email
     }
 
 @router.post("/predict")
 def predict_cooling(
-    features: Dict[str, float],
+    req: SurrogateInferenceRequest,
     current_user: Optional[User] = Depends(get_current_user_optional)
 ):
+    """
+    Runs fast inference through the surrogate pipeline.
+    Requires validated, bounded physical feature parameters (M-9).
+    Returns raw signed delta_T without clipping (M-1).
+    """
+    features = req.model_dump()
     pred_delta_t = pipeline.predict_delta_t(features)
     return {
         "predicted_delta_t_c": round(pred_delta_t, 2),
@@ -37,12 +51,15 @@ def predict_cooling(
 
 @router.post("/explain")
 def explain_scenario(
-    features: Dict[str, float],
+    req: SurrogateInferenceRequest,
     current_user: Optional[User] = Depends(get_current_user_optional)
 ):
+    """
+    Computes SHAP attribution breakdown for the provided scenario parameters (M-9).
+    """
+    features = req.model_dump()
     shap_vals = pipeline.explain_prediction(features)
     return {
         "shap_values": shap_vals,
         "explanation": "SHAP (Shapley Additive exPlanations) attribution showing feature contribution to predicted cooling benefit ΔT."
     }
-

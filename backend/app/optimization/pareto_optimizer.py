@@ -227,8 +227,13 @@ def run_multi_objective_optimization(
         physics_validated_delta_T = float(base_res["T_surface_c"] - scen_res["T_surface_c"])
         val_error = float(abs(surrogate_delta_T - physics_validated_delta_T))
         
-        land_m2 = float(green_roof * total_district_m2 * 0.45 + tree_canopy * total_district_m2 * 0.55 + water_feat * total_district_m2)
+        # H-4: Canonical land area formula matching constraint evaluation in _evaluate
+        land_m2 = float(resource["land_area_m2"])
         heat_risk_score = round(max(0.0, 10.0 - (physics_validated_delta_T * 2.2)), 1)
+        
+        # H-3: Dynamic physics validation threshold check
+        VALIDATION_ERROR_THRESHOLD = 0.50  # Max acceptable divergence (°C) between surrogate and physics
+        is_physics_validated = bool(val_error <= VALIDATION_ERROR_THRESHOLD)
         
         # Energy & Carbon ROI Calculations (Page 6 & 11)
         # 1.0 °C cooling reduction saves ~3.5% of annual HVAC chiller electricity demand
@@ -269,7 +274,7 @@ def run_multi_objective_optimization(
             "co2_avoided_tons": co2_tons,
             "payback_period_years": payback_years,
             "composite_score": composite_score,
-            "physics_validated": True,
+            "physics_validated": is_physics_validated,
             "validated_delta_t": round(physics_validated_delta_T, 2),
             "validation_error": round(val_error, 3)
         }
@@ -277,7 +282,8 @@ def run_multi_objective_optimization(
             
     # Sort solutions by composite score descending
     pareto_solutions.sort(key=lambda s: s["composite_score"], reverse=True)
-    recommended = pareto_solutions[0] if pareto_solutions else {}
+    validated_solutions = [s for s in pareto_solutions if s["physics_validated"]]
+    recommended = validated_solutions[0] if validated_solutions else (pareto_solutions[0] if pareto_solutions else {})
                 
     return {
         "objectives": [
@@ -303,5 +309,6 @@ def run_multi_objective_optimization(
         },
         "pareto_solutions": pareto_solutions,
         "recommended_solution": recommended,
-        "physics_validated": True
+        "physics_validated": bool(recommended.get("physics_validated", False)),
+        "physics_validation_error_c": recommended.get("validation_error", 0.0)
     }

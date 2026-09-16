@@ -44,7 +44,7 @@ class StudyArea(Base):
     id = Column(String, primary_key=True, default=generate_uuid)
     name = Column(String, nullable=False)
     description = Column(Text, nullable=True)
-    location_name = Column(String, default="Connaught Place, New Delhi")
+    location_name = Column(String, nullable=True)
     bounds_geojson = Column(JSON, nullable=True)
     crs = Column(String, default="EPSG:32643")
     resolution_m = Column(Float, default=10.0)
@@ -67,6 +67,7 @@ class Scenario(Base):
     parameters = Column(JSON, nullable=False, default={})
     is_baseline = Column(Boolean, default=False)
     study_area_id = Column(String, ForeignKey("study_areas.id"), nullable=False)
+    owner_id = Column(String, ForeignKey("users.id"), nullable=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     
     study_area = relationship("StudyArea", back_populates="scenarios")
@@ -132,7 +133,8 @@ class OptimizationRun(Base):
     pareto_solutions = Column(JSON, nullable=False) # List of non-dominated solutions
     recommended_solution = Column(JSON, nullable=True)
     study_area_id = Column(String, ForeignKey("study_areas.id"), nullable=False)
-    physics_validated = Column(Boolean, default=True)
+    physics_validated = Column(Boolean, default=False)
+    owner_id = Column(String, ForeignKey("users.id"), nullable=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
 class ValidationRun(Base):
@@ -140,13 +142,14 @@ class ValidationRun(Base):
     
     id = Column(String, primary_key=True, default=generate_uuid)
     name = Column(String, nullable=False)
-    observed_source = Column(String, default="Landsat 8 LST")
+    observed_source = Column(String, default="synthetic baseline (procedural)")
     simulated_scenario_id = Column(String, ForeignKey("scenarios.id"), nullable=True)
     mae = Column(Float, nullable=False)
     rmse = Column(Float, nullable=False)
     r2 = Column(Float, nullable=False)
     spatial_error_summary = Column(JSON, nullable=True)
-    calibration_status = Column(String, default="Calibrated")
+    calibration_status = Column(String, default="Self-Consistent")
+    owner_id = Column(String, ForeignKey("users.id"), nullable=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
 class Report(Base):
@@ -160,4 +163,5 @@ class Report(Base):
     study_area_id = Column(String, ForeignKey("study_areas.id"), nullable=True)
     scenario_id = Column(String, ForeignKey("scenarios.id"), nullable=True)
     optimization_run_id = Column(String, ForeignKey("optimization_runs.id"), nullable=True)
+    owner_id = Column(String, ForeignKey("users.id"), nullable=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)

@@ -332,41 +332,35 @@ class GeoDigitalTwinEngine:
         # Surface emissivity
         emissivity = np.clip(0.91 + (veg_frac * 0.06) + (water_frac * 0.07) - (bldg_density * 0.02), 0.88, 0.98)
 
-        # 6. Calibrated Microclimate Surface Temperature Solve (Oke Urban SEB Framework)
+        # 6. Physical Microclimate Surface Temperature Solve via EnergyBalanceSolver (H-5)
         clim = config["base_climate"]
-        t_air = clim["air_temp_c"]
-        s_down = clim["solar_rad_wm2"]
+        solver = EnergyBalanceSolver(
+            solar_rad=clim["solar_rad_wm2"],
+            air_temp_c=clim["air_temp_c"],
+            rel_humidity=clim.get("rel_humidity", 0.45),
+            wind_speed=clim.get("wind_speed_ms", 2.5)
+        )
+        
+        grid_inputs = {
+            "albedo": albedo,
+            "emissivity": emissivity,
+            "veg_fraction": veg_frac,
+            "water_fraction": water_frac,
+            "building_height": bldg_height,
+            "building_density": bldg_density,
+            "q_f": qf_anthro
+        }
+        
+        seb_solution = solver.solve_grid(grid_inputs, interventions={})
+        seb_t = np.round(seb_solution["T_surface_c"], 2)
 
-        # Shortwave absorbed flux Q_sw = (1 - alpha) * S_down
-        q_sw = (1.0 - albedo) * s_down
-        
-        # Radiative equilibrium baseline
-        delta_solar = (q_sw - 420.0) * 0.015
-        
-        # Canyon trapping (low SVF increases diurnal & nocturnal heat retention)
-        canyon_trapping = (1.0 - svf) * 4.5 * bldg_density
-        
-        # Anthropogenic heat flux (Qf) contribution
-        anthro_heating = qf_anthro * 0.045
-        
-        # Asphalt pavement low-albedo sensible heating
-        road_heating = road_mask * 3.6
-        
-        # Evapotranspirative cooling from vegetation canopy & shading
-        veg_cooling = veg_frac * 7.2
-        
-        # Evaporative & thermal inertia cooling from water bodies
-        water_cooling = water_frac * 8.8
+        # Micro-scale canyon trapping and water thermal sink reconciliation
+        delta_urban_canyon = (1.0 - svf) * 2.5 + (bldg_density * 2.5)
+        delta_water_sink = -1.0 * water_frac * 8.5
+        delta_veg_sink = -1.0 * veg_frac * 4.0
 
-        base_t = t_air + delta_solar + canyon_trapping + anthro_heating + road_heating - veg_cooling - water_cooling
-        
-        # Smooth slightly to simulate lateral heat advection and diffusion in air
-        from scipy.ndimage import gaussian_filter
-        base_t = gaussian_filter(base_t, sigma=0.60)
-        
-        # Preserve strict cold boundary on pure water bodies
-        base_t = np.where(water_frac > 0.4, np.minimum(base_t, t_air - 3.2), base_t)
-        base_t = np.clip(base_t + np.random.normal(0, 0.15, (rows, cols)), 26.0, 52.0)
+        base_t = np.clip(seb_t + delta_urban_canyon + delta_water_sink + delta_veg_sink, 29.5, 53.5)
+        base_t = np.round(base_t, 2)
 
         return {
             "metadata": {
@@ -388,14 +382,9 @@ class GeoDigitalTwinEngine:
                 "is_synthetic": False,
                 "tag": "GEOREFERENCED SATELLITE DIGITAL TWIN",
                 "sources": [
-                    "OpenStreetMap High-Resolution Vector Buildings & Corridors",
-                    "Landsat 8/9 Collection 2 Level-2 Calibrated TIRS LST",
-                    "Sentinel-2 MSI Level-2A Multi-Spectral BOA Albedo",
-                    "NASA GEDI Spaceborne LiDAR Canopy Heights & LAI",
-                    "WorldPop Constrained Demographic Exposure",
-                    "VIIRS VNP46A2 Anthropogenic Heat Flux (Qf)",
-                    "Copernicus GLO-30 3D Morphology & Sky View Factor",
-                    "Deterministic Surface Energy Balance (SEB) Thermodynamics"
+                    "OpenStreetMap Vector Building Footprints and Corridors (GeoJSON)",
+                    "Deterministic Surface Energy Balance (SEB) Thermodynamics",
+                    "Empirical Microclimate Morphology & Surface Parameterization"
                 ]
             },
             "layers": {
@@ -404,7 +393,8 @@ class GeoDigitalTwinEngine:
                 "veg_fraction": np.round(veg_frac, 3).tolist(),
                 "water_fraction": np.round(water_frac, 3).tolist(),
                 "albedo": np.round(albedo, 3).tolist(),
-                "baseline_temperature_c": np.round(base_t, 2).tolist(),
+                "baseline_temperature_c": base_t.tolist(),
+                "seb_temperature_c": seb_t.tolist(),
                 "canopy_height": np.round(canopy_height, 1).tolist(),
                 "population_density": np.round(pop_density, 1).tolist(),
                 "anthropogenic_heat_qf": np.round(qf_anthro, 1).tolist(),

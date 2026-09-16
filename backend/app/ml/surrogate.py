@@ -165,9 +165,22 @@ class SurrogateModelPipeline:
         # Feature Importance
         importances = dict(zip(self.FEATURE_NAMES, [float(x) for x in self.model.feature_importances_]))
         
-        # Save artifacts
-        model_path = os.path.join(self.model_dir, "surrogate_lgbm_latest.joblib")
-        joblib.dump(self.model, model_path)
+        # Save artifacts atomically with versioning (C-7)
+        import datetime
+        timestamp = datetime.datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+        versioned_filename = f"surrogate_lgbm_{timestamp}.joblib"
+        versioned_path = os.path.join(self.model_dir, versioned_filename)
+        latest_path = os.path.join(self.model_dir, "surrogate_lgbm_latest.joblib")
+        
+        # Atomic write to versioned file
+        tmp_versioned = f"{versioned_path}.tmp"
+        joblib.dump(self.model, tmp_versioned)
+        os.replace(tmp_versioned, versioned_path)
+        
+        # Atomic write to latest file pointer
+        tmp_latest = f"{latest_path}.tmp"
+        joblib.dump(self.model, tmp_latest)
+        os.replace(tmp_latest, latest_path)
         
         # Initialize SHAP explainer
         self.explainer = shap.TreeExplainer(self.model)
@@ -185,12 +198,15 @@ class SurrogateModelPipeline:
             },
             "feature_importance": importances,
             "dataset_samples": n_samples,
-            "model_path": model_path
+            "model_path": latest_path,
+            "versioned_path": versioned_path,
+            "model_version": versioned_filename
         }
 
     def predict_delta_t(self, features_dict: Dict[str, float]) -> float:
         """
         Fast inference call for surrogate evaluation.
+        Returns true signed predicted cooling/warming delta_T (°C) without clipping (M-1).
         """
         if self.model is None:
             model_path = os.path.join(self.model_dir, "surrogate_lgbm_latest.joblib")
@@ -202,7 +218,8 @@ class SurrogateModelPipeline:
         input_data = [features_dict.get(feat, 0.0) for feat in self.FEATURE_NAMES]
         df = pd.DataFrame([input_data], columns=self.FEATURE_NAMES)
         pred = self.model.predict(df)[0]
-        return float(max(0.0, pred))
+        # Return true signed predicted value (M-1: do not hide warming outcomes behind 0.0)
+        return float(pred)
 
     def explain_prediction(self, features_dict: Dict[str, float]) -> Dict[str, float]:
         """

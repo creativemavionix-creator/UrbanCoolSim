@@ -4,18 +4,19 @@ from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 
 class ValidationEvaluator:
     """
-    Validation Engine: Evaluates physics simulation & surrogate model outputs against
-    satellite land-surface temperature (LST) observations.
+    Internal Self-Consistency Evaluator: Evaluates physics simulation agreement
+    against synthetic benchmark fields (model output + injected noise).
+    Note: Real satellite observational validation (Landsat/ECOSTRESS) is a separately scoped project.
     """
     
     @classmethod
     def evaluate_against_observations(
-        self,
+        cls,
         simulated_ts: np.ndarray,
         observed_lst: np.ndarray
     ) -> Dict[str, Any]:
         """
-        Computes spatial agreement metrics between simulated and satellite LST fields.
+        Computes spatial agreement metrics between simulated and synthetic benchmark fields.
         """
         flat_sim = simulated_ts.flatten()
         flat_obs = observed_lst.flatten()
@@ -41,17 +42,25 @@ class ValidationEvaluator:
         
         spatial_residuals = (simulated_ts - observed_lst).tolist()
         
+        # Determine status dynamically from computed R² metric
+        if r2 >= 0.85:
+            cal_status = f"SELF-CONSISTENT (Internal R² = {r2:.3f} >= 0.85, synthetic baseline)"
+        elif r2 >= 0.70:
+            cal_status = f"MODERATE AGREEMENT (Internal R² = {r2:.3f}, synthetic baseline)"
+        else:
+            cal_status = f"DEVIATED (Internal R² = {r2:.3f} < 0.70, synthetic baseline)"
+        
         return {
-            "observed_source": "Landsat 8 TIRS Collection 2 LST (10m Resampled)",
+            "observed_source": "synthetic (model output + injected noise, not observational)",
             "mae": round(mae, 3),
             "rmse": round(rmse, 3),
             "r2": round(r2, 3),
             "mean_bias": round(bias, 3),
             "error_quantiles": error_quantiles,
             "spatial_residuals": spatial_residuals,
-            "calibration_status": "CALIBRATED (R² > 0.85)",
+            "calibration_status": cal_status,
             "provenance": {
-                "tag": "OBSERVED vs SIMULATED",
+                "tag": "INTERNAL SELF-CONSISTENCY CHECK (SYNTHETIC)",
                 "units": "°C",
                 "pixel_count": int(np.sum(valid_mask))
             }

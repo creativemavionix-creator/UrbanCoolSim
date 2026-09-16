@@ -1,9 +1,12 @@
+import math
+import threading
 from typing import Optional, List, Dict, Any
 import numpy as np
-from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 
+from app.config import settings
 from app.database import get_db
 from app.auth.security import get_current_user_optional, rate_limiter
 from app.models.db_models import User, Scenario
@@ -13,6 +16,8 @@ from app.api.digital_twin_router import generate_study_area_grid
 
 router = APIRouter(prefix="/thermal", tags=["Physics Thermal Simulation"])
 
+# Concurrency limiting semaphore to prevent threadpool exhaustion (H-2)
+_THERMAL_SEMAPHORE = threading.Semaphore(settings.MAX_CONCURRENT_SIMULATIONS)
 
 class DiurnalPoint(BaseModel):
     hour: int
@@ -23,7 +28,6 @@ class DiurnalPoint(BaseModel):
     cooling_benefit_c: float
     solar_radiation_wm2: float
 
-
 class DiurnalProfileResponse(BaseModel):
     study_area_id: str
     scenario_id: str
@@ -33,7 +37,6 @@ class DiurnalProfileResponse(BaseModel):
     max_cooling_c: float
     nighttime_cooling_c: float
 
-
 @router.post("/simulate", response_model=SimulationResultResponse)
 def run_physics_simulation(
     request: Request,
@@ -42,131 +45,188 @@ def run_physics_simulation(
     db: Session = Depends(get_db),
     current_user: Optional[User] = Depends(get_current_user_optional)
 ):
+    """
+    Executes first-principles Surface Energy Balance (SEB) physics simulation.
+    Protected by concurrency semaphore (H-2) and exposes numerical residual (Phase 4.4).
+    """
     if request.client:
         rate_limiter.check(request.client.host)
-    # Fetch scenario parameters if available
-    interventions = {}
-    if req.scenario_id:
-        scen = db.query(Scenario).filter(Scenario.id == req.scenario_id).first()
-        if scen and scen.parameters:
-            interventions = scen.parameters
-            
-    grid = generate_study_area_grid(study_area_id=study_area_id, rows=40, cols=40)
-    layers = grid["layers"]
-    
-    solver = EnergyBalanceSolver(
-        solar_rad=req.solar_radiation_wm2,
-        air_temp_c=req.air_temperature_c,
-        rel_humidity=req.relative_humidity,
-        wind_speed=req.wind_speed_ms
-    )
-    
-    grid_inputs = {
-        "albedo": np.array(layers["albedo"]),
-        "emissivity": 0.95,
-        "veg_fraction": np.array(layers["veg_fraction"]),
-        "water_fraction": np.array(layers["water_fraction"]),
-        "building_height": np.array(layers["building_height"]),
-        "building_density": np.array(layers["building_density"]),
-        "q_f": req.anthropogenic_heat_wm2
-    }
-    
-    # Run Baseline Simulation
-    base_res = solver.solve_grid(grid_inputs, interventions={})
-    # Run Scenario Simulation
-    scen_res = solver.solve_grid(grid_inputs, interventions=interventions)
-    
-    base_ts = base_res["T_surface_c"]
-    scen_ts = scen_res["T_surface_c"]
-    delta_ts = base_ts - scen_ts
-    
-    base_t_mean = float(np.mean(base_ts))
-    scen_t_mean = float(np.mean(scen_ts))
-    delta_t_mean = float(np.mean(delta_ts))
-    peak_t = float(np.max(scen_ts))
-    
-    # Energy fluxes spatial means
-    fluxes_summary = {
-        "Q_star_mean": float(np.mean(scen_res["Q_star"])),
-        "Q_f_mean": float(req.anthropogenic_heat_wm2),
-        "Q_h_mean": float(np.mean(scen_res["Q_h"])),
-        "Q_e_mean": float(np.mean(scen_res["Q_e"])),
-        "dQs_mean": float(np.mean(scen_res["dQs"])),
-    }
-    
-    spatial_summary = {
-        "min_t_c": float(np.min(scen_ts)),
-        "max_t_c": peak_t,
-        "p25_t_c": float(np.percentile(scen_ts, 25)),
-        "p50_t_c": float(np.median(scen_ts)),
-        "p75_t_c": float(np.percentile(scen_ts, 75)),
-        "max_cooling_c": float(np.max(delta_ts)),
-        "spatial_delta_map": np.round(delta_ts, 2).tolist(),
-        "baseline_temp_map": np.round(base_ts, 2).tolist(),
-        "scenario_temp_map": np.round(scen_ts, 2).tolist()
-    }
-    
-    provenance = {
-        "equation": "Q* + Qf = Qh + Qe + dQs",
-        "solver": "NewtonRaphson Surface Energy Balance Solver",
-        "units": "°C, W/m²",
-        "synthetic_flag": True,
-        "is_physics_informed": True
-    }
-    
-    return SimulationResultResponse(
-        id="sim_" + req.scenario_id[:8] if req.scenario_id else "sim_default",
-        job_id=None,
-        scenario_id=req.scenario_id or "scen_baseline",
-        baseline_t_mean=round(base_t_mean, 2),
-        scenario_t_mean=round(scen_t_mean, 2),
-        delta_t_mean=round(delta_t_mean, 2),
-        peak_t=round(peak_t, 2),
-        heat_risk_reduction=round(delta_t_mean * 15.0, 1),
-        energy_fluxes_json=fluxes_summary,
-        spatial_summary=spatial_summary,
-        provenance=provenance,
-        created_at=np.datetime64('now').astype(str)
-    )
+        
+    acquired = _THERMAL_SEMAPHORE.acquire(blocking=True, timeout=10.0)
+    if not acquired:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="The thermal simulation engine is currently at maximum concurrent capacity. Please retry shortly."
+        )
+        
+    try:
+        # Fetch scenario parameters if available
+        interventions = {}
+        if req.scenario_id:
+            scen = db.query(Scenario).filter(Scenario.id == req.scenario_id).first()
+            if scen and scen.parameters:
+                interventions = scen.parameters
+                
+        grid = generate_study_area_grid(study_area_id=study_area_id, rows=40, cols=40)
+        layers = grid["layers"]
+        
+        solver = EnergyBalanceSolver(
+            solar_rad=req.solar_radiation_wm2,
+            air_temp_c=req.air_temperature_c,
+            rel_humidity=req.relative_humidity,
+            wind_speed=req.wind_speed_ms
+        )
+        
+        grid_inputs = {
+            "albedo": np.array(layers["albedo"]),
+            "emissivity": 0.95,
+            "veg_fraction": np.array(layers["veg_fraction"]),
+            "water_fraction": np.array(layers["water_fraction"]),
+            "building_height": np.array(layers["building_height"]),
+            "building_density": np.array(layers["building_density"]),
+            "q_f": req.anthropogenic_heat_wm2
+        }
+        
+        # Run Baseline Simulation
+        base_res = solver.solve_grid(grid_inputs, interventions={})
+        # Run Scenario Simulation
+        scen_res = solver.solve_grid(grid_inputs, interventions=interventions)
+        
+        base_ts = base_res["T_surface_c"]
+        scen_ts = scen_res["T_surface_c"]
+        delta_ts = base_ts - scen_ts
+        
+        base_t_mean = float(np.mean(base_ts))
+        scen_t_mean = float(np.mean(scen_ts))
+        delta_t_mean = float(np.mean(delta_ts))
+        peak_t = float(np.max(scen_ts))
+        
+        mean_residual = float(np.mean(scen_res.get("residual", np.zeros_like(scen_ts))))
+        
+        # Energy fluxes spatial means
+        fluxes_summary = {
+            "Q_star_mean": float(np.mean(scen_res["Q_star"])),
+            "Q_f_mean": float(req.anthropogenic_heat_wm2),
+            "Q_h_mean": float(np.mean(scen_res["Q_h"])),
+            "Q_e_mean": float(np.mean(scen_res["Q_e"])),
+            "dQs_mean": float(np.mean(scen_res["dQs"])),
+        }
+        
+        spatial_summary = {
+            "min_t_c": float(np.min(scen_ts)),
+            "max_t_c": peak_t,
+            "p25_t_c": float(np.percentile(scen_ts, 25)),
+            "p50_t_c": float(np.median(scen_ts)),
+            "p75_t_c": float(np.percentile(scen_ts, 75)),
+            "max_cooling_c": float(np.max(delta_ts)),
+            "spatial_delta_map": np.round(delta_ts, 2).tolist(),
+            "baseline_temp_map": np.round(base_ts, 2).tolist(),
+            "scenario_temp_map": np.round(scen_ts, 2).tolist()
+        }
+        
+        provenance = {
+            "equation": "Q* + Qf = Qh + Qe + dQs",
+            "solver": "Newton-Raphson Surface Energy Balance Solver with Bisection Fallback",
+            "units": "°C, W/m²",
+            "synthetic_flag": True,
+            "is_physics_informed": True
+        }
+        
+        return SimulationResultResponse(
+            id="sim_" + req.scenario_id[:8] if req.scenario_id else "sim_default",
+            job_id=None,
+            scenario_id=req.scenario_id or "scen_baseline",
+            baseline_t_mean=round(base_t_mean, 2),
+            scenario_t_mean=round(scen_t_mean, 2),
+            delta_t_mean=round(delta_t_mean, 2),
+            peak_t=round(peak_t, 2),
+            heat_risk_reduction=round(delta_t_mean * 15.0, 1),
+            energy_fluxes_json=fluxes_summary,
+            spatial_summary=spatial_summary,
+            energy_balance_residual=round(mean_residual, 4),
+            provenance=provenance,
+            created_at=np.datetime64('now').astype(str)
+        )
+    finally:
+        _THERMAL_SEMAPHORE.release()
 
 
 @router.get("/diurnal-profile", response_model=DiurnalProfileResponse)
 def get_diurnal_profile(
     study_area_id: str = Query(default="delhi_cp"),
-    scenario_id: str = Query(default="scen_hybrid_cp")
+    scenario_id: str = Query(default="scen_hybrid_cp"),
+    db: Session = Depends(get_db)
 ):
     """
-    Computes 24-hour Diurnal Temperature Profile (00:00 to 23:00)
-    calibrated against NASA ECOSTRESS diurnal cycle observations.
+    Computes 24-hour Diurnal Temperature Profile (00:00 to 23:00) using
+    time-stepped Surface Energy Balance (SEB) solver physics.
+    Accurately accounts for requested scenario interventions (H-7).
     """
     peak_solar = 950.0 if study_area_id == "delhi_cp" else (1050.0 if study_area_id == "phoenix_downtown" else 880.0)
     base_air_peak = 42.0 if study_area_id == "delhi_cp" else (45.0 if study_area_id == "phoenix_downtown" else 36.0)
     air_diurnal_amplitude = 7.5
     
+    # Resolve scenario parameters (H-7)
+    params = {}
+    if scenario_id:
+        scen = db.query(Scenario).filter(Scenario.id == scenario_id).first()
+        if scen and scen.parameters:
+            params = scen.parameters
+            
+    base_albedo = 0.18
+    base_veg = 0.12
+    base_water = 0.02
+    
+    scen_albedo = base_albedo + (0.45 * params.get("cool_roof_albedo_boost", 0.0)) + (0.55 * params.get("reflective_pavement_albedo", 0.0))
+    scen_veg = base_veg + (0.45 * params.get("green_roof_coverage", 0.0)) + params.get("tree_canopy_addition", 0.0)
+    scen_water = base_water + params.get("water_feature_fraction", 0.0)
+    wetness = params.get("wetness_factor", 0.5)
+
     points = []
     for h in range(24):
         time_lbl = f"{h:02d}:00"
         
         # Diurnal Solar Curve
         if 6 <= h <= 18:
-            solar = peak_solar * np.sin(np.pi * (h - 6) / 12.0)**1.2
+            solar = peak_solar * (math.sin(math.pi * (h - 6) / 12.0) ** 1.2)
         else:
             solar = 0.0
             
         # Diurnal Air Temp (peaks at ~15:00)
-        air_t = base_air_peak - (air_diurnal_amplitude * (1.0 - np.cos(np.pi * (h - 15) / 12.0)) / 2.0)
+        air_t = base_air_peak - (air_diurnal_amplitude * (1.0 - math.cos(math.pi * (h - 15) / 12.0)) / 2.0)
         
-        # Surface Temperature Response:
-        # Day: Solar shortwave absorption dominates
-        # Night: Thermal mass storage & release (OHM hysteresis)
-        if solar > 0:
-            base_surf_t = air_t + (solar / peak_solar) * 8.5
-            scen_surf_t = air_t + (solar / peak_solar) * 4.8  # High albedo & tree shading reduces peak
-        else:
-            # Nocturnal cooling
-            base_surf_t = air_t + 2.2  # Urban heat retention in dense concrete
-            scen_surf_t = air_t + 0.8  # Lower heat storage due to green roofs & trees
-            
+        # Step through real physics solver for baseline and scenario (H-7)
+        solver_h = EnergyBalanceSolver(
+            solar_rad=solar,
+            air_temp_c=air_t,
+            rel_humidity=0.45,
+            wind_speed=2.5
+        )
+        
+        base_eq = solver_h.solve_cell_equilibrium(
+            albedo=base_albedo,
+            emissivity=0.95,
+            veg_fraction=base_veg,
+            water_fraction=base_water,
+            building_height=22.0,
+            building_density=0.45,
+            q_f=35.0,
+            wetness_factor=0.5
+        )
+        
+        scen_eq = solver_h.solve_cell_equilibrium(
+            albedo=scen_albedo,
+            emissivity=0.95,
+            veg_fraction=scen_veg,
+            water_fraction=scen_water,
+            building_height=22.0,
+            building_density=0.45,
+            q_f=35.0,
+            wetness_factor=wetness
+        )
+        
+        base_surf_t = base_eq["T_surface_c"]
+        scen_surf_t = scen_eq["T_surface_c"]
         benefit = base_surf_t - scen_surf_t
         
         points.append(DiurnalPoint(
@@ -182,7 +242,7 @@ def get_diurnal_profile(
     peak_base = max(p.baseline_surface_temp_c for p in points)
     peak_scen = max(p.scenario_surface_temp_c for p in points)
     max_cool = max(p.cooling_benefit_c for p in points)
-    night_cool = np.mean([p.cooling_benefit_c for p in points if p.hour < 6 or p.hour > 20])
+    night_cool = float(np.mean([p.cooling_benefit_c for p in points if p.hour < 6 or p.hour > 20]))
     
     return DiurnalProfileResponse(
         study_area_id=study_area_id,

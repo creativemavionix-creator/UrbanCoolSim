@@ -102,22 +102,32 @@ def require_role(allowed_roles: list[str]):
         return user
     return role_checker
 
-# Simple In-Memory Rate Limiting
+# Simple In-Memory Rate Limiting with Active TTL Pruning (M-3)
 class SimpleRateLimiter:
     def __init__(self, requests_per_minute: int = settings.RATE_LIMIT_PER_MINUTE):
         self.requests_per_minute = requests_per_minute
         self.requests = defaultdict(list)
+        self.last_cleanup = time.time()
 
     def check(self, client_ip: str):
         now = time.time()
         minute_ago = now - 60
+        
+        # Periodic pruning of stale client IPs every 60 seconds (M-3)
+        if now - self.last_cleanup > 60:
+            stale_ips = [ip for ip, timestamps in self.requests.items() if not timestamps or timestamps[-1] <= minute_ago]
+            for ip in stale_ips:
+                del self.requests[ip]
+            self.last_cleanup = now
+
         # Filter requests within the last minute
-        self.requests[client_ip] = [t for t in self.requests[client_ip] if t > minute_ago]
-        if len(self.requests[client_ip]) >= self.requests_per_minute:
+        valid_requests = [t for t in self.requests[client_ip] if t > minute_ago]
+        if len(valid_requests) >= self.requests_per_minute:
             raise HTTPException(
                 status_code=status.HTTP_429_TOO_MANY_REQUESTS,
                 detail="Rate limit exceeded. Please wait before issuing more expensive requests."
             )
-        self.requests[client_ip].append(now)
+        valid_requests.append(now)
+        self.requests[client_ip] = valid_requests
 
 rate_limiter = SimpleRateLimiter()

@@ -2,11 +2,11 @@
 
 [![Docker Compose](https://img.shields.io/badge/docker--compose-v2.20+-blue?logo=docker&logoColor=white)](./docker-compose.yml)
 [![FastAPI Backend](https://img.shields.io/badge/FastAPI-0.110+-009688?logo=fastapi&logoColor=white)](./backend)
-[![Next.js Frontend](https://img.shields.io/badge/Next.js-14.1.3-black?logo=next.js&logoColor=white)](./frontend)
-[![Pytest](https://img.shields.io/badge/pytest-8%20passed-emerald?logo=pytest&logoColor=white)](./backend/tests/test_backend.py)
+[![Next.js Frontend](https://img.shields.io/badge/Next.js-14.2+-black?logo=next.js&logoColor=white)](./frontend)
+[![Pytest](https://img.shields.io/badge/pytest-passing-emerald?logo=pytest&logoColor=white)](./backend/tests/test_backend.py)
 [![Python](https://img.shields.io/badge/python-3.11.9-3776AB?logo=python&logoColor=white)](./backend)
 [![TypeScript](https://img.shields.io/badge/typescript-5.4-3178C6?logo=typescript&logoColor=white)](./frontend)
-[![PostgreSQL](https://img.shields.io/badge/PostGIS-15--3.3-336791?logo=postgresql&logoColor=white)](./docker-compose.yml)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15%20(GeoJSON)-336791?logo=postgresql&logoColor=white)](./docker-compose.yml)
 [![License](https://img.shields.io/badge/license-MIT-green)](./LICENSE)
 
 > **Product Thesis:** *We are not selling a heat map. We are selling better urban infrastructure decisions.*
@@ -23,7 +23,7 @@ UrbanCoolSim is an enterprise-grade urban microclimate digital twin, surface ene
 5. [Parameterized Intervention Engine & Resource Accounting](#5-parameterized-intervention-engine--resource-accounting)
 6. [AI Surrogate Acceleration & SHAP Explainability Framework](#6-ai-surrogate-acceleration--shap-explainability-framework)
 7. [NSGA-II Multi-Objective Optimization & Physics Re-Validation](#7-nsga-ii-multi-objective-optimization--physics-re-validation)
-8. [Observational Satellite Validation & Ground-Truth Calibration](#8-observational-satellite-validation--ground-truth-calibration)
+8. [Model Validation & Internal Self-Consistency](#8-model-validation--internal-self-consistency)
 9. [Frontend User Experience & The 11 Core Application Screens](#9-frontend-user-experience--the-11-core-application-screens)
 10. [Backend Architecture & API Specification](#10-backend-architecture--api-specification)
 11. [Installation, Verification & Operational Guide](#11-installation-verification--operational-guide)
@@ -41,12 +41,12 @@ Urban Heat Islands (UHIs) represent one of the most acute environmental threats 
 
 ### The UrbanCoolSim Solution
 UrbanCoolSim bridges this gap by unifying:
-1. **Satellite Remote Sensing & GIS Morphology**: Multi-spectral imagery (Landsat 8, NASA ECOSTRESS, Sentinel-2, ESA WorldCover, Copernicus DEM) dynamically ingested into a unified 10m Digital Twin microgrid.
+1. **Satellite Remote Sensing & GIS Morphology**: Vector footprints (OpenStreetMap) and spatial morphology parameterizations integrated into a unified 10m Digital Twin microgrid.
 2. **Deterministic Surface Energy Balance (SEB) Thermodynamics**: First-principles physical conservation of net radiation, sensible turbulent heat, latent evapotranspiration, heat storage, and anthropogenic emissions ($Q^* + Q_f = Q_h + Q_e + \Delta Q_s$).
-3. **AI Surrogate Acceleration (LightGBM + TreeSHAP)**: High-fidelity gradient boosting emulator trained on physics ground-truth, enabling sub-2-millisecond spatial inference ($R^2 > 0.95$) with Shapley additive feature attributions.
+3. **AI Surrogate Acceleration (LightGBM + TreeSHAP)**: High-fidelity gradient boosting emulator trained on physics ground-truth, enabling sub-2-millisecond spatial inference ($R^2 \approx 0.845$) with Shapley additive feature attributions.
 4. **Multi-Objective Pareto Optimization (NSGA-II)**: Genetic algorithm exploring trade-offs between cooling benefit ($\Delta T$), budget (\$), water demand ($m^3$), and land footprint ($m^2$).
 5. **Deterministic Physics Re-Validation Safeguard**: Top candidate solutions are re-simulated through the full physics engine to eliminate surrogate exploitation and ensure engineering credibility.
-6. **Automated Executive Decision Support**: Generates professional, multi-page PDF executive decision reports and actionable spatial intervention blueprints.
+6. **Automated Executive Decision Support**: Generates professional executive decision reports and actionable spatial intervention blueprints.
 
 ---
 
@@ -332,10 +332,11 @@ To enable real-time optimization across millions of policy configurations, Urban
 2. **Ground Truth Generation**: Running deterministic SEB physics solver to compute true cooling delta $\Delta T = T_{s,\text{baseline}} - T_{s,\text{scenario}}$.
 3. **Model Architecture**: LightGBM Regressor (`n_estimators=300, max_depth=6, learning_rate=0.05, num_leaves=31`).
 4. **Validation Performance**:
-   - $R^2 = 0.962$
-   - $\text{MAE} = 0.085^\circ\text{C}$
-   - $\text{RMSE} = 0.114^\circ\text{C}$
+   - $R^2 = 0.8452$ (empirically measured with $n=1500$ Latin Hypercube samples, default LightGBM hyperparameters, random seed 42; $R^2 \approx 0.814$ at default $n=1200$)
+   - $\text{MAE} = 0.0735^\circ\text{C}$
+   - $\text{RMSE} = 0.1324^\circ\text{C}$
    - Inference latency: $< 1.8\text{ ms}$ per scenario grid.
+   - Exact reproduction command: `python scripts/train_ai_surrogate.py --samples 1500 --seed 42`
 
 ### Explainability Engine (TreeSHAP)
 UrbanCoolSim computes Shapley Additive exPlanations (SHAP) to provide local and global attributions:
@@ -377,40 +378,43 @@ $$x_{\text{green}} + x_{\text{cool}} \le 1.0 \quad \text{(Rooftop conservation)}
 A known vulnerability in ML-accelerated optimization is **surrogate exploitation** (the optimizer exploiting model error bounds to find artificially inflated cooling scores). UrbanCoolSim implements a strict safety check:
 1. NSGA-II generates candidate Pareto solutions using the fast LightGBM surrogate.
 2. The top $K$ Pareto candidates are passed through the **deterministic Surface Energy Balance physics solver**.
-3. If $|\Delta T_{\text{physics}} - \Delta T_{\text{surrogate}}| > \text{Threshold}$, the solution is flagged and adjusted.
-4. Only physics-verified solutions are presented to decision-makers.
+3. If $|\Delta T_{\text{physics}} - \Delta T_{\text{surrogate}}| > \text{Threshold}$, the solution is flagged (`physics_validated: false`) and adjusted.
+4. Only physics-verified solutions are recommended to decision-makers.
 
 ---
 
-## 8. Observational Satellite Validation & Ground-Truth Calibration
+## 8. Model Validation & Internal Self-Consistency Check
 
-UrbanCoolSim benchmarks simulated thermal fields against real satellite observations:
+UrbanCoolSim benchmarks simulated thermal fields against internal self-consistency baselines (and compares model predictions against synthetic perturbed truth layers before satellite ingestion pipelines are connected):
 
 ```
-                            SATELLITE GROUND-TRUTH SCATTER
+                       INTERNAL SELF-CONSISTENCY SCATTER
     Simulated Ts (°C)
          ▲
-    48.0 ─┤                                         ●  ● (Landsat Hotspots)
+    48.0 ─┤                                         ●  ●
          │                                      ●  ●  ●
     44.0 ─┤                                 ●  ●  ●
          │                              ●  ●  ●
     40.0 ─┤                         ●  ●  ●
          │                      ●  ●
     36.0 ─┤                 ●  ●
-         │              ●  ● (Central Park Cool Sinks)
-    32.0 ─┴─────────────┬─────────────┬─────────────┬─────────────► Observed Landsat LST (°C)
+         │              ●  ●
+    32.0 ─┴─────────────┬─────────────┬─────────────┬─────────────► Synthetic Perturbed LST (°C)
                        32.0          36.0          40.0          44.0          48.0
 ```
 
-### Calibration Metrics (May 18, 2024 Delhi Heat Wave):
-- **Coefficient of Determination ($R^2$)**: **`0.973`**
-- **Mean Absolute Error (MAE)**: **`0.375 °C`**
-- **Root Mean Square Error (RMSE)**: **`0.465 °C`**
-- **Mean Bias Error (MBE)**: **`+0.042 °C`**
+### Self-Consistency Check Metrics:
+- **Evaluation Mechanism**: Evaluates model fit against a synthetic perturbed baseline ($\sigma=0.35^\circ\text{C}$ injected noise) representing an internal numerical self-consistency check.
+- **Dynamic Calibration Status**: Status string is computed dynamically from the evaluated $R^2$ (e.g. `CONSISTENT (R² > 0.85)` or `NEEDS_CALIBRATION`), explicitly disclaiming real satellite calibration until live observational STAC/GEE ingestion pipelines are connected.
+- **Direct Satellite Integration**: Flagged on roadmap for full Google Earth Engine / NASA AppEEARS automated Landsat 8 TIRS and ECOSTRESS L2 data acquisition.
 
 ### Semantic Provenance Taxonomy
 Every data layer and metric emitted by the platform carries an immutable provenance tag:
-- `[OBSERVED]`: Directly measured by satellite sensor (Landsat 8, ECOSTRESS, Sentinel-2).
+- `[OBSERVED]`: Directly measured by satellite sensor (when connected; currently synthetic procedural/perturbed).
+- `[DERIVED]`: Calculated deterministically from observations (Albedo, NDVI, NDWI).
+- `[SIMULATED]`: Generated by the Surface Energy Balance physics solver.
+- `[PREDICTED]`: Inferred by the LightGBM AI surrogate model.
+- `[OPTIMIZED]`: Produced by the NSGA-II Pareto solver.
 - `[DERIVED]`: Calculated deterministically from observations (Albedo, NDVI, NDWI).
 - `[SIMULATED]`: Generated by the Surface Energy Balance physics solver.
 - `[PREDICTED]`: Inferred by the LightGBM AI surrogate model.
@@ -500,7 +504,7 @@ backend/
 │   ├── main.py                  # FastAPI app, CORS, security middleware, database startup seed
 │   ├── config.py                # Pydantic Settings & resource bounds
 │   ├── database.py              # SQLAlchemy 2.0 asyncpg & psycopg2 engine setup
-│   ├── worker.py                # Celery worker & Redis job queue configuration
+│   ├── worker.py                # Deprecated worker stub (simulations execute synchronously in FastAPI)
 │   ├── api/                     # REST API Routers
 │   │   ├── auth_router.py       # JWT auth, registration, login, RBAC
 │   │   ├── digital_twin_router.py# 10m microgrid layers & cell inspection
@@ -508,16 +512,16 @@ backend/
 │   │   ├── scenarios_router.py  # Scenario CRUD & intervention presets
 │   │   ├── surrogate_router.py  # LightGBM training, inference & SHAP explanation
 │   │   ├── optimization_router.py# NSGA-II optimization & physics re-validation
-│   │   ├── validation_router.py # Satellite LST ground-truth calibration
+│   │   ├── validation_router.py # Microclimate internal self-consistency evaluation
 │   │   ├── reports_router.py    # Executive Markdown & PDF report generator
-│   │   └── jobs_router.py       # Async job queue tracking
+│   │   └── jobs_router.py       # Job tracking
 │   ├── auth/                    # Security, password hashing (bcrypt), token handling
 │   ├── physics/                 # Surface Energy Balance solver & aerodynamic resistance
 │   ├── interventions/           # Parameterized physical modifications & cost accounting
 │   ├── ml/                      # LightGBM surrogate pipeline & SHAP explainer
 │   ├── optimization/            # Pymoo NSGA-II multi-objective problem definition
 │   ├── spatial/                 # Direct GeoTIFF raster ingestion pipeline
-│   ├── validation/              # Satellite ground-truth statistical evaluator
+│   ├── validation/              # Statistical evaluation engine
 │   └── reports/                 # ReportLab executive PDF generator
 └── tests/
     └── test_backend.py          # Complete Pytest test suite
@@ -526,7 +530,7 @@ backend/
 ### Key API Endpoints
 | HTTP Method | Endpoint | Description |
 | :--- | :--- | :--- |
-| `GET` | `/health` | Stack health status (DB, Redis, Physics, ML) |
+| `GET` | `/health` | Stack health status (DB, Physics Engine, LightGBM Surrogate) |
 | `POST` | `/api/v1/auth/register` | User registration with RBAC role |
 | `POST` | `/api/v1/auth/login` | Authentication returning JWT bearer token |
 | `GET` | `/api/v1/digital-twin/grid` | Returns 10m spatial digital twin microgrid |
@@ -536,7 +540,7 @@ backend/
 | `POST` | `/api/v1/ml/predict` | Sub-millisecond $\Delta T$ inference |
 | `POST` | `/api/v1/ml/explain` | Computes TreeSHAP feature attributions |
 | `POST` | `/api/v1/optimization/run` | Runs NSGA-II optimization with physics verification |
-| `POST` | `/api/v1/validation/run` | Evaluates model fit against Landsat 8 / ECOSTRESS |
+| `POST` | `/api/v1/validation/run` | Evaluates internal microclimate self-consistency check |
 | `POST` | `/api/v1/reports/generate` | Builds technical report and PDF |
 | `GET` | `/api/v1/reports/{id}/pdf` | Downloads official executive PDF report |
 
@@ -546,19 +550,25 @@ backend/
 
 ### Option A: Docker Compose (Recommended Full Stack)
 
-To spin up all five services (PostgreSQL/PostGIS, Redis, FastAPI Backend, Celery Worker, Next.js Frontend) in one command:
+To spin up the container stack (PostgreSQL, FastAPI Backend, Next.js Frontend) in one command:
 
 ```bash
 # 1. Clone repository
 git clone https://github.com/your-org/UrbanCoolSim.git
 cd UrbanCoolSim
 
-# 2. Build and launch container stack
+# 2. Configure environment
+cp .env.example .env
+# Generate a secure 32+ character SECRET_KEY and set POSTGRES_PASSWORD in .env
+
+# 3. Build and launch container stack
 docker-compose up --build -d
 
-# 3. Verify container status
+# 4. Verify container health status
 docker-compose ps
 ```
+
+*Note on Spatial Storage: Spatial digital twin boundaries, land covers, and intervention grids are modeled and persisted as standard GeoJSON structures within PostgreSQL and SQLite, eliminating reliance on native PostGIS binary extensions.*
 
 Visit:
 - **Spatial UI**: `http://localhost:3000`
@@ -595,8 +605,8 @@ npm run dev
 ## 12. Security, Resource Bounds & Computational Integrity
 
 - **Pydantic Validation**: All geometry arrays, boundary coordinates, and intervention fractions are strictly validated server-side.
-- **Resource Constraints**: Simulation grid resolution is capped at $100 \times 100$ cells per real-time web request ($1,000,000$ cells in background queue) to prevent denial-of-service memory exhaustion.
-- **Rate Limiting**: Built-in slowapi / Redis rate limiting protecting CPU-intensive optimization and training runs.
+- **Resource Constraints**: Simulation grid resolution is capped at $100 \times 100$ cells per real-time web request, protected by server-side semaphore concurrency controls (`MAX_CONCURRENT_SIMULATIONS = 4`) to prevent CPU exhaustion.
+- **Rate Limiting**: Built-in in-process token-bucket rate limiting with automated 60-second TTL pruning for stale IP addresses.
 - **Non-Root Container Execution**: Backend and frontend containers execute under dedicated non-root users (`appuser` UID 1000, `nextjs` UID 1001).
 - **Zero Hallucination Guarantee**: All simulated temperatures derive strictly from Newton-Raphson thermodynamic convergence or physically validated surrogate predictions.
 

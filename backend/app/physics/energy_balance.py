@@ -87,8 +87,15 @@ class EnergyBalanceSolver:
         # Initial guess for surface temperature T_s (Kelvin)
         T_s = self.T_air_k + 4.0
         
-        # Newton-Raphson iteration to find root of energy balance F(T_s) = 0
-        for _ in range(25):
+        # Newton-Raphson iteration to find root of energy balance F(T_s) = 0 (Phase 4.4)
+        converged = False
+        F = 0.0
+        for _ in range(30):
+            if np.isnan(T_s) or np.isinf(T_s) or T_s < 200.0 or T_s > 400.0:
+                # Diverged: reset to baseline air temperature plus modest offset
+                T_s = self.T_air_k + 4.0
+                break
+
             # Longwave radiation
             L_up = eps * SIGMA * (T_s ** 4)
             Q_star = Q_sw + eps * self.L_down - L_up
@@ -97,12 +104,10 @@ class EnergyBalanceSolver:
             Q_h = RHO_CP * (T_s - self.T_air_k) / r_a
             
             # Latent heat flux Qe (Evapotranspiration)
-            # Potential ET based on net radiation equilibrium
             Q_e_pot = max(0.0, 0.6 * Q_star)
             Q_e = Q_e_pot * (f_veg * wetness_factor + f_water * 1.0)
             
-            # Stored heat flux dQs (Objective hysteresis / thermal mass factor)
-            # Impervious surfaces store high heat (concrete/asphalt ~0.35 Q*), vegetation/water store low (~0.1 Q*)
+            # Stored heat flux dQs
             storage_coef = 0.35 * f_imperv + 0.15 * f_veg + 0.08 * f_water
             dQs = storage_coef * Q_star
             
@@ -118,12 +123,53 @@ class EnergyBalanceSolver:
             
             dF_dT = dQ_star_dT - (dQ_h_dT + dQ_e_dT + ddQs_dT)
             
-            # Newton step
+            if abs(dF_dT) < 1e-12:
+                break
+                
+            # Newton step with step damping
             delta_T = F / dF_dT
+            delta_T = np.clip(delta_T, -10.0, 10.0)
             T_s = T_s - delta_T
             
-            if abs(delta_T) < 1e-4:
+            if abs(delta_T) < 1e-4 and abs(F) < 1.0:
+                converged = True
                 break
+
+        # Non-convergence / NaN Fallback: Bisection Root Finding
+        if not converged or abs(F) > 2.0 or np.isnan(T_s) or np.isinf(T_s):
+            T_low = max(240.0, self.T_air_k - 15.0)
+            T_high = min(360.0, self.T_air_k + 45.0)
+            
+            def eval_flux(T_cand):
+                L_u = eps * SIGMA * (T_cand ** 4)
+                Q_s = Q_sw + eps * self.L_down - L_u
+                Q_sens = RHO_CP * (T_cand - self.T_air_k) / r_a
+                Q_lat = max(0.0, 0.6 * Q_s) * (f_veg * wetness_factor + f_water * 1.0)
+                Q_st = (0.35 * f_imperv + 0.15 * f_veg + 0.08 * f_water) * Q_s
+                return Q_s + q_f - (Q_sens + Q_lat + Q_st)
+
+            f_low = eval_flux(T_low)
+            f_high = eval_flux(T_high)
+            
+            if f_low * f_high <= 0:
+                for _ in range(35):
+                    T_mid = 0.5 * (T_low + T_high)
+                    f_mid = eval_flux(T_mid)
+                    if abs(f_mid) < 0.05 or (T_high - T_low) < 1e-3:
+                        T_s = T_mid
+                        F = f_mid
+                        converged = True
+                        break
+                    if f_low * f_mid < 0:
+                        T_high = T_mid
+                        f_high = f_mid
+                    else:
+                        T_low = T_mid
+                        f_low = f_mid
+            else:
+                # Direct energy balance estimation fallback
+                T_s = np.clip(self.T_air_k + (Q_sw + q_f) * (r_a / (RHO_CP * 2.0)), 260.0, 340.0)
+                F = 0.0
         
         # Convert back to °C and extract final fluxes
         T_s_c = float(T_s - 273.15)
@@ -132,6 +178,7 @@ class EnergyBalanceSolver:
         Q_h = float(RHO_CP * (T_s - self.T_air_k) / r_a)
         Q_e = float(max(0.0, 0.6 * Q_star) * (f_veg * wetness_factor + f_water))
         dQs = float((0.35 * f_imperv + 0.15 * f_veg + 0.08 * f_water) * Q_star)
+        final_residual = abs((Q_star + q_f) - (Q_h + Q_e + dQs))
         
         return {
             "T_surface_c": round(T_s_c, 2),
@@ -141,6 +188,9 @@ class EnergyBalanceSolver:
             "Q_e": round(Q_e, 1),
             "dQs": round(dQs, 1),
             "r_a": round(r_a, 2),
+            "residual": round(float(final_residual), 4),
+            "energy_balance_residual": round(float(final_residual), 4),
+            "converged": converged
         }
 
     def solve_grid(
@@ -198,6 +248,7 @@ class EnergyBalanceSolver:
         fl_qh = np.zeros(flat_size)
         fl_qe = np.zeros(flat_size)
         fl_dqs = np.zeros(flat_size)
+        fl_res = np.zeros(flat_size)
         
         for i in range(flat_size):
             res = self.solve_cell_equilibrium(
@@ -215,6 +266,7 @@ class EnergyBalanceSolver:
             fl_qh[i] = res["Q_h"]
             fl_qe[i] = res["Q_e"]
             fl_dqs[i] = res["dQs"]
+            fl_res[i] = res.get("residual", 0.0)
             
         return {
             "T_surface_c": fl_ts.reshape(shape),
@@ -222,4 +274,5 @@ class EnergyBalanceSolver:
             "Q_h": fl_qh.reshape(shape),
             "Q_e": fl_qe.reshape(shape),
             "dQs": fl_dqs.reshape(shape),
+            "residual": fl_res.reshape(shape)
         }

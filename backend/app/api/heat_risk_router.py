@@ -24,6 +24,7 @@ class HeatRiskSummary(BaseModel):
     critical_zones: List[Dict[str, Any]]
     ward_risk_ranking: List[Dict[str, Any]]
     hvi_distribution: Dict[str, int]
+    demographic_data_source: str = "synthetic / illustrative estimates (not census-enumerated)"
 
 
 @router.get("/analysis", response_model=HeatRiskSummary)
@@ -156,5 +157,6 @@ def get_heat_risk_analysis(
         vulnerable_area_pct=round(high_heat_fraction * 100, 1),
         critical_zones=critical_zones,
         ward_risk_ranking=ward_ranking,
-        hvi_distribution=hvi_dist
+        hvi_distribution=hvi_dist,
+        demographic_data_source="synthetic / illustrative estimates (not census-enumerated)"
     )

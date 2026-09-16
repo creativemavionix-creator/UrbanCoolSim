@@ -94,13 +94,15 @@ urbancoolsim.db
 postgres_data/
 redis_data/
 
-# Dynamic Runtime Storage (preserve folder structure with .gitkeep)
-storage/models/*
-!storage/models/.gitkeep
-storage/rasters/*
-!storage/rasters/.gitkeep
-storage/reports/*
-!storage/reports/.gitkeep
+# Dynamic Runtime Storage & Training Artifacts
+# NOTE: surrogate_lgbm_latest.joblib is deliberately NOT ignored so the production model is tracked in git and bundled for deployment.
+# Only timestamped retraining snapshots and temporary files are ignored:
+storage/models/surrogate_lgbm_[0-9]*.joblib
+backend/storage/models/surrogate_lgbm_[0-9]*.joblib
+storage/models/*.tmp
+backend/storage/models/*.tmp
+storage/reports/*.pdf
+backend/storage/reports/*.pdf
 
 # Generated Reports & PDFs
 *.pdf
